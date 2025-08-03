@@ -10,7 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && vite build",
     "build:server": "cd server && esbuild index.ts --platform=node --bundle --outfile=../dist/server.js --external:pg --external:firebase-admin",
-    "vercel-build": "npm run build:client",
+    "vercel-build": "cd client && npm install && npm run build",
     "preview": "cd client && vite preview",
     "railway:build": "npm run prebuild:railway && npm run build",
     "prebuild:railway": "npm run ensure:linux-deps && npm run verify:esbuild",
