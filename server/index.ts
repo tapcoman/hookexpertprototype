@@ -198,20 +198,25 @@ app.use(globalErrorHandler)
 // 404 handler
 app.use('*', notFoundHandler)
 
-// Start server
-app.listen(PORT, () => {
-  console.log('🚀 Hook Line Studio server running on port', PORT)
-  console.log('📍 Environment:', NODE_ENV)
-  console.log('🔗 Health check: http://localhost:' + PORT + '/api/health')
-})
+// Export the app for Vercel serverless deployment
+export { app }
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully')
-  process.exit(0)
-})
+// Start server (only when not in serverless environment)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log('🚀 Hook Line Studio server running on port', PORT)
+    console.log('📍 Environment:', NODE_ENV)
+    console.log('🔗 Health check: http://localhost:' + PORT + '/api/health')
+  })
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully')
-  process.exit(0)
-})
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully')
+    process.exit(0)
+  })
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully')
+    process.exit(0)
+  })
+}
