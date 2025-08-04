@@ -181,6 +181,8 @@ export const UserProfileSchema = z.object({
   firebaseUid: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  displayName: z.string().optional(),
+  photoURL: z.string().optional(),
   emailVerified: z.boolean().default(false),
   
   // Profile Information

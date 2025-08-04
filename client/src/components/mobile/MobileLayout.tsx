@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocation } from 'wouter'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../contexts/AuthContext'
-import { useUserData } from '../../hooks/useQueries'
+// import { useUserData } from '../../hooks/useQueries'
 import MobileHeader from './MobileHeader'
 import MobileBottomNav from './MobileBottomNav'
 import { cn } from '../../lib/utils'
@@ -30,7 +30,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 }) => {
   const { user } = useAuth()
   const [location] = useLocation()
-  const { data: _userData } = useUserData()
+  // const _userData = useUserData()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [installPrompt, setInstallPrompt] = useState<any>(null)
 

@@ -36,9 +36,9 @@ const MobileMainAppPageContent: React.FC = () => {
     onSuccess: (data) => {
       setCurrentGeneration(data)
       addRecentGeneration(data)
-      setFavoriteStates(new Array(data.hooks.length).fill(false))
+      setFavoriteStates(new Array(data?.hooks?.length || 0).fill(false))
       setViewState('results')
-      showSuccessNotification('Hooks Generated!', `Created ${data.hooks.length} viral hooks for you.`)
+      showSuccessNotification('Hooks Generated!', `Created ${data?.hooks?.length || 0} viral hooks for you.`)
     },
     onError: (error: any) => {
       setViewState('form')

@@ -63,7 +63,7 @@ const loadingMessages = [
 
 const MobileLoading: React.FC<MobileLoadingProps> = ({
   message = "Generating your viral hooks...",
-  submessage = "This usually takes 10-15 seconds",
+  submessage: _submessage = "This usually takes 10-15 seconds",
   progress: externalProgress,
   showSteps = true,
   estimatedTime = 15,

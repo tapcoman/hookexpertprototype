@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { queryKeys, handleQueryError, handleMutationError } from '@/lib/react-query'
+import { queryKeys, handleMutationError } from '@/lib/react-query'
 import { useNotifications } from '@/contexts/AppContext'
 import type {
   GenerateHooksRequest,
@@ -151,7 +151,7 @@ export const useGenerateHooks = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.userUsage() })
       queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
       
-      showSuccessNotification('Hooks Generated!', `Created ${data.hooks.length} viral hooks for you.`)
+      showSuccessNotification('Hooks Generated!', `Created ${data?.hooks?.length || 0} viral hooks for you.`)
     },
     onError: (error: any) => {
       const message = handleMutationError(error)
@@ -252,7 +252,9 @@ export const useCreateCheckoutSession = () => {
       return response.data
     },
     onSuccess: (data) => {
-      window.location.href = data.url
+      if (data?.url) {
+        window.location.href = data.url
+      }
     },
     onError: (error: any) => {
       const message = handleMutationError(error)
@@ -270,7 +272,9 @@ export const useCreateBillingPortal = () => {
       return response.data
     },
     onSuccess: (data) => {
-      window.location.href = data.url
+      if (data?.url) {
+        window.location.href = data.url
+      }
     },
     onError: (error: any) => {
       const message = handleMutationError(error)

@@ -40,7 +40,9 @@ const BillingPageContent: React.FC = () => {
       return response.data
     },
     onSuccess: (data) => {
-      window.location.href = data.url
+      if (data?.url) {
+        window.location.href = data.url
+      }
     },
     onError: (error: any) => {
       showErrorNotification('Portal Access Failed', error.message)

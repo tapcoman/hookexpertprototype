@@ -42,4 +42,3 @@ export default defineConfig({
     include: ['react', 'react-dom'],
   },
 })
-EOF < /dev/null

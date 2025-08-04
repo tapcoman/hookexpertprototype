@@ -292,7 +292,7 @@ const MainAppPageContent: React.FC = () => {
     onSuccess: (data) => {
       setCurrentGeneration(data)
       addRecentGeneration(data)
-      showSuccessNotification('Hooks Generated!', `Created ${data.hooks.length} viral hooks for you.`)
+      showSuccessNotification('Hooks Generated!', `Created ${data?.hooks?.length || 0} viral hooks for you.`)
     },
     onError: (error: any) => {
       showErrorNotification('Generation Failed', error.message)

@@ -38,7 +38,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
   })
 
-  const { handleSubmit, trigger, formState: { isValid, errors } } = methods
+  const { handleSubmit, trigger, formState: { isValid: _isValid, errors } } = methods
 
   const steps = [
     {

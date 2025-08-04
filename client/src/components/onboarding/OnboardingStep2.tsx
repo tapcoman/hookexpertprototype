@@ -4,13 +4,6 @@ import { Volume2, Shield, Plus, X, AlertTriangle } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/Select'
 import { Badge } from '../ui/Badge'
 import type { OnboardingData, Voice, SafetyMode } from '@/types/shared'
 import { cn } from '../../lib/utils'
