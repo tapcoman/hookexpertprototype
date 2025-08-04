@@ -119,9 +119,9 @@ export const userApi = {
 // ==================== HOOKS API ====================
 
 export const hooksApi = {
-  // Generate hooks
+  // Generate hooks (enhanced)
   generateHooks: (data: GenerateHooksRequest) =>
-    apiFetch<GenerateHooksResponse>('/hooks/generate', {
+    apiFetch<GenerateHooksResponse>('/hooks/generate/enhanced', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -151,18 +151,24 @@ export const hooksApi = {
     )
   },
 
-  // Add to favorites
-  addToFavorites: (generationId: string, hookIndex: number) =>
-    apiFetch<void>('/hooks/favorites', {
+  // Add to favorites - now takes full hook data
+  addToFavorites: (data: {
+    generationId?: string
+    hookData: any
+    framework: string
+    platformNotes: string
+    topic?: string
+    platform?: string
+  }) =>
+    apiFetch<any>('/hooks/favorites', {
       method: 'POST',
-      body: JSON.stringify({ generationId, hookIndex }),
+      body: JSON.stringify(data),
     }),
 
-  // Remove from favorites
-  removeFromFavorites: (generationId: string, hookIndex: number) =>
-    apiFetch<void>('/hooks/favorites', {
+  // Remove from favorites by ID
+  removeFromFavorites: (favoriteId: string) =>
+    apiFetch<void>(`/hooks/favorites/${favoriteId}`, {
       method: 'DELETE',
-      body: JSON.stringify({ generationId, hookIndex }),
     }),
 
   // Get favorites

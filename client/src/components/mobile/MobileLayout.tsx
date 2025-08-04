@@ -169,9 +169,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
           <MobileHeader
-            title={headerTitle}
+            title={headerTitle || ''}
             showBackButton={showBackButton}
-            onBackClick={onBackClick}
+            onBackClick={onBackClick || (() => {})}
             creditsRemaining={creditsRemaining}
           />
         </motion.div>

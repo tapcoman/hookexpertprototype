@@ -28,9 +28,14 @@ class Analytics {
   // ==================== INITIALIZATION ====================
 
   init(userId?: string, consentLevel: 'none' | 'essential' | 'analytics' | 'all' = 'essential') {
-    this.userId = userId
-    this.config.userId = userId
-    this.config.consentLevel = consentLevel
+    if (userId !== undefined) {
+      this.userId = userId
+    }
+    this.config = {
+      ...this.config,
+      consentLevel,
+      ...(userId && { userId })
+    }
     this.isInitialized = true
 
     // Process queued events
@@ -328,12 +333,18 @@ class Analytics {
 
   private async sendEvent(endpoint: string, data: any) {
     try {
-      await fetch(`${this.config.apiEndpoint}/${endpoint}`, {
+      // Use the unified analytics API endpoint
+      await fetch(`${this.config.apiEndpoint}/track`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          eventType: endpoint,
+          eventData: data,
+          userId: this.userId,
+          sessionId: this.sessionId
+        })
       })
     } catch (error) {
       console.error('Failed to send analytics event:', error)

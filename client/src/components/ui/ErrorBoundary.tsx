@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
+import { analytics } from '@/lib/analytics'
 
 // ==================== TYPES ====================
 
@@ -51,7 +52,19 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private reportError = (error: Error, errorInfo: ErrorInfo) => {
-    // Here you would typically send the error to a service like Sentry
+    // Report to analytics
+    analytics.trackError({
+      errorMessage: error.message,
+      errorStack: error.stack || '',
+      type: 'js_error',
+      additionalContext: {
+        componentStack: errorInfo.componentStack,
+        location: window.location.href,
+        userAgent: navigator.userAgent
+      }
+    })
+    
+    // Log to console for development
     console.error('Error reported:', {
       message: error.message,
       stack: error.stack,
@@ -60,6 +73,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleRetry = () => {
+    analytics.track('error_boundary_retry', {
+      errorMessage: this.state.error?.message,
+      location: window.location.href
+    })
+    
     this.setState({
       hasError: false,
       error: null,

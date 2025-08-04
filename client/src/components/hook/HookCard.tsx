@@ -26,6 +26,7 @@ import {
 import type { HookObject } from '@/types/shared'
 import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
+import { useAnalytics } from '../../lib/analytics'
 import { 
   cardVariants, 
   itemVariants, 
@@ -62,10 +63,21 @@ const HookCard: React.FC<HookCardProps> = ({
 }) => {
   const [showAnalysis, setShowAnalysis] = useState(false)
   const { toast } = useToast()
+  const { track } = useAnalytics()
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(hook.verbalHook)
+      
+      // Track copy action
+      track('hook_card_copied', {
+        hookScore: hook.score,
+        hookFramework: hook.framework,
+        platform: platform,
+        psychologicalDriver: hook.psychologicalDriver,
+        riskFactor: hook.riskFactor
+      })
+      
       toast({
         title: "Copied to clipboard",
         description: "Hook copied successfully!",
@@ -73,6 +85,10 @@ const HookCard: React.FC<HookCardProps> = ({
       })
       onCopy?.()
     } catch (error) {
+      track('hook_card_copy_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+      
       toast({
         title: "Copy failed",
         description: "Please try again",
@@ -321,11 +337,25 @@ const HookCard: React.FC<HookCardProps> = ({
                     <Copy className="mr-2 h-4 w-4" />
                     Copy Hook
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onFavoriteToggle}>
+                  <DropdownMenuItem onClick={() => {
+                    track('hook_card_favorite_toggled', {
+                      isFavorite: !isFavorite,
+                      hookScore: hook.score,
+                      platform: platform
+                    })
+                    onFavoriteToggle?.()
+                  }}>
                     <Heart className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-current text-red-500' : ''}`} />
                     {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowAnalysis(!showAnalysis)}>
+                  <DropdownMenuItem onClick={() => {
+                    track('hook_card_analysis_toggled', {
+                      showAnalysis: !showAnalysis,
+                      hookScore: hook.score,
+                      framework: hook.framework
+                    })
+                    setShowAnalysis(!showAnalysis)
+                  }}>
                     {showAnalysis ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
                     {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
                   </DropdownMenuItem>
@@ -483,7 +513,15 @@ const HookCard: React.FC<HookCardProps> = ({
             <Button 
               variant={isFavorite ? "default" : "outline"} 
               size="sm" 
-              onClick={onFavoriteToggle}
+              onClick={() => {
+                track('hook_card_favorite_button_clicked', {
+                  isFavorite: !isFavorite,
+                  hookScore: hook.score,
+                  platform: platform,
+                  psychologicalDriver: hook.psychologicalDriver
+                })
+                onFavoriteToggle?.()
+              }}
               className={cn(
                 "px-4 transition-all duration-300",
                 isFavorite ? 

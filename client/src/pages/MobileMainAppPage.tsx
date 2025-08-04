@@ -48,18 +48,29 @@ const MobileMainAppPageContent: React.FC = () => {
 
   // Add to favorites mutation
   const addToFavoritesMutation = useMutation({
-    mutationFn: async ({ generationId, hookIndex }: { generationId: string, hookIndex: number }) => {
-      await api.hooks.addToFavorites(generationId, hookIndex)
+    mutationFn: async ({ generationId, hookData, framework, platformNotes, topic, platform }: { 
+      generationId?: string, 
+      hookData: any, 
+      framework: string, 
+      platformNotes: string, 
+      topic?: string, 
+      platform?: string
+    }) => {
+      const apiData: any = {
+        hookData,
+        framework,
+        platformNotes
+      }
+      if (generationId) apiData.generationId = generationId
+      if (topic) apiData.topic = topic
+      if (platform) apiData.platform = platform
+      
+      await api.hooks.addToFavorites(apiData)
     },
-    onSuccess: (_, { hookIndex }) => {
-      setFavoriteStates(prev => {
-        const newStates = [...prev]
-        newStates[hookIndex] = !newStates[hookIndex]
-        return newStates
-      })
+    onSuccess: () => {
       toast({
         title: "Updated!",
-        description: favoriteStates[hookIndex] ? "Removed from favorites" : "Added to favorites",
+        description: "Added to favorites",
         variant: "default"
       })
     },
@@ -80,9 +91,20 @@ const MobileMainAppPageContent: React.FC = () => {
 
   const handleFavoriteToggle = (hookIndex: number) => {
     if (currentGeneration) {
+      // Toggle favorite state immediately for UI responsiveness
+      setFavoriteStates(prev => {
+        const newStates = [...prev]
+        newStates[hookIndex] = !newStates[hookIndex]
+        return newStates
+      })
+      
       addToFavoritesMutation.mutate({
         generationId: currentGeneration.id,
-        hookIndex,
+        hookData: currentGeneration.hooks[hookIndex],
+        framework: currentGeneration.hooks[hookIndex]?.framework || 'unknown',
+        platformNotes: `Generated for ${currentGeneration.platform}`,
+        topic: currentGeneration.topic,
+        platform: currentGeneration.platform,
       })
     }
   }
@@ -229,8 +251,8 @@ const MobileMainAppPageContent: React.FC = () => {
               <div className="h-full">
                 <MobileHookViewer
                   hooks={currentGeneration.hooks}
-                  platform={generationRequest?.platform}
-                  objective={generationRequest?.objective}
+                  platform={generationRequest?.platform || ''}
+                  objective={generationRequest?.objective || ''}
                   onFavoriteToggle={handleFavoriteToggle}
                   onCopy={handleCopy}
                   onShare={handleShare}

@@ -3,9 +3,11 @@ import { motion } from 'framer-motion'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useGenerationState, useNotifications } from '@/contexts/AppContext'
+import { useAnalytics } from '@/lib/analytics'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { HookGenerationLoading, LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import HookCard from '@/components/hook/HookCard'
 import { api } from '@/lib/api'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
@@ -223,9 +225,10 @@ interface HookResultsProps {
   generation: any
   onFavorite: (hookIndex: number) => void
   onCopy: (hook: string) => void
+  favoriteHooks?: Set<string> // Set of "generationId-hookIndex" strings
 }
 
-const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCopy }) => {
+const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCopy, favoriteHooks }) => {
   if (!generation || !generation.hooks) return null
 
   return (
@@ -242,35 +245,23 @@ const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCop
       </div>
 
       <div className="grid gap-4">
-        {generation.hooks.map((hook: any, index: number) => (
-          <div key={index} className="bg-card border rounded-lg p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <p className="text-foreground font-medium mb-2">{hook.verbalHook}</p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                  <span>Score: {hook.score}/5</span>
-                  <span>Framework: {hook.framework}</span>
-                  <span>Words: {hook.wordCount}</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{hook.rationale}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onCopy(hook.verbalHook)}
-                  className="px-3 py-1 text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded transition-colors"
-                >
-                  Copy
-                </button>
-                <button
-                  onClick={() => onFavorite(index)}
-                  className="px-3 py-1 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+        {generation.hooks.map((hook: any, index: number) => {
+          const favoriteKey = `${generation.id}-${index}`
+          const isFavorite = favoriteHooks?.has(favoriteKey) || false
+          
+          return (
+            <HookCard
+              key={index}
+              hook={hook}
+              platform={generation.platform}
+              objective={generation.objective}
+              isFavorite={isFavorite}
+              onFavoriteToggle={() => onFavorite(index)}
+              onCopy={() => onCopy(hook.verbalHook)}
+              showDetails={true}
+            />
+          )
+        })}
       </div>
     </motion.div>
   )
@@ -282,6 +273,8 @@ const MainAppPageContent: React.FC = () => {
   const { user } = useAuth()
   const { currentGeneration, setCurrentGeneration, addRecentGeneration } = useGenerationState()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
+  const { track } = useAnalytics(user?.id)
+  const [favoriteHooks, setFavoriteHooks] = useState<Set<string>>(new Set())
 
   // Hook generation mutation
   const generateHooksMutation = useMutation({
@@ -293,18 +286,52 @@ const MainAppPageContent: React.FC = () => {
       setCurrentGeneration(data)
       addRecentGeneration(data)
       showSuccessNotification('Hooks Generated!', `Created ${data?.hooks?.length || 0} viral hooks for you.`)
+      
+      // Track successful generation
+      track('hook_generation_completed', {
+        hooksGenerated: data?.hooks?.length || 0,
+        platform: data?.platform,
+        objective: data?.objective,
+        modelType: data?.modelType
+      })
     },
     onError: (error: any) => {
       showErrorNotification('Generation Failed', error.message)
+      
+      // Track generation failure
+      track('hook_generation_failed', {
+        error: error.message,
+        errorCode: error.status
+      })
     },
   })
 
   // Add to favorites mutation
   const addToFavoritesMutation = useMutation({
-    mutationFn: async ({ generationId, hookIndex }: { generationId: string, hookIndex: number }) => {
-      await api.hooks.addToFavorites(generationId, hookIndex)
+    mutationFn: async ({ generationId, hookData, framework, platformNotes, topic, platform }: { 
+      generationId?: string, 
+      hookData: any, 
+      framework: string, 
+      platformNotes: string, 
+      topic?: string, 
+      platform?: string 
+    }) => {
+      const apiData: any = {
+        hookData,
+        framework,
+        platformNotes
+      }
+      if (generationId) apiData.generationId = generationId
+      if (topic) apiData.topic = topic
+      if (platform) apiData.platform = platform
+      
+      await api.hooks.addToFavorites(apiData)
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Add to local state for immediate UI update
+      const favoriteKey = `${variables.generationId || 'manual'}-${variables.hookData?.id || Date.now()}`
+      setFavoriteHooks(prev => new Set([...prev, favoriteKey]))
+      
       showSuccessNotification('Saved!', 'Hook added to your favorites.')
     },
     onError: (error: any) => {
@@ -313,20 +340,46 @@ const MainAppPageContent: React.FC = () => {
   })
 
   const handleGenerate = (data: GenerateHooksRequest) => {
+    // Track hook generation event
+    track('hook_generation_started', {
+      platform: data.platform,
+      objective: data.objective,
+      modelType: data.modelType,
+      topicLength: data.topic.length
+    })
+    
     generateHooksMutation.mutate(data)
   }
 
   const handleFavorite = (hookIndex: number) => {
     if (currentGeneration) {
-      addToFavoritesMutation.mutate({
+      // Track favorite action
+      track('hook_favorited', {
         generationId: currentGeneration.id,
         hookIndex,
+        platform: currentGeneration.platform,
+        objective: currentGeneration.objective
+      })
+      
+      addToFavoritesMutation.mutate({
+        generationId: currentGeneration.id,
+        hookData: currentGeneration.hooks[hookIndex],
+        framework: currentGeneration.hooks[hookIndex]?.framework || 'unknown',
+        platformNotes: `Generated for ${currentGeneration.platform}`,
+        topic: currentGeneration.topic,
+        platform: currentGeneration.platform,
       })
     }
   }
 
   const handleCopy = (hook: string) => {
     navigator.clipboard.writeText(hook).then(() => {
+      // Track copy action
+      track('hook_copied', {
+        hookText: hook.substring(0, 50), // First 50 chars for privacy
+        hookLength: hook.length
+      })
+      
       showSuccessNotification('Copied!', 'Hook copied to clipboard.')
     })
   }
@@ -364,6 +417,7 @@ const MainAppPageContent: React.FC = () => {
           generation={currentGeneration}
           onFavorite={handleFavorite}
           onCopy={handleCopy}
+          favoriteHooks={favoriteHooks}
         />
       )}
 

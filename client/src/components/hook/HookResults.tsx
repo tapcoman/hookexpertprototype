@@ -288,8 +288,8 @@ const HookResults: React.FC<HookResultsProps> = ({
               >
                 <HookCard
                   hook={hook}
-                  platform={platform}
-                  objective={objective}
+                  platform={platform || ''}
+                  objective={objective || ''}
                   isFavorite={favoriteIds.has(`${index}`)}
                   onFavoriteToggle={() => onFavoriteToggle?.(index)}
                   onCopy={() => onCopyHook?.(hook)}
@@ -304,10 +304,10 @@ const HookResults: React.FC<HookResultsProps> = ({
           {/* Tri-Modal Hook Results */}
           <TriModalHookResults
             hooks={filteredAndSortedHooks}
-            platform={platform}
-            objective={objective}
-            onFavoriteToggle={onFavoriteToggle}
-            onCopyHook={onCopyHook}
+            platform={platform || ''}
+            objective={objective || ''}
+            onFavoriteToggle={onFavoriteToggle || (() => {})}
+            onCopyHook={onCopyHook || (() => {})}
             favoriteIds={favoriteIds}
           />
         </TabsContent>

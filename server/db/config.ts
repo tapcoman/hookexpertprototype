@@ -1,3 +1,12 @@
+import { config } from 'dotenv'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+// Load environment variables from project root
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const projectRoot = join(__dirname, '../../')
+config({ path: join(projectRoot, '.env') })
+
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema.js'

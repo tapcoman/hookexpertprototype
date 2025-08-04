@@ -12,9 +12,7 @@ import {
   Heart,
   CreditCard,
   Sparkles,
-  Target,
-  MessageCircle,
-  Info
+  Target
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar'
@@ -93,12 +91,9 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Public navigation for non-authenticated users
+  // Public navigation for non-authenticated users (minimal for app-only experience)
   const publicNavigation = [
-    { name: 'Features', href: '/features', icon: Sparkles },
     { name: 'Pricing', href: '/pricing', icon: Target },
-    { name: 'About', href: '/about', icon: Info },
-    { name: 'Contact', href: '/contact', icon: MessageCircle },
   ]
 
   // App navigation for authenticated users
@@ -141,7 +136,7 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
       <Container>
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
-          <Link href="/">
+          <Link href={user ? "/app" : "/auth"}>
             <motion.div 
               className="flex items-center space-x-3 cursor-pointer group"
               whileHover={{ scale: 1.02 }}

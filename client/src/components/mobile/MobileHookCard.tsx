@@ -25,6 +25,7 @@ import {
 import type { HookObject } from '@/types/shared'
 import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
+import { useAnalytics } from '../../lib/analytics'
 
 interface MobileHookCardProps {
   hook: HookObject
@@ -54,10 +55,22 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
   const [showDetails, setShowDetails] = useState(false)
   const [dragX, setDragX] = useState(0)
   const { toast } = useToast()
+  const { track } = useAnalytics()
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(hook.verbalHook)
+      
+      // Track mobile copy action
+      track('mobile_hook_card_copied', {
+        hookScore: hook.score,
+        hookFramework: hook.framework,
+        platform: platform,
+        psychologicalDriver: hook.psychologicalDriver,
+        riskFactor: hook.riskFactor,
+        index: index
+      })
+      
       toast({
         title: "Copied!",
         description: "Hook copied to clipboard",
@@ -65,6 +78,11 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
       })
       onCopy?.()
     } catch (error) {
+      track('mobile_hook_card_copy_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        index: index
+      })
+      
       toast({
         title: "Copy failed",
         description: "Please try again",
@@ -107,8 +125,18 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
       onDrag={(_, info) => setDragX(info.offset.x)}
       onDragEnd={(_, info) => {
         if (info.offset.x > 50) {
+          track('mobile_hook_card_swipe_right', {
+            hookScore: hook.score,
+            platform: platform,
+            index: index
+          })
           onSwipeRight?.()
         } else if (info.offset.x < -50) {
+          track('mobile_hook_card_swipe_left', {
+            hookScore: hook.score,
+            platform: platform,
+            index: index
+          })
           onSwipeLeft?.()
         }
         setDragX(0)
@@ -159,11 +187,27 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
                   <Copy className="mr-2 h-4 w-4" />
                   Copy Hook
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onFavoriteToggle}>
+                <DropdownMenuItem onClick={() => {
+                  track('mobile_hook_card_favorite_toggled', {
+                    isFavorite: !isFavorite,
+                    hookScore: hook.score,
+                    platform: platform,
+                    index: index
+                  })
+                  onFavoriteToggle?.()
+                }}>
                   <Heart className={`mr-2 h-4 w-4 ${isFavorite ? 'fill-current text-red-500' : ''}`} />
                   {isFavorite ? 'Remove Favorite' : 'Add Favorite'}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowDetails(!showDetails)}>
+                <DropdownMenuItem onClick={() => {
+                  track('mobile_hook_card_details_toggled', {
+                    showDetails: !showDetails,
+                    hookScore: hook.score,
+                    framework: hook.framework,
+                    index: index
+                  })
+                  setShowDetails(!showDetails)
+                }}>
                   {showDetails ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
                   {showDetails ? 'Hide Details' : 'Show Details'}
                 </DropdownMenuItem>
@@ -209,7 +253,15 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowDetails(!showDetails)}
+              onClick={() => {
+                track('mobile_hook_card_expand_details', {
+                  showDetails: !showDetails,
+                  hookScore: hook.score,
+                  framework: hook.framework,
+                  index: index
+                })
+                setShowDetails(!showDetails)
+              }}
               className="w-full flex items-center justify-center gap-2 text-muted-foreground"
             >
               <span className="text-xs">
@@ -295,7 +347,16 @@ const MobileHookCard: React.FC<MobileHookCardProps> = ({
             <Button 
               variant={isFavorite ? "default" : "outline"} 
               size="sm" 
-              onClick={onFavoriteToggle}
+              onClick={() => {
+                track('mobile_hook_card_favorite_button_clicked', {
+                  isFavorite: !isFavorite,
+                  hookScore: hook.score,
+                  platform: platform,
+                  index: index,
+                  psychologicalDriver: hook.psychologicalDriver
+                })
+                onFavoriteToggle?.()
+              }}
               className={cn(
                 "px-3",
                 isFavorite && "bg-red-500 hover:bg-red-600"

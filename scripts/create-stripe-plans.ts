@@ -21,7 +21,7 @@ async function createStripeProducts() {
       description: 'Perfect for getting started with AI hook generation',
       price: 0, // Free plan
       features: [
-        '20 draft generations per week',
+        '10 hooks per month',
         'Basic hook formulas',
         'Community support'
       ]
@@ -32,7 +32,7 @@ async function createStripeProducts() {
       description: 'Great for content creators and small businesses',
       price: 900, // $9.00
       features: [
-        '100 Pro generations per month',
+        '100 hooks per month',
         'Unlimited draft generations',
         'All hook formulas',
         'Email support',
@@ -45,7 +45,7 @@ async function createStripeProducts() {
       description: 'Most popular - Perfect for serious content creators',
       price: 1500, // $15.00
       features: [
-        '200 Pro generations per month',
+        '300 hooks per month',
         'Unlimited draft generations',
         'All hook formulas',
         'Priority email support',
@@ -59,7 +59,7 @@ async function createStripeProducts() {
       description: 'Advanced features for power users and agencies',
       price: 2400, // $24.00
       features: [
-        '400 Pro generations per month',
+        '1,000 hooks per month',
         'Unlimited draft generations',
         'All hook formulas',
         'Advanced analytics',
@@ -74,7 +74,7 @@ async function createStripeProducts() {
       description: 'Perfect for teams and agencies with collaboration features',
       price: 5900, // $59.00
       features: [
-        '1,500 Pro generations per month (pooled)',
+        'Unlimited hooks per month',
         'Unlimited draft generations',
         'All hook formulas',
         '3 team seats',

@@ -1,0 +1,78 @@
+import type { NewUser } from '../../server/db/schema.js'
+
+export const testUsers = {
+  freeUser: {
+    id: 'user-free-123',
+    firebaseUid: 'firebase-free-123',
+    email: 'free@example.com',
+    firstName: 'Free',
+    lastName: 'User',
+    emailVerified: true,
+    safety: 'standard',
+    freeCredits: 5,
+    subscriptionStatus: 'free',
+    isPremium: false,
+    draftGenerationsUsed: 0,
+    proGenerationsUsed: 0,
+    weeklyDraftReset: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+  } as const,
+
+  premiumUser: {
+    id: 'user-premium-123',
+    firebaseUid: 'firebase-premium-123',
+    email: 'premium@example.com',
+    firstName: 'Premium',
+    lastName: 'User',
+    emailVerified: true,
+    safety: 'standard',
+    freeCredits: 0,
+    subscriptionStatus: 'active',
+    subscriptionPlan: 'pro',
+    isPremium: true,
+    stripeCustomerId: 'cus_premium123',
+    stripeSubscriptionId: 'sub_premium123',
+    currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    draftGenerationsUsed: 15,
+    proGenerationsUsed: 50,
+    weeklyDraftReset: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-15'),
+  } as const,
+
+  expiredUser: {
+    id: 'user-expired-123',
+    firebaseUid: 'firebase-expired-123',
+    email: 'expired@example.com',
+    firstName: 'Expired',
+    lastName: 'User',
+    emailVerified: true,
+    safety: 'standard',
+    freeCredits: 0,
+    subscriptionStatus: 'canceled',
+    subscriptionPlan: 'pro',
+    isPremium: false,
+    stripeCustomerId: 'cus_expired123',
+    stripeSubscriptionId: 'sub_expired123',
+    currentPeriodEnd: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
+    draftGenerationsUsed: 20, // At limit
+    proGenerationsUsed: 100,
+    weeklyDraftReset: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-30'),
+  } as const,
+}
+
+export const createTestUser = (overrides: Partial<NewUser> = {}): NewUser => ({
+  firebaseUid: 'test-firebase-uid',
+  email: 'test@example.com',
+  firstName: 'Test',
+  lastName: 'User',
+  emailVerified: true,
+  safety: 'standard',
+  freeCredits: 5,
+  subscriptionStatus: 'free',
+  isPremium: false,
+  ...overrides,
+})

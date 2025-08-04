@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
 import { checkDatabaseConnection } from './db/index.js'
+import { checkServerlessConnection, getServerlessStats } from './db/serverless.js'
 
 // Import middleware
 import { globalRateLimit } from './middleware/rateLimiting.js'
@@ -14,6 +15,7 @@ import { performanceTracker, errorTracker, trackSystemHealth } from './middlewar
 
 // Import configuration
 import { FirebaseConfig } from './config/firebase.js'
+import { StripeConfig } from './config/stripe.js'
 
 // Import routes
 import authRoutes from './routes/auth.js'
@@ -123,15 +125,22 @@ app.use(express.urlencoded({
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
-    const dbStatus = await checkDatabaseConnection()
-    const firebaseStatus = FirebaseConfig.getStatus()
+    // Use serverless connection for Vercel, regular connection otherwise
+    const isServerless = process.env.VERCEL === '1'
+    const dbStatus = isServerless 
+      ? await checkServerlessConnection()
+      : await checkDatabaseConnection()
     
-    res.json({
+    const firebaseStatus = FirebaseConfig.getStatus()
+    const stripeStatus = StripeConfig.getStatus()
+    
+    const response = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: dbStatus.connected ? 'connected' : 'disconnected',
       environment: NODE_ENV,
       version: '2.0.0',
+      serverless: isServerless,
       services: {
         database: dbStatus.connected ? 'operational' : 'down',
         ai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
@@ -139,15 +148,29 @@ app.get('/api/health', async (req, res) => {
           configured: firebaseStatus.configured,
           initialized: firebaseStatus.initialized,
           projectId: firebaseStatus.projectId
+        },
+        stripe: {
+          configured: stripeStatus.configured,
+          initialized: stripeStatus.initialized,
+          webhookSecret: stripeStatus.webhookSecret
         }
       }
-    })
+    }
+
+    // Add serverless-specific stats if available
+    if (isServerless) {
+      response.serverless_stats = getServerlessStats()
+    }
+
+    res.json(response)
   } catch (error) {
+    console.error('Health check error:', error)
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       error: 'Health check failed',
-      environment: NODE_ENV
+      environment: NODE_ENV,
+      details: error instanceof Error ? error.message : 'Unknown error'
     })
   }
 })

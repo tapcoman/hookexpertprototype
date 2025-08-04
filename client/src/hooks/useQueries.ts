@@ -165,8 +165,15 @@ export const useAddToFavorites = () => {
   const { showSuccessNotification, showErrorNotification } = useNotifications()
 
   return useMutation({
-    mutationFn: async ({ generationId, hookIndex }: { generationId: string; hookIndex: number }) => {
-      await api.hooks.addToFavorites(generationId, hookIndex)
+    mutationFn: async (data: {
+      generationId?: string
+      hookData: any
+      framework: string
+      platformNotes: string
+      topic?: string
+      platform?: string
+    }) => {
+      await api.hooks.addToFavorites(data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.hookFavorites() })
@@ -184,8 +191,8 @@ export const useRemoveFromFavorites = () => {
   const { showSuccessNotification, showErrorNotification } = useNotifications()
 
   return useMutation({
-    mutationFn: async ({ generationId, hookIndex }: { generationId: string; hookIndex: number }) => {
-      await api.hooks.removeFromFavorites(generationId, hookIndex)
+    mutationFn: async (favoriteId: string) => {
+      await api.hooks.removeFromFavorites(favoriteId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.hookFavorites() })

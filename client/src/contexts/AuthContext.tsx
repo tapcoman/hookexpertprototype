@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { firebaseAuth } from '@/lib/firebase'
 import { api, setAuthToken } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
+import { analytics } from '@/lib/analytics'
 import type { UserProfile } from '@/types/shared'
 
 // ==================== TYPES ====================
@@ -79,6 +80,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Set auth token for API calls
           setAuthToken(response.data?.token || null)
           
+          // Initialize analytics with user ID
+          analytics.init(user.uid, 'analytics')
+          
           // Clear any previous errors
           setError(null)
         } catch (error: any) {
@@ -126,7 +130,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const user = await firebaseAuth.signIn(email, password)
       return user
     },
+    onSuccess: () => {
+      analytics.track('user_sign_in', { method: 'email' })
+    },
     onError: (error: any) => {
+      analytics.track('user_sign_in_failed', { method: 'email', error: error.message })
       setError(error.message)
     },
   })
@@ -136,7 +144,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const user = await firebaseAuth.signUp(email, password)
       return user
     },
+    onSuccess: () => {
+      analytics.track('user_sign_up', { method: 'email' })
+    },
     onError: (error: any) => {
+      analytics.track('user_sign_up_failed', { method: 'email', error: error.message })
       setError(error.message)
     },
   })
@@ -146,7 +158,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const user = await firebaseAuth.signInWithGoogle()
       return user
     },
+    onSuccess: () => {
+      analytics.track('user_sign_in', { method: 'google' })
+    },
     onError: (error: any) => {
+      analytics.track('user_sign_in_failed', { method: 'google', error: error.message })
       setError(error.message)
     },
   })
@@ -156,6 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await firebaseAuth.signOut()
     },
     onSuccess: () => {
+      analytics.track('user_sign_out')
       // Clear all cached data
       queryClient.clear()
     },

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { body, query, param } from 'express-validator'
 import { validateRequest } from '../middleware/validation.js'
-import { requireAuth } from '../middleware/auth.js'
+import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js'
 import { StripeService } from '../services/stripeService.js'
 import { StripeWebhookService } from '../services/stripeWebhookService.js'
 import { logger } from '../middleware/logging.js'
@@ -62,7 +62,7 @@ router.get('/plans', async (req: Request, res: Response) => {
  * Get current subscription status and usage
  */
 router.get('/subscription', 
-  requireAuth,
+  verifyFirebaseToken,
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id
@@ -89,7 +89,7 @@ router.get('/subscription',
  * Create Stripe Checkout session for new subscription
  */
 router.post('/checkout',
-  requireAuth,
+  verifyFirebaseToken,
   [
     body('priceId').isString().notEmpty().withMessage('Price ID is required'),
     body('successUrl').isURL().withMessage('Valid success URL is required'),
@@ -136,7 +136,7 @@ router.post('/checkout',
  * Create billing portal session for subscription management
  */
 router.post('/billing-portal',
-  requireAuth,
+  verifyFirebaseToken,
   [
     body('returnUrl').isURL().withMessage('Valid return URL is required'),
   ],
@@ -171,7 +171,7 @@ router.post('/billing-portal',
  * Cancel subscription
  */
 router.post('/subscription/cancel',
-  requireAuth,
+  verifyFirebaseToken,
   [
     body('cancelAtPeriodEnd').optional().isBoolean().withMessage('cancelAtPeriodEnd must be boolean'),
   ],
@@ -212,7 +212,7 @@ router.post('/subscription/cancel',
  * Reactivate cancelled subscription
  */
 router.post('/subscription/reactivate',
-  requireAuth,
+  verifyFirebaseToken,
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id
@@ -242,13 +242,47 @@ router.post('/subscription/reactivate',
   }
 )
 
+/**
+ * Resume cancelled subscription (alias for reactivate)
+ */
+router.post('/subscription/resume',
+  verifyFirebaseToken,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id
+
+      const subscription = await StripeService.reactivateSubscription(userId)
+
+      res.json({
+        success: true,
+        data: {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString()
+        },
+        message: 'Subscription resumed successfully'
+      })
+    } catch (error) {
+      logger.error('Failed to resume subscription', { 
+        userId: req.user?.id, 
+        error: error.message 
+      })
+      res.status(500).json({
+        success: false,
+        error: error.message
+      })
+    }
+  }
+)
+
 // ==================== USAGE & GENERATION LIMITS ====================
 
 /**
  * Check generation limits for user
  */
 router.get('/usage/limits',
-  requireAuth,
+  verifyFirebaseToken,
   [
     query('modelType').optional().isIn(['gpt-4o', 'gpt-4o-mini']).withMessage('Invalid model type'),
   ],
@@ -281,7 +315,7 @@ router.get('/usage/limits',
  * Record hook generation usage
  */
 router.post('/usage/record',
-  requireAuth,
+  verifyFirebaseToken,
   [
     body('modelType').isIn(['gpt-4o', 'gpt-4o-mini']).withMessage('Invalid model type'),
   ],
@@ -316,7 +350,7 @@ router.post('/usage/record',
  * Get payment history for user
  */
 router.get('/history',
-  requireAuth,
+  verifyFirebaseToken,
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be 1-100'),
@@ -433,7 +467,7 @@ router.post('/webhooks/stripe',
  * Update payment method
  */
 router.post('/payment-method',
-  requireAuth,
+  verifyFirebaseToken,
   [
     body('paymentMethodId').isString().notEmpty().withMessage('Payment method ID is required'),
   ],

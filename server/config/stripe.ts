@@ -44,23 +44,23 @@ export class StripeConfig {
     }
   }
 
-  // Subscription plan configurations
+  // Subscription plan configurations - Updated to match requirements
   static readonly PLAN_CONFIGURATIONS = {
     free: {
       name: 'free',
       displayName: 'Free',
       price: 0,
-      proGenerationsLimit: 0,
-      draftGenerationsLimit: 20, // per week
+      proGenerationsLimit: 0, // No pro generations on free plan
+      draftGenerationsLimit: 10, // 10 hooks/month
       teamSeats: 1,
       trialPeriodDays: 0,
-      resetInterval: 'week' as const,
+      resetInterval: 'month' as const,
     },
     starter: {
       name: 'starter',
       displayName: 'Starter',
       price: 900, // $9.00
-      proGenerationsLimit: 100,
+      proGenerationsLimit: 100, // 100 hooks/month
       draftGenerationsLimit: null, // unlimited
       teamSeats: 1,
       trialPeriodDays: 7,
@@ -70,7 +70,7 @@ export class StripeConfig {
       name: 'creator',
       displayName: 'Creator',
       price: 1500, // $15.00
-      proGenerationsLimit: 200,
+      proGenerationsLimit: 300, // 300 hooks/month
       draftGenerationsLimit: null, // unlimited
       teamSeats: 1,
       trialPeriodDays: 7,
@@ -81,7 +81,7 @@ export class StripeConfig {
       name: 'pro',
       displayName: 'Pro',
       price: 2400, // $24.00
-      proGenerationsLimit: 400,
+      proGenerationsLimit: 1000, // 1000 hooks/month
       draftGenerationsLimit: null, // unlimited
       teamSeats: 1,
       trialPeriodDays: 7,
@@ -92,7 +92,7 @@ export class StripeConfig {
       name: 'teams',
       displayName: 'Teams',
       price: 5900, // $59.00
-      proGenerationsLimit: 1500, // pooled across team
+      proGenerationsLimit: null, // Unlimited hooks
       draftGenerationsLimit: null, // unlimited
       teamSeats: 3,
       trialPeriodDays: 7,

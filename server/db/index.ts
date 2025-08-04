@@ -1,3 +1,6 @@
+import { config } from 'dotenv'
+config() // Load environment variables first
+
 import { setupDatabase, getDatabaseHealth, databaseMonitor, connectionPool } from './config.js'
 import * as schema from './schema.js'
 

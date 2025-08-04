@@ -1,3 +1,6 @@
+import { config } from 'dotenv'
+config() // Load environment variables
+
 import { db } from './index.js'
 import { hookFormulas, subscriptionPlans } from './schema.js'
 
@@ -544,11 +547,11 @@ export const hookFormulasData = [
   }
 ]
 
-// Subscription Plans Data - Note: You'll need to update these with actual Stripe price IDs
+// Subscription Plans Data - Updated with proper credit limits as per requirements
 export const subscriptionPlansData = [
   {
-    stripePriceId: 'price_free_plan', // This would be actual Stripe price ID
-    stripeProductId: 'prod_free_plan', // This would be actual Stripe product ID
+    stripePriceId: 'price_free_plan', // Will be updated after running setup:stripe-plans
+    stripeProductId: 'prod_free_plan', // Will be updated after running setup:stripe-plans
     name: 'free',
     displayName: 'Free',
     description: 'Perfect for getting started with AI hook generation',
@@ -556,8 +559,8 @@ export const subscriptionPlansData = [
     currency: 'usd',
     interval: 'month',
     intervalCount: 1,
-    proGenerationsLimit: 0,
-    draftGenerationsLimit: 20, // per week
+    proGenerationsLimit: 0, // No pro generations on free plan
+    draftGenerationsLimit: 10, // 10 hooks/month on free plan
     teamSeats: 1,
     hasAdvancedAnalytics: false,
     hasPrioritySupport: false,
@@ -566,8 +569,8 @@ export const subscriptionPlansData = [
     isPopular: false,
   },
   {
-    stripePriceId: 'price_starter_monthly', // This would be actual Stripe price ID
-    stripeProductId: 'prod_starter_plan', // This would be actual Stripe product ID
+    stripePriceId: 'price_starter_monthly', // Will be updated after running setup:stripe-plans
+    stripeProductId: 'prod_starter_plan', // Will be updated after running setup:stripe-plans
     name: 'starter',
     displayName: 'Starter',
     description: 'Great for content creators and small businesses',
@@ -575,8 +578,8 @@ export const subscriptionPlansData = [
     currency: 'usd',
     interval: 'month',
     intervalCount: 1,
-    proGenerationsLimit: 100,
-    draftGenerationsLimit: null, // unlimited
+    proGenerationsLimit: 100, // 100 hooks/month
+    draftGenerationsLimit: null, // unlimited draft generations
     teamSeats: 1,
     hasAdvancedAnalytics: false,
     hasPrioritySupport: false,
@@ -585,8 +588,8 @@ export const subscriptionPlansData = [
     isPopular: false,
   },
   {
-    stripePriceId: 'price_creator_monthly', // This would be actual Stripe price ID
-    stripeProductId: 'prod_creator_plan', // This would be actual Stripe product ID
+    stripePriceId: 'price_creator_monthly', // Will be updated after running setup:stripe-plans
+    stripeProductId: 'prod_creator_plan', // Will be updated after running setup:stripe-plans
     name: 'creator',
     displayName: 'Creator',
     description: 'Most popular - Perfect for serious content creators',
@@ -594,8 +597,8 @@ export const subscriptionPlansData = [
     currency: 'usd',
     interval: 'month',
     intervalCount: 1,
-    proGenerationsLimit: 200,
-    draftGenerationsLimit: null, // unlimited
+    proGenerationsLimit: 300, // 300 hooks/month
+    draftGenerationsLimit: null, // unlimited draft generations
     teamSeats: 1,
     hasAdvancedAnalytics: false,
     hasPrioritySupport: false,
@@ -604,8 +607,8 @@ export const subscriptionPlansData = [
     isPopular: true,
   },
   {
-    stripePriceId: 'price_pro_monthly', // This would be actual Stripe price ID
-    stripeProductId: 'prod_pro_plan', // This would be actual Stripe product ID
+    stripePriceId: 'price_pro_monthly', // Will be updated after running setup:stripe-plans
+    stripeProductId: 'prod_pro_plan', // Will be updated after running setup:stripe-plans
     name: 'pro',
     displayName: 'Pro',
     description: 'Advanced features for power users and agencies',
@@ -613,8 +616,8 @@ export const subscriptionPlansData = [
     currency: 'usd',
     interval: 'month',
     intervalCount: 1,
-    proGenerationsLimit: 400,
-    draftGenerationsLimit: null, // unlimited
+    proGenerationsLimit: 1000, // 1000 hooks/month
+    draftGenerationsLimit: null, // unlimited draft generations
     teamSeats: 1,
     hasAdvancedAnalytics: true,
     hasPrioritySupport: false,
@@ -623,8 +626,8 @@ export const subscriptionPlansData = [
     isPopular: false,
   },
   {
-    stripePriceId: 'price_teams_monthly', // This would be actual Stripe price ID
-    stripeProductId: 'prod_teams_plan', // This would be actual Stripe product ID
+    stripePriceId: 'price_teams_monthly', // Will be updated after running setup:stripe-plans
+    stripeProductId: 'prod_teams_plan', // Will be updated after running setup:stripe-plans
     name: 'teams',
     displayName: 'Teams',
     description: 'Perfect for teams and agencies with collaboration features',
@@ -632,8 +635,8 @@ export const subscriptionPlansData = [
     currency: 'usd',
     interval: 'month',
     intervalCount: 1,
-    proGenerationsLimit: 1500, // pooled across team
-    draftGenerationsLimit: null, // unlimited
+    proGenerationsLimit: null, // Unlimited hooks for teams plan
+    draftGenerationsLimit: null, // unlimited draft generations
     teamSeats: 3,
     hasAdvancedAnalytics: true,
     hasPrioritySupport: true,

@@ -85,7 +85,7 @@ export class StripeWebhookService {
     } catch (error) {
       logger.error(`Failed to process webhook event: ${event.type}`, { 
         eventId: event.id, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       
       // Update event with processing error
@@ -122,7 +122,7 @@ export class StripeWebhookService {
           stripeSubscriptionId: subscription.id,
           subscriptionStatus: subscription.status as SubscriptionStatus,
           subscriptionPlan: planName as SubscriptionPlanName,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
           isPremium: subscription.status === 'active' || subscription.status === 'trialing',
           updatedAt: sql`NOW()`
@@ -167,7 +167,7 @@ export class StripeWebhookService {
         .set({
           subscriptionStatus: subscription.status as SubscriptionStatus,
           subscriptionPlan: planName as SubscriptionPlanName,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
           cancelAtPeriodEnd: subscription.cancel_at_period_end,
           isPremium,
           updatedAt: sql`NOW()`
@@ -263,19 +263,19 @@ export class StripeWebhookService {
       // Record payment in history
       await db.insert(paymentHistory).values({
         userId: user.id,
-        stripeInvoiceId: invoice.id,
-        stripeSubscriptionId: invoice.subscription as string,
+        stripeInvoiceId: invoice.id || null,
+        stripeSubscriptionId: (invoice as any).subscription as string,
         amount: invoice.amount_paid,
         currency: invoice.currency,
         status: 'succeeded',
-        paymentMethod: invoice.payment_intent ? 'card' : 'unknown',
+        paymentMethod: (invoice as any).payment_intent ? 'card' : 'unknown',
         description: invoice.description || `Payment for subscription`,
-        receiptUrl: invoice.hosted_invoice_url || undefined,
+        receiptUrl: invoice.hosted_invoice_url || null,
         paidAt: new Date(invoice.status_transitions.paid_at! * 1000),
       })
 
       // If this is a subscription renewal, reset usage tracking
-      if (invoice.subscription && (invoice as any).billing_reason === 'subscription_cycle') {
+      if ((invoice as any).subscription && (invoice as any).billing_reason === 'subscription_cycle') {
         await this.resetUsageForBillingCycle(user.id)
       }
 
@@ -308,8 +308,8 @@ export class StripeWebhookService {
       // Record failed payment in history
       await db.insert(paymentHistory).values({
         userId: user.id,
-        stripeInvoiceId: invoice.id,
-        stripeSubscriptionId: invoice.subscription as string,
+        stripeInvoiceId: invoice.id || null,
+        stripeSubscriptionId: (invoice as any).subscription as string,
         amount: invoice.amount_due,
         currency: invoice.currency,
         status: 'failed',
@@ -373,7 +373,7 @@ export class StripeWebhookService {
       }
 
       if (Object.keys(updates).length > 0) {
-        updates.updatedAt = sql`NOW()`
+        updates.updatedAt = new Date()
         await db
           .update(users)
           .set(updates)
@@ -490,7 +490,7 @@ export class StripeWebhookService {
       logger.error('Failed to store webhook event', { 
         eventId: event.id, 
         type: event.type,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
     }
   }

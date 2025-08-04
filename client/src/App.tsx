@@ -11,9 +11,10 @@ import { queryClient } from '@/lib/react-query'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Toaster } from '@/components/ui/Toaster'
 import { MobileLayout } from '@/components/mobile'
+import { ProtectedRoute, PublicRoute, OnboardingRoute } from '@/components/routing/ProtectedRoute'
+import { RootRedirect } from '@/components/routing/RootRedirect'
 
 // Pages
-import LandingPage from '@/pages/LandingPage'
 import AuthPage from '@/pages/AuthPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import MainAppPage from '@/pages/MainAppPage'
@@ -22,10 +23,13 @@ import HistoryPage from '@/pages/HistoryPage'
 import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
-import FeaturesPage from '@/pages/FeaturesPage'
-import AboutPage from '@/pages/AboutPage'
-import ContactPage from '@/pages/ContactPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+
+// Marketing pages (kept for reference, not used in routing)
+// import LandingPage from '@/pages/LandingPage'
+// import FeaturesPage from '@/pages/FeaturesPage'
+// import AboutPage from '@/pages/AboutPage'
+// import ContactPage from '@/pages/ContactPage'
 
 function App() {
   return (
@@ -36,23 +40,64 @@ function App() {
             <Router>
               <MobileLayout>
                 <Switch>
-                  {/* Public Routes */}
-                  <Route path="/" component={LandingPage} />
-                  <Route path="/features" component={FeaturesPage} />
-                  <Route path="/pricing" component={PricingPage} />
-                  <Route path="/about" component={AboutPage} />
-                  <Route path="/contact" component={ContactPage} />
+                  {/* Root Route - Redirects based on auth status */}
+                  <Route path="/" component={RootRedirect} />
                   
-                  {/* Authentication Routes */}
-                  <Route path="/auth" component={AuthPage} />
-                  <Route path="/onboarding" component={OnboardingPage} />
+                  {/* Public Routes */}
+                  <Route path="/auth">
+                    <PublicRoute redirectIfAuthenticated={true} redirectTo="/app">
+                      <AuthPage />
+                    </PublicRoute>
+                  </Route>
+                  
+                  <Route path="/pricing">
+                    <PublicRoute>
+                      <PricingPage />
+                    </PublicRoute>
+                  </Route>
+                  
+                  {/* Onboarding Route */}
+                  <Route path="/onboarding">
+                    <OnboardingRoute>
+                      <OnboardingPage />
+                    </OnboardingRoute>
+                  </Route>
                   
                   {/* Protected App Routes */}
-                  <Route path="/app" component={MainAppPage} />
-                  <Route path="/favorites" component={FavoritesPage} />
-                  <Route path="/history" component={HistoryPage} />
-                  <Route path="/profile" component={ProfilePage} />
-                  <Route path="/billing" component={BillingPage} />
+                  <Route path="/app">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <MainAppPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/favorites">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <FavoritesPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/history">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <HistoryPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/profile">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/billing">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <BillingPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  {/* Redirect old marketing URLs to auth */}
+                  <Route path="/features" component={RootRedirect} />
+                  <Route path="/about" component={RootRedirect} />
+                  <Route path="/contact" component={RootRedirect} />
                   
                   {/* 404 Route */}
                   <Route component={NotFoundPage} />
