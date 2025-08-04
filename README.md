@@ -277,4 +277,4 @@ For technical support or questions:
 ---
 
 **Hook Line Studio** - Transform your content strategy with AI-powered psychological frameworks.
-EOF < /dev/null
+EOF < /dev/null# Deployment Trigger - Mon  4 Aug 2025 22:26:58 BST
