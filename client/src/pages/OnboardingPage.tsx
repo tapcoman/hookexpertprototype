@@ -2,13 +2,13 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation } from 'wouter'
 import { useMutation } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContext'
+import { } from '@/contexts/AuthContext'
 import { useNotifications } from '@/contexts/AppContext'
 import { OnboardingRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
-import type { OnboardingData, UserRole, Industry, Voice, SafetyMode, Platform, Objective } from '@/shared/types'
+import type { OnboardingData, UserRole, Industry, Voice, SafetyMode, Platform, Objective } from '../../shared/types'
 
 // ==================== TYPES ====================
 
@@ -402,7 +402,7 @@ const Step3WhatYouMake: React.FC<StepProps> = ({ data, onChange, onNext, onBack,
                     if (e.target.checked) {
                       onChange({ primaryPlatforms: [...platforms, platform.value] })
                     } else {
-                      onChange({ primaryPlatforms: platforms.filter(p => p !== platform.value) })
+                      onChange({ primaryPlatforms: platforms.filter((p: any) => p !== platform.value) })
                     }
                   }}
                   className="mt-1"
@@ -444,7 +444,7 @@ const Step3WhatYouMake: React.FC<StepProps> = ({ data, onChange, onNext, onBack,
                     if (e.target.checked && goals.length < 3) {
                       onChange({ contentGoals: [...goals, objective.value] })
                     } else if (!e.target.checked) {
-                      onChange({ contentGoals: goals.filter(g => g !== objective.value) })
+                      onChange({ contentGoals: goals.filter((g: any) => g !== objective.value) })
                     }
                   }}
                   disabled={data.contentGoals && data.contentGoals.length >= 3 && !data.contentGoals.includes(objective.value)}
@@ -527,7 +527,7 @@ const OnboardingPageContent: React.FC = () => {
   })
 
   const handleDataChange = (newData: Partial<OnboardingData>) => {
-    setFormData(prev => ({ ...prev, ...newData }))
+    setFormData((prev: any) => ({ ...prev, ...newData }))
   }
 
   const handleNext = () => {

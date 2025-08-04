@@ -1,14 +1,13 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useGenerationState, useNotifications } from '@/contexts/AppContext'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { HookGenerationLoading, LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
-import { queryKeys } from '@/lib/react-query'
-import type { GenerateHooksRequest, Platform, Objective } from '@/shared/types'
+import type { GenerateHooksRequest, Platform, Objective } from '../../shared/types'
 
 // ==================== HOOK GENERATION FORM ====================
 
@@ -99,7 +98,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                   name="platform"
                   value={platform.value}
                   checked={formData.platform === platform.value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value as Platform }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, platform: e.target.value as Platform }))}
                   className="sr-only"
                 />
                 <div className="font-medium text-foreground mb-1">{platform.label}</div>
@@ -129,7 +128,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                   name="objective"
                   value={objective.value}
                   checked={formData.objective === objective.value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, objective: e.target.value as Objective }))}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, objective: e.target.value as Objective }))}
                   className="sr-only"
                 />
                 <div className="font-medium text-foreground text-sm mb-1">{objective.label}</div>
@@ -146,7 +145,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
           </label>
           <textarea
             value={formData.topic}
-            onChange={(e) => setFormData(prev => ({ ...prev, topic: e.target.value }))}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, topic: e.target.value }))}
             placeholder="Describe what your content is about... (e.g., 'How to increase productivity using AI tools for remote work')"
             rows={4}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
@@ -171,7 +170,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
           </label>
           <select
             value={formData.modelType}
-            onChange={(e) => setFormData(prev => ({ ...prev, modelType: e.target.value as 'gpt-4o' | 'gpt-4o-mini' }))}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, modelType: e.target.value as 'gpt-4o' | 'gpt-4o-mini' }))}
             className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>

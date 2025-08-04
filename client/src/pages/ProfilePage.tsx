@@ -6,7 +6,7 @@ import { useNotifications } from '@/contexts/AppContext'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import type { UserProfile } from '@/shared/types'
+import type { UserProfile } from '../../shared/types'
 
 const ProfilePageContent: React.FC = () => {
   const { user, updateProfile, updatePassword } = useAuth()

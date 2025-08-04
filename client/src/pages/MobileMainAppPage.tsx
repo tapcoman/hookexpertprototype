@@ -13,12 +13,12 @@ import {
 } from '@/components/mobile'
 import { api } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
-import type { GenerateHooksRequest } from '@/shared/types'
+import type { GenerateHooksRequest } from '../../shared/types'
 
 type ViewState = 'form' | 'loading' | 'results'
 
 const MobileMainAppPageContent: React.FC = () => {
-  const { user } = useAuth()
+  const { } = useAuth()
   const { currentGeneration, setCurrentGeneration, addRecentGeneration } = useGenerationState()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
   const { toast } = useToast()
@@ -87,7 +87,7 @@ const MobileMainAppPageContent: React.FC = () => {
     }
   }
 
-  const handleCopy = (hook: string, index: number) => {
+  const handleCopy = (_hook: string, _index: number) => {
     toast({
       title: "Copied!",
       description: "Hook copied to clipboard",
@@ -95,7 +95,7 @@ const MobileMainAppPageContent: React.FC = () => {
     })
   }
 
-  const handleShare = async (hook: any, index: number) => {
+  const handleShare = async (hook: any, _index: number) => {
     try {
       if (navigator.share) {
         await navigator.share({

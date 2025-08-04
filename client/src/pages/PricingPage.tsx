@@ -11,7 +11,7 @@ import { Check } from 'lucide-react'
 
 const PricingPageContent: React.FC = () => {
   const { user } = useAuth()
-  const { showSuccessNotification, showErrorNotification } = useNotifications()
+  const { showErrorNotification } = useNotifications()
 
   const { data: plans, isLoading } = useQuery({
     queryKey: queryKeys.subscriptionPlans(),
