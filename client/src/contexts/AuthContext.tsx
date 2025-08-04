@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { firebaseAuth } from '@/lib/firebase'
 import { api, setAuthToken } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
-import type { UserProfile } from '@/shared/types'
+import type { UserProfile } from '@/types/shared'
 
 // ==================== TYPES ====================
 

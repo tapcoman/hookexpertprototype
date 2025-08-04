@@ -9,7 +9,6 @@ import {
   TrendingUp,
   Brain,
   AlertTriangle,
-  SwipeIcon,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
@@ -23,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/DropdownMenu'
-import type { HookObject } from '../../../shared/types'
+import type { HookObject } from '@/types/shared'
 import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 
@@ -43,7 +42,7 @@ interface MobileHookCardProps {
 const MobileHookCard: React.FC<MobileHookCardProps> = ({
   hook,
   platform,
-  objective,
+  objective: _objective,
   index,
   isFavorite = false,
   onFavoriteToggle,

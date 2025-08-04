@@ -221,10 +221,12 @@ class Analytics {
       this.trackError({
         errorMessage: event.message,
         errorStack: event.error?.stack,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        type: 'js_error'
+        url: event.filename,
+        type: 'js_error',
+        additionalContext: {
+          lineno: event.lineno,
+          colno: event.colno
+        }
       })
     })
 

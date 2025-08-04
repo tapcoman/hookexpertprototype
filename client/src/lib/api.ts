@@ -11,7 +11,7 @@ import type {
   CreateCheckoutSession,
   BillingPortalSession,
   AnalyticsEvent
-} from '@/shared/types'
+} from '@/types/shared'
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'

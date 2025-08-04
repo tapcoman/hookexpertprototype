@@ -13,7 +13,7 @@ import {
 } from '@/components/mobile'
 import { api } from '@/lib/api'
 import { useToast } from '@/hooks/useToast'
-import type { GenerateHooksRequest } from '../../shared/types'
+import type { GenerateHooksRequest } from '@/types/shared'
 
 type ViewState = 'form' | 'loading' | 'results'
 

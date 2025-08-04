@@ -87,15 +87,17 @@ export const useSwipeGestures = (handlers: SwipeHandlers, elementRef?: React.Ref
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
   const threshold = handlers.threshold || 50
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    const touch = e.touches[0]
+  const handleTouchStart = useCallback((e: Event) => {
+    const touchEvent = e as TouchEvent
+    const touch = touchEvent.touches[0]
     setTouchStart({ x: touch.clientX, y: touch.clientY })
   }, [])
 
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
+  const handleTouchEnd = useCallback((e: Event) => {
     if (!touchStart) return
 
-    const touch = e.changedTouches[0]
+    const touchEvent = e as TouchEvent
+    const touch = touchEvent.changedTouches[0]
     const deltaX = touch.clientX - touchStart.x
     const deltaY = touch.clientY - touchStart.y
 
@@ -192,9 +194,8 @@ export const usePullToRefresh = (onRefresh: () => Promise<void>, threshold = 100
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const handleTouchStart = useCallback((e: TouchEvent) => {
+  const handleTouchStart = useCallback((_e: TouchEvent) => {
     if (window.scrollY === 0) {
-      const touch = e.touches[0]
       setPullDistance(0)
       setIsPulling(true)
     }

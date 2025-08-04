@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Filter, 
+ 
   SortAsc, 
   SortDesc, 
   Grid, 
@@ -11,7 +11,6 @@ import {
   Zap
 } from 'lucide-react'
 import { Button } from '../ui/Button'
-import { Badge } from '../ui/Badge'
 import {
   Select,
   SelectContent,
@@ -27,7 +26,7 @@ import {
 } from '../ui/Tabs'
 import HookCard from './HookCard'
 import TriModalHookResults from './TriModalHookResults'
-import type { HookObject } from '../../../shared/types'
+import type { HookObject } from '@/types/shared'
 import { cn } from '../../lib/utils'
 
 interface HookResultsProps {

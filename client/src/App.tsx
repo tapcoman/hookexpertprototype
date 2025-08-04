@@ -1,4 +1,3 @@
-import React from 'react'
 import { Router, Route, Switch } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -70,4 +69,3 @@ function App() {
 }
 
 export default App
-EOF < /dev/null

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/Select'
-import type { OnboardingData, Industry, UserRole } from '../../../shared/types'
+import type { OnboardingData, Industry, UserRole } from '@/types/shared'
 import { cn } from '../../lib/utils'
 
 const OnboardingStep1: React.FC = () => {

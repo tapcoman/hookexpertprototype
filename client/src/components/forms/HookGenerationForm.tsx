@@ -14,19 +14,11 @@ import {
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
-import { Input } from '../ui/Input'
 import { Textarea } from '../ui/Textarea'
 import { Label } from '../ui/Label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/Select'
 import { Badge } from '../ui/Badge'
 import { Progress } from '../ui/Progress'
-import type { Platform, Objective, ModelType } from '../../../shared/types'
+import type { Platform, Objective, ModelType } from '@/types/shared'
 import { cn, formatPlatformName, getObjectiveLabel } from '../../lib/utils'
 
 const formSchema = z.object({
@@ -69,7 +61,6 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
   })
 
   const watchedValues = watch()
-  const topic = watch('topic', '')
 
   const platforms = [
     { 

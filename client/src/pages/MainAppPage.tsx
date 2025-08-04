@@ -7,7 +7,7 @@ import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { HookGenerationLoading, LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
-import type { GenerateHooksRequest, Platform, Objective } from '../../shared/types'
+import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
 // ==================== HOOK GENERATION FORM ====================
 

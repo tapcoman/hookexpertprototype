@@ -18,7 +18,7 @@ import { Progress } from '../ui/Progress'
 import { useToast } from '../../hooks/useToast'
 import { useAuth } from '../../contexts/AuthContext'
 import { cn } from '../../lib/utils'
-import type { GenerateHooksRequest, Platform, Objective } from '../../../shared/types'
+import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
 interface MobileHookGenerationFormProps {
   onGenerate: (data: GenerateHooksRequest) => void

@@ -21,7 +21,7 @@ const AuthPageContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   
   const [, setLocation] = useLocation()
-  const { signIn, signUp, signInWithGoogle, resetPassword, clearError, error } = useAuth()
+  const { signIn, signUp, signInWithGoogle, resetPassword, clearError } = useAuth()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
 
   // ==================== FORM HANDLERS ====================

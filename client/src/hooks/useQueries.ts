@@ -8,7 +8,7 @@ import type {
   UserProfile,
   CreateCheckoutSession,
   BillingPortalSession
-} from '@/shared/types'
+} from '@/types/shared'
 
 // ==================== USER QUERIES ====================
 

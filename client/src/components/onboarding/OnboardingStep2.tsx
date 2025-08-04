@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '../ui/Select'
 import { Badge } from '../ui/Badge'
-import type { OnboardingData, Voice, SafetyMode } from '../../../shared/types'
+import type { OnboardingData, Voice, SafetyMode } from '@/types/shared'
 import { cn } from '../../lib/utils'
 
 const OnboardingStep2: React.FC = () => {

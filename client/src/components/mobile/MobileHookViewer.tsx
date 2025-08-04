@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, PanInfo, useAnimation } from 'framer-motion'
 import { 
   ChevronLeft, 
@@ -24,7 +24,7 @@ import {
 } from '../ui/DropdownMenu'
 import { useToast } from '../../hooks/useToast'
 import { cn } from '../../lib/utils'
-import type { HookObject } from '../../../shared/types'
+import type { HookObject } from '@/types/shared'
 
 interface MobileHookViewerProps {
   hooks: HookObject[]
@@ -42,7 +42,7 @@ interface MobileHookViewerProps {
 const MobileHookViewer: React.FC<MobileHookViewerProps> = ({
   hooks,
   platform,
-  objective,
+  objective: _objective,
   onFavoriteToggle,
   onCopy,
   onShare,
@@ -60,7 +60,7 @@ const MobileHookViewer: React.FC<MobileHookViewerProps> = ({
 
   const currentHook = hooks[currentIndex]
 
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = (_event: any, info: PanInfo) => {
     const threshold = 100
     const swipeVelocity = 500
 

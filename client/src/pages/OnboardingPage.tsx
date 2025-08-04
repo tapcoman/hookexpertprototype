@@ -8,7 +8,7 @@ import { OnboardingRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
-import type { OnboardingData, UserRole, Industry, Voice, SafetyMode, Platform, Objective } from '../../shared/types'
+import type { OnboardingData, UserRole, Industry, Voice, SafetyMode, Platform, Objective } from '@/types/shared'
 
 // ==================== TYPES ====================
 

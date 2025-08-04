@@ -9,7 +9,7 @@ import { Progress } from '../ui/Progress'
 import OnboardingStep1 from './OnboardingStep1'
 import OnboardingStep2 from './OnboardingStep2'
 import OnboardingStep3 from './OnboardingStep3'
-import { OnboardingDataSchema, type OnboardingData } from '../../../shared/types'
+import { OnboardingDataSchema, type OnboardingData } from '@/types/shared'
 import { cn } from '../../lib/utils'
 
 interface OnboardingFlowProps {

@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
 import { Progress } from '../ui/Progress'
-import type { HookObject } from '../../../shared/types'
+import type { HookObject } from '@/types/shared'
 import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 
@@ -31,7 +31,7 @@ interface TriModalHookResultsProps {
 const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
   hooks,
   platform,
-  objective,
+  objective: _objective,
   onFavoriteToggle,
   onCopyHook,
   favoriteIds = new Set(),

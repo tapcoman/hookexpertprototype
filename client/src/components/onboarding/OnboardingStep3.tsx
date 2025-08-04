@@ -16,7 +16,7 @@ import { Button } from '../ui/Button'
 import { Textarea } from '../ui/Textarea'
 import { Label } from '../ui/Label'
 import { Badge } from '../ui/Badge'
-import type { OnboardingData, Platform, Objective } from '../../../shared/types'
+import type { OnboardingData, Platform, Objective } from '@/types/shared'
 import { cn, formatPlatformName, getObjectiveLabel } from '../../lib/utils'
 
 const OnboardingStep3: React.FC = () => {

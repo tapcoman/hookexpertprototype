@@ -70,4 +70,3 @@ const LandingPage: React.FC = () => {
 }
 
 export default LandingPage
-EOF < /dev/null

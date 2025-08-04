@@ -9,7 +9,6 @@ import {
   TrendingUp,
   Brain,
   AlertTriangle,
-  Zap
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
@@ -21,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/DropdownMenu'
-import type { HookObject } from '../../../shared/types'
+import type { HookObject } from '@/types/shared'
 import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 
@@ -39,7 +38,7 @@ interface HookCardProps {
 const HookCard: React.FC<HookCardProps> = ({
   hook,
   platform,
-  objective,
+  objective: _objective,
   showDetails = true,
   isFavorite = false,
   onFavoriteToggle,

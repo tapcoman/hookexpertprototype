@@ -169,4 +169,3 @@ export function calculateUsagePercentage(used: number, limit: number | null): nu
 export function isValidHookTopic(topic: string): boolean {
   return topic.length >= 10 && topic.length <= 1000
 }
-EOF < /dev/null

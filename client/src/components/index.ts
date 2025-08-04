@@ -29,8 +29,8 @@ export { default as MobileHookCard } from './mobile/MobileHookCard'
 export { default as MobileBottomNav } from './mobile/MobileBottomNav'
 
 // Utility Components
-export { default as LoadingSpinner } from './ui/LoadingSpinner'
-export { default as ErrorBoundary } from './ui/ErrorBoundary'
+export { LoadingSpinner } from './ui/LoadingSpinner'
+export { ErrorBoundary } from './ui/ErrorBoundary'
 
 // Routing Components
-export { default as ProtectedRoute } from './routing/ProtectedRoute'
+export { ProtectedRoute } from './routing/ProtectedRoute'

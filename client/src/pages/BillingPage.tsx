@@ -8,7 +8,7 @@ import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
-import { CreditCard, Calendar, DollarSign, FileText } from 'lucide-react'
+import { CreditCard, DollarSign, FileText } from 'lucide-react'
 
 const BillingPageContent: React.FC = () => {
   const { user } = useAuth()
