@@ -117,27 +117,31 @@ const LandingPage: React.FC = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-white via-gray-50/30 to-blue-50/50 relative overflow-hidden"
       variants={getReducedMotionVariants(pageVariants)}
       initial="initial"
       animate="animate"
     >
+      {/* Premium background elements */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-primary/5 to-teal-bright/5 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-r from-electric-blue/5 to-coral-red/3 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
       <FloatingParticles />
       
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-16 pt-24 lg:pt-32">
-        {/* Dynamic background gradient */}
+      {/* Premium Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-20 pt-32 lg:pt-40">
+        {/* Sophisticated background gradient */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-purple-500/5"
+          className="absolute inset-0 bg-gradient-to-br from-primary/3 via-teal-bright/2 to-electric-blue/3"
           animate={{
             background: [
-              "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 50%, rgba(139, 92, 246, 0.05) 100%)",
-              "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 50%, rgba(6, 182, 212, 0.05) 100%)",
-              "linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(139, 92, 246, 0.05) 50%, rgba(59, 130, 246, 0.05) 100%)",
+              "linear-gradient(135deg, rgba(5, 112, 222, 0.03) 0%, rgba(38, 210, 239, 0.02) 50%, rgba(0, 123, 255, 0.03) 100%)",
+              "linear-gradient(135deg, rgba(0, 123, 255, 0.03) 0%, rgba(5, 112, 222, 0.02) 50%, rgba(38, 210, 239, 0.03) 100%)",
+              "linear-gradient(135deg, rgba(38, 210, 239, 0.03) 0%, rgba(0, 123, 255, 0.02) 50%, rgba(5, 112, 222, 0.03) 100%)",
             ],
           }}
           transition={{
-            duration: 20,
+            duration: 30,
             ease: "linear",
             repeat: Infinity,
           }}
@@ -306,26 +310,27 @@ const LandingPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="relative py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
+      {/* Premium Social Proof Section */}
+      <section className="relative py-32 px-4 bg-gradient-to-br from-gray-50/50 via-white to-blue-50/30">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+        <div className="max-w-7xl mx-auto relative">
           <motion.div
-            className="text-center mb-16"
+            className="text-center mb-20"
             variants={staggerVariants}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true, margin: "-100px" }}
           >
             <motion.h2
-              className="text-3xl md:text-4xl font-bold mb-8 text-gray-900"
+              className="font-display text-4xl md:text-5xl lg:text-6xl font-black mb-8 text-gradient-primary"
               variants={itemVariants}
             >
               Trusted by Leading Content Creators
             </motion.h2>
             
-            {/* Stats */}
+            {/* Premium Stats */}
             <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16"
+              className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20"
               variants={staggerVariants}
             >
               {[
@@ -336,20 +341,21 @@ const LandingPage: React.FC = () => {
               ].map((stat) => (
                 <motion.div
                   key={stat.label}
-                  className="text-center"
+                  className="glass-card text-center group cursor-pointer"
                   variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.02, y: -8 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                    <stat.icon className="w-8 h-8 text-white" />
+                  <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-primary to-teal-bright rounded-3xl flex items-center justify-center shadow-premium group-hover:shadow-premium-lg transition-all duration-300">
+                    <stat.icon className="w-10 h-10 text-white" />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
-                  <div className="text-gray-600 font-medium">{stat.label}</div>
+                  <div className="text-4xl md:text-5xl font-black text-gray-900 mb-3 font-display">{stat.number}</div>
+                  <div className="text-gray-600 font-semibold">{stat.label}</div>
                 </motion.div>
               ))}
             </motion.div>
             
-            {/* Testimonials */}
+            {/* Premium Testimonials */}
             <motion.div
               className="grid md:grid-cols-3 gap-8"
               variants={staggerVariants}
@@ -359,42 +365,58 @@ const LandingPage: React.FC = () => {
                   quote: "Hook Line Studio transformed my content strategy. My engagement increased by 300% in just 2 weeks!",
                   author: "Sarah Chen",
                   role: "TikTok Creator (2.1M followers)",
-                  avatar: "SC"
+                  avatar: "SC",
+                  gradient: "from-primary to-teal-bright"
                 },
                 {
                   quote: "The psychological frameworks are game-changing. Every hook feels scientifically crafted to capture attention.",
                   author: "Marcus Rodriguez",
                   role: "YouTube Content Creator",
-                  avatar: "MR"
+                  avatar: "MR",
+                  gradient: "from-electric-blue to-coral-red"
                 },
                 {
                   quote: "From 10K to 500K followers in 6 months. This tool is the secret weapon every creator needs.",
                   author: "Emma Thompson",
                   role: "Instagram Influencer",
-                  avatar: "ET"
+                  avatar: "ET",
+                  gradient: "from-teal-bright to-golden-yellow"
                 }
               ].map((testimonial, index) => (
                 <motion.div
                   key={index}
-                  className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg border border-gray-100"
+                  className="glass-card group relative overflow-hidden"
                   variants={itemVariants}
-                  whileHover={{ y: -5, shadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                  whileHover={{ 
+                    y: -8, 
+                    transition: { type: "spring", stiffness: 400, damping: 25 }
+                  }}
                 >
+                  {/* Premium glow effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-r ${testimonial.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-3xl`} />
+                  
                   <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                    <div className={`w-14 h-14 bg-gradient-to-r ${testimonial.gradient} rounded-2xl flex items-center justify-center text-white font-bold mr-4 shadow-premium`}>
                       {testimonial.avatar}
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{testimonial.author}</div>
-                      <div className="text-sm text-gray-600">{testimonial.role}</div>
+                      <div className="font-semibold text-gray-900 text-lg">{testimonial.author}</div>
+                      <div className="text-sm text-gray-600 font-medium">{testimonial.role}</div>
                     </div>
                   </div>
-                  <p className="text-gray-700 italic leading-relaxed">"{testimonial.quote}"</p>
-                  <div className="flex text-yellow-400 mt-4">
+                  <p className="text-gray-700 leading-relaxed text-base mb-6 font-medium">"{testimonial.quote}"</p>
+                  <div className="flex text-golden-yellow">
                     {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                      <motion.svg 
+                        key={i} 
+                        className="w-5 h-5 fill-current" 
+                        viewBox="0 0 20 20"
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 1.5 + index * 0.2 + i * 0.1, type: "spring", stiffness: 200 }}
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
+                      </motion.svg>
                     ))}
                   </div>
                 </motion.div>

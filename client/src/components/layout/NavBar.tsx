@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar'
+import { ThemeToggle } from '../ui/ThemeToggle'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,8 +184,9 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
             })}
           </div>
 
-          {/* CTA and User Menu */}
-          <div className="flex items-center space-x-4">
+          {/* Theme Toggle, CTA and User Menu */}
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

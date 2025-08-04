@@ -74,3 +74,4 @@ export {
 export { Avatar, AvatarImage, AvatarFallback } from './Avatar'
 export { Progress } from './Progress'
 export { Skeleton } from './Skeleton'
+export { ThemeToggle } from './ThemeToggle'
