@@ -41,6 +41,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "build"
+    "build",
+    "server/tests/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

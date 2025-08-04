@@ -184,7 +184,7 @@ const MobileMainAppPageContent: React.FC = () => {
                     💡 Tips for Better Hooks
                   </h3>
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>• Be specific: "5 AI tools" > "AI tools"</p>
+                    <p>• Be specific: "5 AI tools" &gt; "AI tools"</p>
                     <p>• Use numbers and timeframes</p>
                     <p>• Focus on benefits and outcomes</p>
                     <p>• Create curiosity and urgency</p>
