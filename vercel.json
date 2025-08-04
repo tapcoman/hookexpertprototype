@@ -3,7 +3,7 @@
   "name": "hook-line-studio",
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "client/dist",
-  "installCommand": "npm install --omit=dev",
+  "installCommand": "npm install",
   "functions": {
     "api/index.ts": {
       "maxDuration": 30,
