@@ -83,8 +83,7 @@
     "jest-environment-node": "^29.7.0",
     "supertest": "^6.3.4",
     "ts-jest": "^29.1.2",
-    "@playwright/test": "^1.44.1",
-    "stripe-mock": "^0.178.0"
+    "@playwright/test": "^1.44.1"
   },
   "engines": {
     "node": ">=18.0.0"
