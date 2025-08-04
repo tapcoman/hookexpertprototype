@@ -22,6 +22,9 @@ import HistoryPage from '@/pages/HistoryPage'
 import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
+import FeaturesPage from '@/pages/FeaturesPage'
+import AboutPage from '@/pages/AboutPage'
+import ContactPage from '@/pages/ContactPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 function App() {
@@ -35,7 +38,10 @@ function App() {
                 <Switch>
                   {/* Public Routes */}
                   <Route path="/" component={LandingPage} />
+                  <Route path="/features" component={FeaturesPage} />
                   <Route path="/pricing" component={PricingPage} />
+                  <Route path="/about" component={AboutPage} />
+                  <Route path="/contact" component={ContactPage} />
                   
                   {/* Authentication Routes */}
                   <Route path="/auth" component={AuthPage} />
