@@ -192,14 +192,15 @@ export const authApi = {
     }),
 
   // Refresh auth token (critical auth operation)
-  refreshToken: () =>
+  refreshToken: (firebaseToken: string) =>
     authApiFetch<{ token: string }>('/auth/refresh', {
       method: 'POST',
+      body: JSON.stringify({ firebaseToken }),
     }),
 
   // Sign out (use regular retry logic)
   signOut: () =>
-    apiFetch<void>('/auth/signout', {
+    apiFetch<void>('/auth/logout', {
       method: 'POST',
     }),
 

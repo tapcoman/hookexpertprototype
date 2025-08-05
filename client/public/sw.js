@@ -1,16 +1,16 @@
 // Hook Line Studio Service Worker for PWA functionality
-const CACHE_NAME = 'hook-line-studio-v1';
-const STATIC_CACHE_NAME = 'hook-line-studio-static-v1';
-const DYNAMIC_CACHE_NAME = 'hook-line-studio-dynamic-v1';
+const CACHE_NAME = 'hook-line-studio-v2';
+const STATIC_CACHE_NAME = 'hook-line-studio-static-v2';
+const DYNAMIC_CACHE_NAME = 'hook-line-studio-dynamic-v2';
 
-// Files to cache immediately
+// Files to cache immediately - only include files that actually exist
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-  // Add critical CSS/JS files here when generated
+  '/favicon.ico',
+  '/icons/icon-144x144.png',
+  // Critical CSS/JS files will be added dynamically from dist directory
 ];
 
 // Runtime caching patterns
@@ -44,20 +44,91 @@ self.addEventListener('install', (event) => {
   
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('[SW] Pre-caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        
+        // Cache assets individually with error handling for graceful degradation
+        const cachePromises = STATIC_ASSETS.map(async (asset) => {
+          try {
+            const response = await fetch(asset);
+            if (response.ok) {
+              await cache.put(asset, response);
+              console.log(`[SW] Cached: ${asset}`);
+            } else {
+              console.warn(`[SW] Failed to fetch (${response.status}): ${asset}`);
+            }
+          } catch (error) {
+            console.warn(`[SW] Error caching ${asset}:`, error.message);
+            // Continue installation even if individual assets fail
+          }
+        });
+        
+        // Wait for all cache attempts to complete
+        await Promise.allSettled(cachePromises);
+        
+        // Try to cache critical dist assets if they exist
+        try {
+          const distAssets = await findCriticalDistAssets();
+          for (const asset of distAssets) {
+            try {
+              const response = await fetch(asset);
+              if (response.ok) {
+                await cache.put(asset, response);
+                console.log(`[SW] Cached dist asset: ${asset}`);
+              }
+            } catch (error) {
+              console.warn(`[SW] Could not cache dist asset ${asset}:`, error.message);
+            }
+          }
+        } catch (error) {
+          console.warn('[SW] Could not load dist assets:', error.message);
+        }
       })
       .then(() => {
-        console.log('[SW] Installation complete');
+        console.log('[SW] Installation complete - service worker ready');
         // Skip waiting to activate immediately
         return self.skipWaiting();
       })
       .catch((error) => {
         console.error('[SW] Installation failed:', error);
+        // Still skip waiting to allow service worker to activate
+        // This ensures the SW is functional even if caching partially fails
+        return self.skipWaiting();
       })
   );
 });
+
+// Helper function to find critical dist assets
+async function findCriticalDistAssets() {
+  const criticalAssets = [];
+  
+  try {
+    // Try to fetch the main HTML to extract asset URLs
+    const htmlResponse = await fetch('/index.html');
+    if (htmlResponse.ok) {
+      const htmlText = await htmlResponse.text();
+      
+      // Extract CSS and JS file paths from HTML
+      const cssMatches = htmlText.match(/href="([^"]*\.css[^"]*)"/g) || [];
+      const jsMatches = htmlText.match(/src="([^"]*\.js[^"]*)"/g) || [];
+      
+      // Clean up the matches and add to critical assets
+      cssMatches.forEach(match => {
+        const path = match.match(/href="([^"]*)"/)[1];
+        if (path.startsWith('/')) criticalAssets.push(path);
+      });
+      
+      jsMatches.forEach(match => {
+        const path = match.match(/src="([^"]*)"/)[1];
+        if (path.startsWith('/') && !path.includes('main.tsx')) criticalAssets.push(path);
+      });
+    }
+  } catch (error) {
+    console.warn('[SW] Could not analyze HTML for dist assets:', error);
+  }
+  
+  return criticalAssets;
+}
 
 // Activation event
 self.addEventListener('activate', (event) => {
@@ -118,38 +189,61 @@ self.addEventListener('fetch', (event) => {
 
 // API request handler - Network first
 async function handleApiRequest(request) {
-  const cache = await caches.open(CACHE_STRATEGIES.api.cacheName);
-  
   try {
-    // Try network first
-    const networkResponse = await fetch(request);
+    const cache = await caches.open(CACHE_STRATEGIES.api.cacheName);
     
-    if (networkResponse.ok) {
-      // Cache successful API responses (except POST/PUT/DELETE)
-      if (request.method === 'GET') {
-        cache.put(request, networkResponse.clone());
+    try {
+      // Try network first
+      const networkResponse = await fetch(request);
+      
+      if (networkResponse.ok) {
+        // Cache successful API responses (except POST/PUT/DELETE)
+        if (request.method === 'GET') {
+          try {
+            await cache.put(request, networkResponse.clone());
+          } catch (cacheError) {
+            console.warn('[SW] Failed to cache API response:', request.url, cacheError.message);
+          }
+        }
       }
+      
+      return networkResponse;
+    } catch (networkError) {
+      console.log('[SW] API network failed, trying cache:', request.url, networkError.message);
+      
+      // Fallback to cache
+      try {
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+      } catch (cacheError) {
+        console.warn('[SW] Failed to read API cache:', request.url, cacheError.message);
+      }
+      
+      // Return offline response for API failures
+      return new Response(
+        JSON.stringify({ 
+          error: 'Offline', 
+          message: 'No network connection. Please try again when online.' 
+        }),
+        {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
     }
-    
-    return networkResponse;
   } catch (error) {
-    console.log('[SW] API network failed, trying cache:', request.url);
-    
-    // Fallback to cache
-    const cachedResponse = await cache.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // Return offline response for API failures
+    console.error('[SW] API handler error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Offline', 
-        message: 'No network connection. Please try again when online.' 
+        error: 'ServiceWorkerError', 
+        message: 'Service worker encountered an error. Please refresh the page.' 
       }),
       {
-        status: 503,
-        statusText: 'Service Unavailable',
+        status: 500,
+        statusText: 'Internal Server Error',
         headers: { 'Content-Type': 'application/json' }
       }
     );
@@ -158,44 +252,63 @@ async function handleApiRequest(request) {
 
 // Image request handler - Cache first
 async function handleImageRequest(request) {
-  const cache = await caches.open(CACHE_STRATEGIES.images.cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    const cache = await caches.open(CACHE_STRATEGIES.images.cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
     }
-    return networkResponse;
+    
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        // Safely attempt to cache the response
+        try {
+          await cache.put(request, networkResponse.clone());
+        } catch (cacheError) {
+          console.warn('[SW] Failed to cache image:', request.url, cacheError.message);
+        }
+      }
+      return networkResponse;
+    } catch (networkError) {
+      console.log('[SW] Image network failed:', request.url, networkError.message);
+      return new Response('', { status: 404 });
+    }
   } catch (error) {
-    console.log('[SW] Image load failed:', request.url);
-    // Return placeholder or error image
-    return new Response('', { status: 404 });
+    console.error('[SW] Image handler error:', error);
+    return new Response('', { status: 500 });
   }
 }
 
 // Font request handler - Cache first
 async function handleFontRequest(request) {
-  const cache = await caches.open(CACHE_STRATEGIES.fonts.cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    const cache = await caches.open(CACHE_STRATEGIES.fonts.cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
     }
-    return networkResponse;
+    
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        // Safely attempt to cache the response
+        try {
+          await cache.put(request, networkResponse.clone());
+        } catch (cacheError) {
+          console.warn('[SW] Failed to cache font:', request.url, cacheError.message);
+        }
+      }
+      return networkResponse;
+    } catch (networkError) {
+      console.log('[SW] Font network failed:', request.url, networkError.message);
+      return new Response('', { status: 404 });
+    }
   } catch (error) {
-    console.log('[SW] Font load failed:', request.url);
-    return new Response('', { status: 404 });
+    console.error('[SW] Font handler error:', error);
+    return new Response('', { status: 500 });
   }
 }
 
@@ -283,24 +396,49 @@ async function handleNavigationRequest(request) {
   }
 }
 
-// Static asset handler - Cache first
+// Static asset handler - Cache first with better error handling
 async function handleStaticRequest(request) {
-  const cache = await caches.open(STATIC_CACHE_NAME);
-  const cachedResponse = await cache.match(request);
-  
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
   try {
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone());
+    const cache = await caches.open(STATIC_CACHE_NAME);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
     }
-    return networkResponse;
+    
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        // Safely attempt to cache the response
+        try {
+          await cache.put(request, networkResponse.clone());
+        } catch (cacheError) {
+          console.warn('[SW] Failed to cache static asset:', request.url, cacheError.message);
+          // Continue even if caching fails
+        }
+      }
+      return networkResponse;
+    } catch (networkError) {
+      console.log('[SW] Static asset network failed:', request.url, networkError.message);
+      
+      // For critical assets, try to provide a meaningful fallback
+      if (request.url.includes('.css')) {
+        return new Response('/* Asset unavailable */', {
+          status: 200,
+          headers: { 'Content-Type': 'text/css' }
+        });
+      } else if (request.url.includes('.js')) {
+        return new Response('console.warn("Asset unavailable: ' + request.url + '");', {
+          status: 200,
+          headers: { 'Content-Type': 'application/javascript' }
+        });
+      }
+      
+      return new Response('', { status: 404 });
+    }
   } catch (error) {
-    console.log('[SW] Static asset load failed:', request.url);
-    return new Response('', { status: 404 });
+    console.error('[SW] Static asset handler error:', error);
+    return new Response('', { status: 500 });
   }
 }
 
@@ -373,6 +511,23 @@ self.addEventListener('message', (event) => {
           headers: { 'Content-Type': 'application/json' }
         })
       );
+    });
+  }
+  
+  if (event.data && event.data.type === 'GET_SW_STATUS') {
+    // Return service worker health status
+    event.ports[0].postMessage({
+      type: 'SW_STATUS_RESPONSE',
+      status: 'active',
+      cacheNames: {
+        static: STATIC_CACHE_NAME,
+        dynamic: DYNAMIC_CACHE_NAME,
+        api: CACHE_STRATEGIES.api.cacheName,
+        images: CACHE_STRATEGIES.images.cacheName,
+        fonts: CACHE_STRATEGIES.fonts.cacheName
+      },
+      staticAssets: STATIC_ASSETS,
+      timestamp: Date.now()
     });
   }
 });
