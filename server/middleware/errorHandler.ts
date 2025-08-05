@@ -54,9 +54,44 @@ export class RateLimitError extends AppError {
 }
 
 export class ExternalServiceError extends AppError {
-  constructor(service: string, message: string = 'External service error') {
+  public service: string
+  public canRetry: boolean
+  public retryAfter?: number
+
+  constructor(service: string, message: string = 'External service error', canRetry: boolean = true, retryAfter?: number) {
     super(`${service}: ${message}`, 502)
     this.name = 'ExternalServiceError'
+    this.service = service
+    this.canRetry = canRetry
+    this.retryAfter = retryAfter
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  public service: string
+  public canRetry: boolean
+  public retryAfter?: number
+
+  constructor(service: string, message: string = 'Service temporarily unavailable', retryAfter: number = 60) {
+    super(`${service} service: ${message}`, 503)
+    this.name = 'ServiceUnavailableError'
+    this.service = service
+    this.canRetry = true
+    this.retryAfter = retryAfter
+  }
+}
+
+export class DatabaseConnectionError extends AppError {
+  constructor(message: string = 'Database connection failed') {
+    super(message, 503)
+    this.name = 'DatabaseConnectionError'
+  }
+}
+
+export class TokenExpiredError extends AuthenticationError {
+  constructor(message: string = 'Authentication token has expired') {
+    super(message)
+    this.name = 'TokenExpiredError'
   }
 }
 
@@ -123,10 +158,80 @@ export function globalErrorHandler(
     })
   }
 
-  // Send error response
-  const response: APIResponse = {
+  // Create enhanced error response
+  const response: APIResponse & {
+    errorCode?: string
+    userMessage?: string
+    canRetry?: boolean
+    retryAfter?: number
+    actionRequired?: string[]
+  } = {
     success: false,
     error: message
+  }
+
+  // Add user-friendly error information
+  if (err instanceof AuthenticationError) {
+    response.errorCode = 'AUTHENTICATION_REQUIRED'
+    response.userMessage = 'Please sign in to access this resource.'
+    response.canRetry = false
+    response.actionRequired = ['Sign in to your account']
+  } else if (err instanceof AuthorizationError) {
+    response.errorCode = 'INSUFFICIENT_PERMISSIONS'
+    response.userMessage = 'You don\'t have permission to perform this action.'
+    response.canRetry = false
+    response.actionRequired = ['Contact support if you believe this is an error']
+  } else if (err instanceof ValidationError) {
+    response.errorCode = 'VALIDATION_ERROR'
+    response.userMessage = 'The information provided is invalid. Please check and try again.'
+    response.canRetry = true
+    response.actionRequired = ['Check your input and try again']
+  } else if (err instanceof RateLimitError) {
+    response.errorCode = 'RATE_LIMITED'
+    response.userMessage = 'Too many requests. Please wait before trying again.'
+    response.canRetry = true
+    response.retryAfter = 60
+    response.actionRequired = ['Wait a moment before trying again']
+  } else if (err instanceof ExternalServiceError) {
+    response.errorCode = 'EXTERNAL_SERVICE_ERROR'
+    response.userMessage = `${err.service} service is temporarily unavailable. Please try again.`
+    response.canRetry = err.canRetry
+    response.retryAfter = err.retryAfter
+    response.actionRequired = ['Try again in a few moments', 'Contact support if issue persists']
+  } else if (err instanceof ServiceUnavailableError) {
+    response.errorCode = 'SERVICE_UNAVAILABLE'
+    response.userMessage = `${err.service} is temporarily unavailable. Please try again later.`
+    response.canRetry = err.canRetry
+    response.retryAfter = err.retryAfter
+    response.actionRequired = ['Try again in a few minutes']
+  } else if (err instanceof DatabaseConnectionError) {
+    response.errorCode = 'DATABASE_CONNECTION'
+    response.userMessage = 'Our servers are experiencing database issues. Please try again shortly.'
+    response.canRetry = true
+    response.retryAfter = 30
+    response.actionRequired = ['Try again in a few minutes', 'Contact support if issue persists']
+  } else if (err instanceof TokenExpiredError) {
+    response.errorCode = 'TOKEN_EXPIRED'
+    response.userMessage = 'Your session has expired. Please sign in again.'
+    response.canRetry = false
+    response.actionRequired = ['Sign in again']
+  } else if (err instanceof NotFoundError) {
+    response.errorCode = 'NOT_FOUND'
+    response.userMessage = 'The requested resource was not found.'
+    response.canRetry = false
+    response.actionRequired = ['Check the URL and try again']
+  } else if (statusCode === 500) {
+    response.errorCode = 'INTERNAL_SERVER_ERROR'
+    response.userMessage = 'Something went wrong on our end. Please try again later.'
+    response.canRetry = true
+    response.retryAfter = 60
+    response.actionRequired = ['Try again later', 'Contact support if issue persists']
+  } else if (statusCode >= 500) {
+    response.errorCode = 'SERVER_ERROR'
+    response.userMessage = 'Our servers are experiencing issues. Please try again later.'
+    response.canRetry = true
+    response.retryAfter = 60
+    response.actionRequired = ['Try again later']
   }
 
   // Add additional error details in development
@@ -139,12 +244,16 @@ export function globalErrorHandler(
 
   // Add Zod validation details
   if (err instanceof z.ZodError) {
+    response.errorCode = 'VALIDATION_ERROR'
+    response.userMessage = 'The information provided is invalid. Please check and try again.'
+    response.canRetry = true
     response.data = {
       issues: err.issues.map(issue => ({
         field: issue.path.join('.'),
         message: issue.message
       }))
     }
+    response.actionRequired = ['Check the highlighted fields and try again']
   }
 
   res.status(statusCode).json(response)

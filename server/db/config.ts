@@ -80,14 +80,21 @@ export function createDatabaseConnection(config?: DatabaseConfig) {
     throw new Error('DATABASE_URL environment variable is required or provide connection config')
   }
   
-  // Create postgres client with configuration
+  // Create postgres client with enhanced configuration
   const client = postgres(connectionString, {
     max: finalConfig.max,
     idle_timeout: finalConfig.idle_timeout,
     connect_timeout: finalConfig.connect_timeout,
     ssl: finalConfig.ssl,
     onnotice: process.env.NODE_ENV === 'development' ? console.log : undefined,
-    debug: process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true'
+    debug: process.env.NODE_ENV === 'development' && process.env.DB_DEBUG === 'true',
+    // Enhanced error handling
+    onclose: function(connection_id) {
+      console.log(`Database connection ${connection_id} closed`)
+    },
+    onconnect: function(connection) {
+      console.log(`Database connection established`)
+    }
   })
   
   // Create drizzle instance
@@ -98,16 +105,40 @@ export function createDatabaseConnection(config?: DatabaseConfig) {
       await client.end()
     },
     async healthCheck() {
-      try {
-        await client`SELECT 1`
-        return { connected: true, timestamp: new Date().toISOString() }
-      } catch (error) {
-        return { 
-          connected: false, 
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
+      const maxRetries = 3
+      const retryDelay = 1000
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const start = Date.now()
+          await client`SELECT 1 as health_check`
+          const duration = Date.now() - start
+          
+          return { 
+            connected: true, 
+            timestamp: new Date().toISOString(),
+            responseTime: duration,
+            attempt,
+            connectionString: connectionString.replace(/:[^:]*@/, ':***@') // Hide password
+          }
+        } catch (error) {
+          if (attempt === maxRetries) {
+            return { 
+              connected: false, 
+              error: error instanceof Error ? error.message : 'Unknown error',
+              timestamp: new Date().toISOString(),
+              attempts: attempt,
+              connectionString: connectionString.replace(/:[^:]*@/, ':***@') // Hide password
+            }
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
         }
       }
+      
+      // This should never be reached, but TypeScript needs it
+      return { connected: false, error: 'Unexpected error', timestamp: new Date().toISOString() }
     }
   }
 }

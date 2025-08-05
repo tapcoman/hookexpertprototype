@@ -6,6 +6,10 @@ import dotenv from 'dotenv'
 
 // Import essential middleware
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { serviceStatusChecker } from './middleware/serviceAvailability.js'
+
+// Import startup validation
+import { validateEnvironmentAndServices } from './config/startup.js'
 
 // Import basic routes  
 import authRoutes from './routes/auth.js'
@@ -14,6 +18,21 @@ import userRoutes from './routes/users.js'
 
 // Load environment variables
 dotenv.config()
+
+// Perform startup validation
+let startupResult: any = null
+if (process.env.NODE_ENV !== 'test') {
+  startupResult = await validateEnvironmentAndServices()
+  
+  if (!startupResult.canStart) {
+    console.error('❌ Critical startup failures detected. Server cannot start.')
+    console.error('Critical failures:')
+    startupResult.criticalFailures.forEach((failure: string) => {
+      console.error(`  - ${failure}`)
+    })
+    process.exit(1)
+  }
+}
 
 // Create Express app
 const app = express()
@@ -36,38 +55,61 @@ app.use(compression())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Health check endpoint
+// Add service status middleware
+app.use(serviceStatusChecker)
+
+// Enhanced health check endpoint with actual service testing
 app.get('/api/health', async (req, res) => {
   try {
+    // Get fresh service statuses
+    const currentValidation = await validateEnvironmentAndServices()
+    
+    // Determine overall health
+    const criticalServicesDown = currentValidation.services
+      .filter(s => s.critical && s.status !== 'healthy').length
+    
+    const overallStatus = criticalServicesDown > 0 ? 'unhealthy' : 
+                         currentValidation.warnings.length > 0 ? 'degraded' : 'healthy'
+    
+    const statusCode = overallStatus === 'unhealthy' ? 503 : 
+                      overallStatus === 'degraded' ? 200 : 200
+
     const response = {
-      status: 'healthy',
+      status: overallStatus,
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       version: '2.0.0',
       serverless: Boolean(process.env.VERCEL),
-      services: {
-        database: 'healthy', // Simplified check
-        ai: process.env.OPENAI_API_KEY ? 'configured' : 'not_configured',
-        firebase: {
-          configured: Boolean(process.env.FIREBASE_PROJECT_ID),
-          initialized: true,
-          projectId: process.env.FIREBASE_PROJECT_ID
-        },
-        stripe: {
-          configured: Boolean(process.env.STRIPE_SECRET_KEY),
-          initialized: true,
-          webhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET)
+      canStart: currentValidation.canStart,
+      services: currentValidation.services.reduce((acc, service) => {
+        acc[service.name.toLowerCase().replace(/[^a-z0-9]/g, '_')] = {
+          status: service.status,
+          message: service.message,
+          critical: service.critical,
+          lastCheck: service.lastCheck,
+          details: service.details
         }
-      }
+        return acc
+      }, {} as any),
+      summary: {
+        total: currentValidation.services.length,
+        healthy: currentValidation.services.filter(s => s.status === 'healthy').length,
+        degraded: currentValidation.services.filter(s => s.status === 'degraded').length,
+        unavailable: currentValidation.services.filter(s => s.status === 'unavailable').length,
+        not_configured: currentValidation.services.filter(s => s.status === 'not_configured').length
+      },
+      warnings: currentValidation.warnings,
+      criticalFailures: currentValidation.criticalFailures
     }
 
-    res.json(response)
+    res.status(statusCode).json(response)
   } catch (error) {
     console.error('Health check error:', error)
     res.status(503).json({
-      status: 'unhealthy',
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: 'Service health check failed'
+      error: 'Health check system failure',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
     })
   }
 })

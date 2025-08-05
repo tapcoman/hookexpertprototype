@@ -12,6 +12,16 @@ import type {
   BillingPortalSession,
   AnalyticsEvent
 } from '@/types/shared'
+import { 
+  classifyAuthError, 
+  shouldRetry, 
+  calculateRetryDelay, 
+  sleep, 
+  logAuthError,
+  AuthError,
+  DEFAULT_RETRY_CONFIG,
+  RetryConfig
+} from './auth-errors'
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -25,12 +35,14 @@ export const setAuthToken = (token: string | null) => {
 
 export const getAuthToken = () => authToken
 
-// Base fetch wrapper with error handling
+// Enhanced fetch wrapper with comprehensive error handling and retry logic
 async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryConfig: Partial<RetryConfig> = {}
 ): Promise<APIResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
+  const finalRetryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig }
   
   const config: RequestInit = {
     ...options,
@@ -39,61 +51,183 @@ async function apiFetch<T>(
       ...(authToken && { Authorization: `Bearer ${authToken}` }),
       ...options.headers,
     },
+    // Add timeout to prevent hanging requests
+    signal: AbortSignal.timeout(30000), // 30 second timeout
   }
 
-  try {
-    const response = await fetch(url, config)
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw {
-        status: response.status,
-        message: errorData.error || response.statusText,
-        ...errorData,
+  let lastError: AuthError | null = null
+  
+  for (let attempt = 1; attempt <= finalRetryConfig.maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const rawError = {
+          status: response.status,
+          statusCode: response.status,
+          message: errorData.error || response.statusText,
+          ...errorData,
+        }
+        
+        const classifiedError = classifyAuthError(rawError)
+        lastError = classifiedError
+        
+        // Log error details
+        logAuthError(classifiedError, {
+          endpoint,
+          attempt,
+          statusCode: response.status,
+          response: errorData
+        })
+        
+        // Check if we should retry
+        if (shouldRetry(classifiedError, attempt, finalRetryConfig)) {
+          const delay = calculateRetryDelay(attempt, finalRetryConfig)
+          console.warn(`API request failed, retrying in ${delay}ms (attempt ${attempt}/${finalRetryConfig.maxAttempts})`)
+          await sleep(delay)
+          continue
+        }
+        
+        // No more retries, throw the error
+        throw classifiedError
       }
-    }
 
-    const data = await response.json()
-    return data
-  } catch (error: any) {
-    console.error(`API Error [${endpoint}]:`, error)
-    throw error
+      const data = await response.json()
+      
+      // Log successful retry if this wasn't the first attempt
+      if (attempt > 1) {
+        console.info(`API request succeeded on attempt ${attempt}`)
+      }
+      
+      return data
+      
+    } catch (error: any) {
+      // Handle network errors, timeouts, etc.
+      if (error.name === 'AbortError') {
+        const timeoutError = classifyAuthError({ message: 'Request timeout', code: 'TIMEOUT' })
+        lastError = timeoutError
+        logAuthError(timeoutError, { endpoint, attempt })
+        
+        if (shouldRetry(timeoutError, attempt, finalRetryConfig)) {
+          const delay = calculateRetryDelay(attempt, finalRetryConfig)
+          console.warn(`Request timeout, retrying in ${delay}ms (attempt ${attempt}/${finalRetryConfig.maxAttempts})`)
+          await sleep(delay)
+          continue
+        }
+        
+        throw timeoutError
+      }
+      
+      // Handle network errors
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        const networkError = classifyAuthError({ message: 'Network connection failed', code: 'NETWORK_ERROR' })
+        lastError = networkError
+        logAuthError(networkError, { endpoint, attempt })
+        
+        if (shouldRetry(networkError, attempt, finalRetryConfig)) {
+          const delay = calculateRetryDelay(attempt, finalRetryConfig)
+          console.warn(`Network error, retrying in ${delay}ms (attempt ${attempt}/${finalRetryConfig.maxAttempts})`)
+          await sleep(delay)
+          continue
+        }
+        
+        throw networkError
+      }
+      
+      // If it's already a classified error, just check retry logic
+      if (error.type && error.userMessage) {
+        lastError = error as AuthError
+        if (shouldRetry(error, attempt, finalRetryConfig)) {
+          const delay = calculateRetryDelay(attempt, finalRetryConfig)
+          console.warn(`Classified error, retrying in ${delay}ms (attempt ${attempt}/${finalRetryConfig.maxAttempts})`)
+          await sleep(delay)
+          continue
+        }
+        throw error
+      }
+      
+      // Classify and handle unknown errors
+      const classifiedError = classifyAuthError(error)
+      lastError = classifiedError
+      logAuthError(classifiedError, { endpoint, attempt, originalError: error })
+      
+      if (shouldRetry(classifiedError, attempt, finalRetryConfig)) {
+        const delay = calculateRetryDelay(attempt, finalRetryConfig)
+        console.warn(`Unknown error, retrying in ${delay}ms (attempt ${attempt}/${finalRetryConfig.maxAttempts})`)
+        await sleep(delay)
+        continue
+      }
+      
+      throw classifiedError
+    }
   }
+  
+  // This should never be reached, but throw last error if it happens
+  throw lastError || classifyAuthError({ message: 'Max retries exceeded' })
+}
+
+// Auth-specific fetch with enhanced retry for critical auth operations
+async function authApiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<APIResponse<T>> {
+  return apiFetch<T>(endpoint, options, {
+    maxAttempts: 5, // More retries for auth operations
+    baseDelay: 2000, // Longer initial delay
+    maxDelay: 60000 // Up to 1 minute max delay
+  })
 }
 
 // ==================== AUTHENTICATION API ====================
 
 export const authApi = {
-  // Verify Firebase token with backend
+  // Verify Firebase token with backend (critical auth operation)
   verifyToken: (firebaseToken: string) =>
-    apiFetch<{ user: UserProfile; token: string }>('/auth/verify', {
-      method: 'POST',
-      body: JSON.stringify({ token: firebaseToken }),
+    authApiFetch<{ user: UserProfile; isAuthenticated: boolean }>('/auth/verify', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${firebaseToken}`,
+      },
     }),
 
-  // Refresh auth token
+  // Refresh auth token (critical auth operation)
   refreshToken: () =>
-    apiFetch<{ token: string }>('/auth/refresh', {
+    authApiFetch<{ token: string }>('/auth/refresh', {
       method: 'POST',
     }),
 
-  // Sign out
+  // Sign out (use regular retry logic)
   signOut: () =>
     apiFetch<void>('/auth/signout', {
       method: 'POST',
+    }),
+
+  // Check auth status (non-critical, fewer retries)
+  checkStatus: (firebaseToken?: string) =>
+    apiFetch<{ isAuthenticated: boolean; user?: UserProfile; error?: string }>('/auth/status', {
+      method: 'GET',
+      ...(firebaseToken && {
+        headers: {
+          Authorization: `Bearer ${firebaseToken}`,
+        },
+      }),
+    }, {
+      maxAttempts: 2, // Only retry once for status checks
+      baseDelay: 1000
     }),
 }
 
 // ==================== USER API ====================
 
 export const userApi = {
-  // Get user profile
+  // Get user profile (critical operation)
   getProfile: () =>
-    apiFetch<UserProfile>('/users/profile'),
+    authApiFetch<UserProfile>('/users/profile'),
 
-  // Update user profile
+  // Update user profile (critical operation)
   updateProfile: (data: Partial<UserProfile>) =>
-    apiFetch<UserProfile>('/users/profile', {
+    authApiFetch<UserProfile>('/users/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),

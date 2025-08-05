@@ -5,12 +5,17 @@ import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js
 import { StripeService } from '../services/stripeService.js'
 import { StripeWebhookService } from '../services/stripeWebhookService.js'
 import { logger } from '../middleware/logging.js'
+import { requireDatabase, requireStripe } from '../middleware/serviceAvailability.js'
 import { eq, desc, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { paymentHistory, subscriptionPlans } from '../db/schema.js'
 import type { Request, Response } from 'express'
 
 const router = Router()
+
+// All payment routes require database and Stripe
+router.use(requireDatabase)
+router.use(requireStripe)
 
 // ==================== SUBSCRIPTION PLANS ====================
 

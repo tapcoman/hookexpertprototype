@@ -10,6 +10,7 @@ import { authRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { AuthenticationError, ValidationError } from '../middleware/errorHandler.js'
 import { logBusinessEvent, logSecurityEvent } from '../middleware/logging.js'
+import { requireDatabase, degradedFirebase, isServiceAvailable } from '../middleware/serviceAvailability.js'
 import { APIResponse } from '../../shared/types.js'
 import admin from 'firebase-admin'
 
@@ -17,6 +18,10 @@ const router = Router()
 
 // Initialize Firebase on route setup
 initializeFirebase()
+
+// All auth routes require database, Firebase is degraded (can fallback)
+router.use(requireDatabase)
+router.use(degradedFirebase)
 
 // Validation schemas
 const registerSchema = z.object({

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs'
+import { InlineAuthError } from './AuthErrorBoundary'
 import { cn } from '../../lib/utils'
 
 const signInSchema = z.object({
@@ -102,17 +103,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive"
-            >
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
-            </motion.div>
-          )}
+          {/* Enhanced Error Display */}
+          <InlineAuthError showRetry={false} />
 
           {/* Google Sign In */}
           <Button

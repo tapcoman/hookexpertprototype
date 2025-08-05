@@ -41,14 +41,23 @@ export async function verifyFirebaseToken(
       })
       return res.status(401).json({
         success: false,
-        error: 'No authentication token provided'
+        error: 'Authentication required',
+        errorCode: 'TOKEN_MISSING',
+        userMessage: 'Please sign in to access this resource.',
+        canRetry: false,
+        actionRequired: ['Sign in to your account']
       })
     }
 
     if (!FirebaseService.isConfigured()) {
-      return res.status(500).json({
+      return res.status(503).json({
         success: false,
-        error: 'Firebase authentication not configured'
+        error: 'Authentication service unavailable',
+        errorCode: 'FIREBASE_CONFIG_ERROR',
+        userMessage: 'Authentication service is temporarily unavailable. Please try again later.',
+        canRetry: true,
+        retryAfter: 60,
+        actionRequired: ['Try again in a few minutes', 'Contact support if issue persists']
       })
     }
 
@@ -66,7 +75,11 @@ export async function verifyFirebaseToken(
       })
       return res.status(401).json({
         success: false,
-        error: 'User synchronization failed'
+        error: 'User synchronization failed',
+        errorCode: 'USER_SYNC_FAILED',
+        userMessage: 'Unable to sync your user data. Please try signing in again.',
+        canRetry: false,
+        actionRequired: ['Sign out and sign in again', 'Contact support if issue persists']
       })
     }
 
@@ -89,10 +102,61 @@ export async function verifyFirebaseToken(
       ipAddress: req.ip
     })
 
-    return res.status(401).json({
+    // Enhanced error responses based on Firebase error codes
+    let errorResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'Invalid authentication token'
-    })
+      error: 'Authentication failed',
+      errorCode: 'TOKEN_INVALID',
+      userMessage: 'Your session is invalid. Please sign in again.',
+      canRetry: false,
+      actionRequired: ['Sign in again']
+    }
+
+    if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase()
+      
+      if (errorMessage.includes('expired') || error.message.includes('exp')) {
+        errorResponse = {
+          success: false,
+          error: 'Token expired',
+          errorCode: 'TOKEN_EXPIRED',
+          userMessage: 'Your session has expired. Please sign in again.',
+          canRetry: false,
+          actionRequired: ['Sign in again']
+        }
+      } else if (errorMessage.includes('revoked')) {
+        errorResponse = {
+          success: false,
+          error: 'Token revoked',
+          errorCode: 'TOKEN_REVOKED',
+          userMessage: 'Your session has been revoked. Please sign in again.',
+          canRetry: false,
+          actionRequired: ['Sign in again']
+        }
+      } else if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+        errorResponse = {
+          success: false,
+          error: 'Firebase service error',
+          errorCode: 'FIREBASE_UNAVAILABLE',
+          userMessage: 'Authentication service is temporarily unavailable. Please try again.',
+          canRetry: true,
+          retryAfter: 30,
+          actionRequired: ['Try again in a few moments', 'Check your internet connection']
+        }
+      } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        errorResponse = {
+          success: false,
+          error: 'Service quota exceeded',
+          errorCode: 'FIREBASE_QUOTA_EXCEEDED',
+          userMessage: 'Authentication service is temporarily overloaded. Please try again later.',
+          canRetry: true,
+          retryAfter: 300,
+          actionRequired: ['Try again in a few minutes']
+        }
+      }
+    }
+
+    return res.status(401).json(errorResponse)
   }
 }
 

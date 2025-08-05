@@ -6,6 +6,7 @@ import { hookGenerationRateLimit, heavyOperationRateLimit } from '../middleware/
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { ValidationError, NotFoundError } from '../middleware/errorHandler.js'
 import { logBusinessEvent, logPerformanceMetric } from '../middleware/logging.js'
+import { requireDatabase, degradedOpenAI, isServiceAvailable, handleServiceUnavailable } from '../middleware/serviceAvailability.js'
 import { 
   UserService, 
   HookGenerationService, 
@@ -21,8 +22,10 @@ import { v4 as uuidv4 } from 'uuid'
 
 const router = Router()
 
-// All routes require authentication
+// All routes require authentication and database
 router.use(verifyFirebaseToken)
+router.use(requireDatabase)
+router.use(degradedOpenAI) // AI is optional but may affect functionality
 
 // Validation schemas
 const generateHooksSchema = z.object({
@@ -110,6 +113,19 @@ router.post('/generate/enhanced',
     }
 
     try {
+      // Check if AI service is available
+      if (!isServiceAvailable(req, 'openai')) {
+        return res.status(503).json({
+          success: false,
+          error: 'AI service is currently unavailable. Please try again later.',
+          data: {
+            service: 'openai',
+            status: 'unavailable',
+            retryAfter: 300 // 5 minutes
+          }
+        })
+      }
+
       // Generate enhanced hooks using psychological framework
       const enhancedResult = await enhancedHookGenerator.generateEnhancedHooks({
         userId,

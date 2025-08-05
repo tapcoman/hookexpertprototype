@@ -5,6 +5,14 @@ import { firebaseAuth } from '@/lib/firebase'
 import { api, setAuthToken } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
 import { analytics } from '@/lib/analytics'
+import { 
+  classifyAuthError, 
+  AuthError, 
+  AuthErrorType, 
+  requiresSignIn,
+  getRecoveryInstructions,
+  logAuthError
+} from '@/lib/auth-errors'
 import type { UserProfile } from '@/types/shared'
 
 // ==================== TYPES ====================
@@ -17,8 +25,11 @@ interface AuthState {
   // Loading states
   isLoading: boolean
   isInitializing: boolean
-  // Error state
-  error: string | null
+  isRetrying: boolean
+  // Enhanced error state
+  error: AuthError | null
+  // Connection status
+  isOnline: boolean
 }
 
 interface AuthContextValue extends AuthState {
@@ -36,8 +47,14 @@ interface AuthContextValue extends AuthState {
   
   // Utility methods
   clearError: () => void
+  retryAuth: () => Promise<void>
   canGenerateHooks: () => boolean
   hasActiveSubscription: () => boolean
+  
+  // Error helpers
+  getErrorMessage: () => string
+  getRecoverySteps: () => string[]
+  shouldShowSignIn: () => boolean
 }
 
 // ==================== CONTEXT ====================
@@ -61,40 +78,77 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [error, setError] = useState<AuthError | null>(null)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
   
   const queryClient = useQueryClient()
 
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
   // ==================== FIREBASE AUTH STATE ====================
+
+  const handleAuthError = (error: any, context: string) => {
+    const classifiedError = classifyAuthError(error)
+    logAuthError(classifiedError, { context, firebaseUser: firebaseUser?.uid })
+    setError(classifiedError)
+    
+    // Clear auth token on authentication errors
+    if (requiresSignIn(classifiedError)) {
+      setAuthToken(null)
+    }
+  }
+
+  const verifyUserToken = async (user: User) => {
+    try {
+      setIsRetrying(true)
+      
+      // Get Firebase token and verify with backend
+      const firebaseToken = await user.getIdToken(true) // Force refresh
+      await api.auth.verifyToken(firebaseToken)
+      
+      // Set Firebase token for API calls
+      setAuthToken(firebaseToken)
+      
+      // Initialize analytics with user ID
+      analytics.init(user.uid, 'analytics')
+      
+      // Clear any previous errors
+      setError(null)
+      return true
+    } catch (error: any) {
+      handleAuthError(error, 'token_verification')
+      return false
+    } finally {
+      setIsRetrying(false)
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
       setFirebaseUser(user)
       
       if (user) {
-        try {
-          // Get Firebase token and verify with backend
-          const firebaseToken = await user.getIdToken()
-          const response = await api.auth.verifyToken(firebaseToken)
-          
-          // Set auth token for API calls
-          setAuthToken(response.data?.token || null)
-          
-          // Initialize analytics with user ID
-          analytics.init(user.uid, 'analytics')
-          
-          // Clear any previous errors
-          setError(null)
-        } catch (error: any) {
-          console.error('Failed to verify token:', error)
-          setError('Authentication failed. Please sign in again.')
-          setAuthToken(null)
-        }
+        await verifyUserToken(user)
       } else {
         // Clear auth token when signed out
         setAuthToken(null)
         // Clear all cached data
         queryClient.clear()
+        // Clear errors when signing out
+        setError(null)
       }
       
       setIsInitializing(false)
@@ -109,6 +163,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     data: user,
     isLoading: isLoadingUser,
     refetch: refetchUser,
+    error: userQueryError,
   } = useQuery({
     queryKey: queryKeys.userProfile(),
     queryFn: async () => {
@@ -117,11 +172,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     enabled: !!firebaseUser && !error,
     retry: (failureCount, error: any) => {
-      // Don't retry on auth errors
-      if (error?.status === 401) return false
-      return failureCount < 3
+      // Don't retry on authentication errors
+      if (error?.type === AuthErrorType.TOKEN_EXPIRED || 
+          error?.type === AuthErrorType.TOKEN_INVALID ||
+          error?.type === AuthErrorType.TOKEN_REVOKED) {
+        return false
+      }
+      // Retry on network/server errors up to 3 times
+      return failureCount < 3 && (
+        error?.type === AuthErrorType.NETWORK_ERROR ||
+        error?.type === AuthErrorType.SERVER_UNAVAILABLE ||
+        error?.type === AuthErrorType.DATABASE_CONNECTION
+      )
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    onError: (error: any) => {
+      // Handle user profile fetch errors
+      if (error?.type && error?.userMessage) {
+        handleAuthError(error, 'user_profile_fetch')
+      } else {
+        handleAuthError(error, 'user_profile_fetch')
+      }
     },
   })
+
+  // Monitor user query errors and update auth error state
+  useEffect(() => {
+    if (userQueryError && !error) {
+      handleAuthError(userQueryError, 'user_profile_query')
+    }
+  }, [userQueryError, error])
 
   // ==================== AUTHENTICATION MUTATIONS ====================
 
@@ -132,10 +212,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     onSuccess: () => {
       analytics.track('user_sign_in', { method: 'email' })
+      setError(null) // Clear any previous errors on successful sign in
     },
     onError: (error: any) => {
       analytics.track('user_sign_in_failed', { method: 'email', error: error.message })
-      setError(error.message)
+      handleAuthError(error, 'email_sign_in')
     },
   })
 
@@ -146,10 +227,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     onSuccess: () => {
       analytics.track('user_sign_up', { method: 'email' })
+      setError(null)
     },
     onError: (error: any) => {
       analytics.track('user_sign_up_failed', { method: 'email', error: error.message })
-      setError(error.message)
+      handleAuthError(error, 'email_sign_up')
     },
   })
 
@@ -160,10 +242,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     onSuccess: () => {
       analytics.track('user_sign_in', { method: 'google' })
+      setError(null)
     },
     onError: (error: any) => {
       analytics.track('user_sign_in_failed', { method: 'google', error: error.message })
-      setError(error.message)
+      handleAuthError(error, 'google_sign_in')
     },
   })
 
@@ -175,9 +258,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       analytics.track('user_sign_out')
       // Clear all cached data
       queryClient.clear()
+      setError(null)
     },
     onError: (error: any) => {
-      setError(error.message)
+      handleAuthError(error, 'sign_out')
     },
   })
 
@@ -185,8 +269,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     mutationFn: async (email: string) => {
       await firebaseAuth.resetPassword(email)
     },
+    onSuccess: () => {
+      setError(null)
+    },
     onError: (error: any) => {
-      setError(error.message)
+      handleAuthError(error, 'password_reset')
     },
   })
 
@@ -197,8 +284,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }) => {
       await firebaseAuth.updatePassword(currentPassword, newPassword)
     },
+    onSuccess: () => {
+      setError(null)
+    },
     onError: (error: any) => {
-      setError(error.message)
+      handleAuthError(error, 'password_update')
     },
   })
 
@@ -212,9 +302,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     onSuccess: (updatedUser) => {
       // Update the cached user data
       queryClient.setQueryData(queryKeys.userProfile(), updatedUser)
+      setError(null)
     },
     onError: (error: any) => {
-      setError(error.message)
+      handleAuthError(error, 'profile_update')
     },
   })
 
@@ -243,15 +334,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await refetchUser()
   }
 
+  const retryAuth = async () => {
+    if (!firebaseUser) return
+    
+    try {
+      setIsRetrying(true)
+      setError(null)
+      
+      // Force refresh Firebase token and retry verification
+      const success = await verifyUserToken(firebaseUser)
+      
+      if (success) {
+        // Retry user profile fetch
+        await refetchUser()
+      }
+    } catch (error: any) {
+      handleAuthError(error, 'auth_retry')
+    } finally {
+      setIsRetrying(false)
+    }
+  }
+
+  // ==================== ERROR HELPER METHODS ====================
+
+  const getErrorMessage = (): string => {
+    if (!error) return ''
+    
+    // Show offline message if user is offline
+    if (!isOnline) {
+      return 'You appear to be offline. Please check your internet connection.'
+    }
+    
+    return error.userMessage
+  }
+
+  const getRecoverySteps = (): string[] => {
+    if (!error) return []
+    
+    // Add offline-specific steps
+    if (!isOnline) {
+      return [
+        'Check your internet connection',
+        'Try switching between WiFi and mobile data',
+        'Refresh the page once you\'re back online'
+      ]
+    }
+    
+    return getRecoveryInstructions(error)
+  }
+
+  const shouldShowSignIn = (): boolean => {
+    return !!error && requiresSignIn(error)
+  }
+
   // ==================== CONTEXT VALUE ====================
 
   const contextValue: AuthContextValue = {
     // State
     firebaseUser,
     user: user || null,
-    isLoading: isLoadingUser,
+    isLoading: isLoadingUser || isRetrying,
     isInitializing,
+    isRetrying,
     error,
+    isOnline,
 
     // Authentication methods
     signIn: async (email: string, password: string) => {
@@ -281,8 +427,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Utility methods
     clearError,
+    retryAuth,
     canGenerateHooks,
     hasActiveSubscription,
+    
+    // Error helpers
+    getErrorMessage,
+    getRecoverySteps,
+    shouldShowSignIn,
   }
 
   return (
