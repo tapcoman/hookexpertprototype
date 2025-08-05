@@ -250,15 +250,45 @@ router.post('/firebase/custom-token',
 router.get('/firebase/health',
   asyncHandler(async (req, res: Response<APIResponse>) => {
     const healthStatus = await FirebaseService.healthCheck()
+    const configured = FirebaseService.isConfigured()
+    const projectId = FirebaseService.getProjectId()
 
-    res.json({
-      success: true,
+    // Enhanced health check with environment variable status
+    const envStatus = {
+      projectId: {
+        present: !!process.env.FIREBASE_PROJECT_ID,
+        value: process.env.FIREBASE_PROJECT_ID ? `${process.env.FIREBASE_PROJECT_ID.substring(0, 10)}...` : null
+      },
+      serviceAccountKey: {
+        present: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+        length: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.length || 0,
+        validJson: false
+      }
+    }
+
+    // Test JSON parsing
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      try {
+        JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+        envStatus.serviceAccountKey.validJson = true
+      } catch {
+        envStatus.serviceAccountKey.validJson = false
+      }
+    }
+
+    const isHealthy = configured && healthStatus.status === 'connected'
+
+    res.status(isHealthy ? 200 : 503).json({
+      success: isHealthy,
       data: {
         firebase: healthStatus,
-        configured: FirebaseService.isConfigured(),
-        projectId: FirebaseService.getProjectId()
+        configured,
+        projectId,
+        environmentVariables: envStatus,
+        timestamp: new Date().toISOString(),
+        nodeEnv: process.env.NODE_ENV
       },
-      message: 'Firebase health check completed'
+      message: isHealthy ? 'Firebase health check completed - service is healthy' : 'Firebase health check completed - service has issues'
     })
   })
 )

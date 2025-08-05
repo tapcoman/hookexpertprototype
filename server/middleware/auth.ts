@@ -50,6 +50,13 @@ export async function verifyFirebaseToken(
     }
 
     if (!FirebaseService.isConfigured()) {
+      console.error('🚨 Firebase service not configured during auth request:')
+      console.error(`   FIREBASE_PROJECT_ID: ${process.env.FIREBASE_PROJECT_ID ? 'SET' : 'MISSING'}`)
+      console.error(`   FIREBASE_SERVICE_ACCOUNT_KEY: ${process.env.FIREBASE_SERVICE_ACCOUNT_KEY ? 'SET' : 'MISSING'}`)
+      console.error(`   Endpoint: ${req.path}`)
+      console.error(`   Method: ${req.method}`)
+      console.error(`   User-Agent: ${req.get('User-Agent')}`)
+      
       return res.status(503).json({
         success: false,
         error: 'Authentication service unavailable',
@@ -94,12 +101,31 @@ export async function verifyFirebaseToken(
 
     next()
   } catch (error) {
-    console.error('Firebase authentication error:', error)
+    console.error('🚨 Firebase authentication error:', error)
+    console.error('   Context:')
+    console.error(`     Endpoint: ${req.path}`)
+    console.error(`     Method: ${req.method}`)
+    console.error(`     IP: ${req.ip}`)
+    console.error(`     User-Agent: ${req.get('User-Agent')}`)
+    console.error(`     Token Length: ${token?.length || 'N/A'}`)
+    console.error(`     Firebase Configured: ${FirebaseService.isConfigured()}`)
+    console.error(`     Firebase Project ID: ${FirebaseService.getProjectId()}`)
+    
+    if (error instanceof Error) {
+      console.error(`     Error Type: ${error.constructor.name}`)
+      console.error(`     Error Code: ${(error as any).code || 'N/A'}`)
+      console.error(`     Error Message: ${error.message}`)
+      console.error(`     Stack Trace: ${error.stack}`)
+    }
     
     logSecurityEvent('firebase_auth_failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: (error as any)?.code,
       endpoint: req.path,
-      ipAddress: req.ip
+      ipAddress: req.ip,
+      tokenPresent: !!token,
+      tokenLength: token?.length,
+      firebaseConfigured: FirebaseService.isConfigured()
     })
 
     // Enhanced error responses based on Firebase error codes

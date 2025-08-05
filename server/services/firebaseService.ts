@@ -13,6 +13,7 @@ export class FirebaseService {
    */
   static initialize(): boolean {
     if (this.app) {
+      console.log('🔄 Firebase Admin SDK already initialized')
       return true
     }
 
@@ -20,22 +21,81 @@ export class FirebaseService {
       const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
       const projectId = process.env.FIREBASE_PROJECT_ID
 
+      console.log('🔧 Initializing Firebase Admin SDK...')
+      console.log(`   Project ID: ${projectId ? `${projectId.substring(0, 20)}...` : 'NOT SET'}`)
+      console.log(`   Service Account Key: ${serviceAccountKey ? `${serviceAccountKey.length} characters` : 'NOT SET'}`)
+
       if (!serviceAccountKey || !projectId) {
         console.warn('⚠️ Firebase credentials not found - authentication will be limited')
+        console.warn('   Required environment variables:')
+        console.warn(`   - FIREBASE_PROJECT_ID: ${projectId ? '✅ SET' : '❌ MISSING'}`)
+        console.warn(`   - FIREBASE_SERVICE_ACCOUNT_KEY: ${serviceAccountKey ? '✅ SET' : '❌ MISSING'}`)
         return false
       }
 
-      const serviceAccount = JSON.parse(serviceAccountKey)
-      
-      this.app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: projectId
-      })
+      // Enhanced service account validation
+      let serviceAccount: any
+      try {
+        serviceAccount = JSON.parse(serviceAccountKey)
+        console.log('✅ Service account key JSON parsing successful')
+        
+        // Validate required fields
+        const requiredFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email']
+        const missingFields = requiredFields.filter(field => !serviceAccount[field])
+        
+        if (missingFields.length > 0) {
+          console.error(`❌ Service account key missing required fields: ${missingFields.join(', ')}`)
+          return false
+        }
 
-      console.log('✅ Firebase Admin SDK initialized successfully')
-      return true
+        // Validate project ID match
+        if (serviceAccount.project_id !== projectId) {
+          console.error(`❌ Project ID mismatch: env=${projectId}, serviceAccount=${serviceAccount.project_id}`)
+          return false
+        }
+
+        // Validate private key format
+        if (!serviceAccount.private_key.includes('-----BEGIN') || !serviceAccount.private_key.includes('-----END')) {
+          console.error('❌ Private key does not appear to be in valid format')
+          return false
+        }
+
+        console.log('✅ Service account validation successful')
+        console.log(`   Type: ${serviceAccount.type}`)
+        console.log(`   Project ID: ${serviceAccount.project_id}`)
+        console.log(`   Client Email: ${serviceAccount.client_email}`)
+        console.log(`   Private Key: ${serviceAccount.private_key.length} characters`)
+
+      } catch (parseError) {
+        console.error('❌ Failed to parse Firebase service account key JSON:')
+        console.error('   Error:', parseError instanceof Error ? parseError.message : parseError)
+        console.error('   Key preview:', serviceAccountKey.substring(0, 100) + '...')
+        return false
+      }
+
+      // Initialize Firebase Admin SDK
+      try {
+        this.app = admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          projectId: projectId
+        })
+
+        console.log('✅ Firebase Admin SDK initialized successfully')
+        console.log(`   App Name: ${this.app.name}`)
+        console.log(`   Project ID: ${this.app.options.projectId}`)
+        
+        return true
+      } catch (initError) {
+        console.error('❌ Firebase Admin SDK initialization failed:')
+        console.error('   Error:', initError instanceof Error ? initError.message : initError)
+        console.error('   Stack:', initError instanceof Error ? initError.stack : 'No stack trace')
+        return false
+      }
+
     } catch (error) {
-      console.error('❌ Failed to initialize Firebase Admin SDK:', error)
+      console.error('❌ Unexpected error during Firebase initialization:')
+      console.error('   Error:', error instanceof Error ? error.message : error)
+      console.error('   Stack:', error instanceof Error ? error.stack : 'No stack trace')
       return false
     }
   }
