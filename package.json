@@ -11,7 +11,7 @@
     "build:client": "cd client && vite build",
     "build:server": "cd server && esbuild index.ts --platform=node --bundle --outfile=../dist/server.js --external:pg --external:firebase-admin",
     "vercel-build": "npm run build:production",
-    "build:production": "cd client && npm install && npm run build",
+    "build:production": "cd client && npm install && npx vite build",
     "build:api": "tsc --project server/tsconfig.json --noEmit",
     "preview": "cd client && vite preview",
     "railway:build": "npm run prebuild:railway && npm run build",
