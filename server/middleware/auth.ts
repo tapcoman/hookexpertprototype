@@ -49,6 +49,48 @@ export async function verifyFirebaseToken(
       })
     }
 
+    // Development bypass mode for Firebase authentication
+    if (process.env.FIREBASE_BYPASS_MODE === 'true') {
+      console.log('🚧 Firebase bypass mode active - creating mock user for development')
+      
+      // Create or get mock user from database
+      let mockUser
+      try {
+        const existingUsers = await db.select().from(users).where(eq(users.email, 'dev@hookline.studio')).limit(1)
+        
+        if (existingUsers.length > 0) {
+          mockUser = existingUsers[0]
+        } else {
+          // Create mock user
+          const newUser = await db.insert(users).values({
+            email: 'dev@hookline.studio',
+            firebaseUid: 'mock-firebase-uid-dev',
+            displayName: 'Development User',
+            subscriptionStatus: 'premium',
+            createdAt: new Date(),
+            lastLoginAt: new Date()
+          }).returning()
+          mockUser = newUser[0]
+        }
+        
+        // Attach mock user to request
+        (req as AuthenticatedRequest).user = {
+          id: mockUser.id,
+          email: mockUser.email,
+          firebaseUid: mockUser.firebaseUid || 'mock-firebase-uid-dev',
+          subscriptionStatus: mockUser.subscriptionStatus,
+          isPremium: mockUser.subscriptionStatus === 'premium' || mockUser.subscriptionStatus === 'pro'
+        }
+        
+        console.log('✅ Mock user authenticated:', mockUser.email)
+        return next()
+        
+      } catch (error) {
+        console.error('Error creating mock user:', error)
+        // Fall through to normal Firebase auth if mock fails
+      }
+    }
+
     if (!FirebaseService.isConfigured()) {
       return res.status(503).json({
         success: false,

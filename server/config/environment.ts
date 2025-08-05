@@ -81,6 +81,7 @@ const envSchema = z.object({
   DEBUG: z.string().optional(),
   MOCK_AI_RESPONSES: z.string().transform(val => val === 'true').default('false'),
   SKIP_EMAIL_VERIFICATION: z.string().transform(val => val === 'true').default('false'),
+  FIREBASE_BYPASS_MODE: z.string().transform(val => val === 'true').default('false'),
 })
 
 // Environment variable validation and parsing
@@ -208,7 +209,8 @@ export const config = {
   development: {
     debug: env.DEBUG,
     mockAiResponses: env.MOCK_AI_RESPONSES,
-    skipEmailVerification: env.SKIP_EMAIL_VERIFICATION
+    skipEmailVerification: env.SKIP_EMAIL_VERIFICATION,
+    firebaseBypassMode: env.FIREBASE_BYPASS_MODE
   }
 }
 
