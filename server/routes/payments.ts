@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Response } from 'express'
 import { body, query, param } from 'express-validator'
 import { validateRequest } from '../middleware/validation.js'
 import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js'

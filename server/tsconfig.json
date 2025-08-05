@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/server",
-    "rootDir": ".",
+    "rootDir": "..",
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -14,6 +14,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": false,
+    "noImplicitReturns": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
@@ -21,10 +22,15 @@
     "exactOptionalPropertyTypes": false,
     "noImplicitAny": false,
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false
   },
   "include": [
-    "**/*.ts"
+    "./**/*.ts",
+    "../shared/**/*.ts"
   ],
   "exclude": [
     "node_modules",

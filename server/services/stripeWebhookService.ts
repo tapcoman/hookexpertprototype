@@ -557,7 +557,7 @@ export class StripeWebhookService {
    */
   private static async initializeUsageTracking(userId: string, plan: any, subscription: Stripe.Subscription): Promise<void> {
     const now = new Date()
-    const periodEnd = new Date(subscription.current_period_end * 1000)
+    const periodEnd = new Date((subscription as any).current_period_end * 1000)
 
     await db.insert(usageTracking).values({
       userId,

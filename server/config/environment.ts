@@ -48,22 +48,22 @@ const envSchema = z.object({
   PERFORMANCE_TRACKING_ENABLED: z.string().transform(val => val === 'true').default('true'),
   
   // Feature Flags
-  FEATURE_PSYCHOLOGICAL_PROFILING: z.string().transform(val => val === 'true').default(true),
-  FEATURE_AB_TESTING: z.string().transform(val => val === 'true').default(true),
-  FEATURE_ADVANCED_ANALYTICS: z.string().transform(val => val === 'true').default(true),
-  FEATURE_PREMIUM_MODELS: z.string().transform(val => val === 'true').default(true),
+  FEATURE_PSYCHOLOGICAL_PROFILING: z.string().transform(val => val === 'true').default('true'),
+  FEATURE_AB_TESTING: z.string().transform(val => val === 'true').default('true'),
+  FEATURE_ADVANCED_ANALYTICS: z.string().transform(val => val === 'true').default('true'),
+  FEATURE_PREMIUM_MODELS: z.string().transform(val => val === 'true').default('true'),
   
   // Security
-  HELMET_CSP_ENABLED: z.string().transform(val => val === 'true').default(true),
-  CORS_CREDENTIALS: z.string().transform(val => val === 'true').default(true),
-  TRUST_PROXY: z.string().transform(Number).default(1),
+  HELMET_CSP_ENABLED: z.string().transform(val => val === 'true').default('true'),
+  CORS_CREDENTIALS: z.string().transform(val => val === 'true').default('true'),
+  TRUST_PROXY: z.string().transform(Number).default('1'),
   
   // Optional Services
   REDIS_URL: z.string().url().optional(),
-  CACHE_TTL: z.string().transform(Number).default(3600),
+  CACHE_TTL: z.string().transform(Number).default('3600'),
   SENTRY_DSN: z.string().url().optional(),
   SENTRY_ENVIRONMENT: z.string().optional(),
-  SENTRY_TRACES_SAMPLE_RATE: z.string().transform(Number).min(0).max(1).default(0.1),
+  SENTRY_TRACES_SAMPLE_RATE: z.string().transform(Number).pipe(z.number().min(0).max(1)).default('0.1'),
   
   // Email (Optional)
   SMTP_HOST: z.string().optional(),
@@ -79,8 +79,8 @@ const envSchema = z.object({
   
   // Development
   DEBUG: z.string().optional(),
-  MOCK_AI_RESPONSES: z.string().transform(val => val === 'true').default(false),
-  SKIP_EMAIL_VERIFICATION: z.string().transform(val => val === 'true').default(false),
+  MOCK_AI_RESPONSES: z.string().transform(val => val === 'true').default('false'),
+  SKIP_EMAIL_VERIFICATION: z.string().transform(val => val === 'true').default('false'),
 })
 
 // Environment variable validation and parsing

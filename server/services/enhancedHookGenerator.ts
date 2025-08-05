@@ -105,7 +105,7 @@ export class EnhancedHookGenerator {
         request.userId,
         contentStrategy,
         request.platform,
-        request.psychologicalPreferences?.riskTolerance || 'balanced'
+        request.psychologicalPreferences?.riskTolerance || 'medium'
       )
       
       if (selectedFormulas.length === 0) {
@@ -449,7 +449,7 @@ export class EnhancedHookGenerator {
     }
     
     // Platform expansion
-    const otherPlatforms: Platform[] = ['tiktok', 'instagram', 'youtube'].filter(p => p !== request.platform)
+    const otherPlatforms: Platform[] = (['tiktok', 'instagram', 'youtube'] as Platform[]).filter(p => p !== request.platform)
     if (otherPlatforms.length > 0) {
       recommendations.push(`Adapt top-performing hooks for ${otherPlatforms[0]} with platform-specific optimization`)
     }

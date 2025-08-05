@@ -62,7 +62,7 @@ export class FirebaseService {
 
       return decodedToken
     } catch (error) {
-      if (error instanceof admin.auth.AuthError) {
+      if (error instanceof Error && (error as any).code) {
         logSecurityEvent('firebase_token_verification_failed', {
           error: error.message,
           errorCode: error.code
@@ -113,7 +113,7 @@ export class FirebaseService {
 
       return userRecord
     } catch (error) {
-      if (error instanceof admin.auth.AuthError) {
+      if (error instanceof Error && (error as any).code) {
         switch (error.code) {
           case 'auth/email-already-exists':
             throw new ValidationError('Email address is already in use')
@@ -165,7 +165,7 @@ export class FirebaseService {
 
       return userRecord
     } catch (error) {
-      if (error instanceof admin.auth.AuthError) {
+      if (error instanceof Error && (error as any).code) {
         throw new AuthenticationError(`Failed to update user: ${error.message}`)
       }
       throw error
@@ -196,7 +196,7 @@ export class FirebaseService {
         firebaseUid: uid
       })
     } catch (error) {
-      if (error instanceof admin.auth.AuthError) {
+      if (error instanceof Error && (error as any).code) {
         throw new AuthenticationError(`Failed to delete user: ${error.message}`)
       }
       throw error

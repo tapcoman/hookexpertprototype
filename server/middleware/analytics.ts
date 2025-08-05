@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { AuthenticatedRequest } from './auth.js'
 import { db } from '../db/index.js'
+import { sql } from 'drizzle-orm'
 import { 
   systemMetrics, 
   apiUsageTracking, 
@@ -111,7 +112,7 @@ async function trackError(error: any, req: Request, userId?: string) {
   try {
     const errorData: NewErrorTracking = {
       id: uuidv4(),
-      sessionId: req.sessionID || null,
+      sessionId: (req as any).sessionID || null,
       userId: userId || null,
       errorType: 'api_error',
       errorMessage: error.message || 'Unknown error',

@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Response, Request } from 'express'
 import { z } from 'zod'
 import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validation.js'

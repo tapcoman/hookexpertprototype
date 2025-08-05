@@ -13,7 +13,8 @@ import {
   type UsageTracking as UsageTrackingType,
   type WebhookEvent
 } from '../db/schema.js'
-import { stripe, StripeConfig } from '../config/stripe.js'
+import { stripe } from '../config/stripe.js'
+import { StripeConfig } from '../config/stripe.js'
 import { logger } from '../middleware/logging.js'
 import type { 
   SubscriptionStatus, 
@@ -38,7 +39,7 @@ export class StripeService {
             return customer as Stripe.Customer
           }
         } catch (error) {
-          logger.warn(`Stripe customer ${user.stripeCustomerId} not found, creating new one`, { userId: user.id })
+          logger.warn(`Stripe customer ${user.stripeCustomerId} not found, creating new one`, { userId: user.id, error: error instanceof Error ? error.message : String(error) })
         }
       }
 
@@ -71,7 +72,7 @@ export class StripeService {
     } catch (error) {
       logger.error('Failed to get or create Stripe customer', { 
         userId: user.id, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw new Error('Failed to create customer account')
     }
@@ -132,7 +133,7 @@ export class StripeService {
         stripeSubscriptionId: subscription.id,
         subscriptionStatus: subscription.status as SubscriptionStatus,
         subscriptionPlan: plan.name as SubscriptionPlanName,
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       })
 
@@ -150,7 +151,7 @@ export class StripeService {
       logger.error('Failed to create subscription', { 
         userId: user.id, 
         priceId,
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw error
     }
@@ -232,7 +233,7 @@ export class StripeService {
           stripeSubscriptionId: usage.stripeSubscriptionId || undefined,
           proOverageUsed: usage.proOverageUsed || 0,
           overageCharges: usage.overageCharges || 0,
-          lastResetAt: usage.lastResetAt.toISOString(),
+          lastResetAt: usage.lastResetAt?.toISOString() || new Date().toISOString(),
           nextResetAt: usage.nextResetAt.toISOString(),
         } : {
           id: '',
@@ -253,7 +254,7 @@ export class StripeService {
         hasPaymentMethod,
       }
     } catch (error) {
-      logger.error('Failed to get subscription status', { userId, error: error.message })
+      logger.error('Failed to get subscription status', { userId, error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }
@@ -285,7 +286,7 @@ export class StripeService {
 
       return subscription
     } catch (error) {
-      logger.error('Failed to cancel subscription', { userId, error: error.message })
+      logger.error('Failed to cancel subscription', { userId, error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }
@@ -316,7 +317,7 @@ export class StripeService {
 
       return subscription
     } catch (error) {
-      logger.error('Failed to reactivate subscription', { userId, error: error.message })
+      logger.error('Failed to reactivate subscription', { userId, error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }
@@ -383,7 +384,7 @@ export class StripeService {
       logger.error('Failed to create checkout session', { 
         userId, 
         priceId, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw error
     }
@@ -412,7 +413,7 @@ export class StripeService {
     } catch (error) {
       logger.error('Failed to create billing portal session', { 
         userId, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw error
     }
@@ -456,7 +457,7 @@ export class StripeService {
       logger.error('Failed to update payment method', { 
         userId, 
         paymentMethodId, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw error
     }
@@ -522,7 +523,7 @@ export class StripeService {
 
         return {
           canGenerate,
-          reason: canGenerate ? undefined : 'Pro generation limit exceeded',
+          reason: canGenerate ? '' : 'Pro generation limit exceeded',
           remainingProGenerations: remaining === Infinity ? 999999 : remaining,
           remainingDraftGenerations: usage.draftGenerationsLimit ? 
             Math.max(0, usage.draftGenerationsLimit - (usage.draftGenerationsUsed || 0)) : Infinity,
@@ -538,7 +539,7 @@ export class StripeService {
 
         return {
           canGenerate,
-          reason: canGenerate ? undefined : 'Draft generation limit exceeded',
+          reason: canGenerate ? '' : 'Draft generation limit exceeded',
           remainingProGenerations: usage.proGenerationsLimit ? 
             Math.max(0, usage.proGenerationsLimit - (usage.proGenerationsUsed || 0)) : Infinity,
           remainingDraftGenerations: remaining === Infinity ? 999999 : remaining,
@@ -547,7 +548,7 @@ export class StripeService {
         }
       }
     } catch (error) {
-      logger.error('Failed to check generation limits', { userId, modelType, error: error.message })
+      logger.error('Failed to check generation limits', { userId, modelType, error: error instanceof Error ? error.message : String(error) })
       return {
         canGenerate: false,
         reason: 'Error checking limits',
@@ -623,7 +624,7 @@ export class StripeService {
       logger.error('Failed to record generation usage', { 
         userId, 
         modelType, 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error) 
       })
       throw error
     }
@@ -699,7 +700,7 @@ export class StripeService {
     subscription: Stripe.Subscription
   ): Promise<void> {
     const now = new Date()
-    const periodEnd = new Date(subscription.current_period_end * 1000)
+    const periodEnd = new Date((subscription as any).current_period_end * 1000)
 
     await db.insert(usageTracking).values({
       userId,

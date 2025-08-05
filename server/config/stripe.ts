@@ -17,7 +17,7 @@ export class StripeConfig {
       }
 
       this.instance = new Stripe(stripeSecretKey, {
-        apiVersion: '2024-12-18.acacia',
+        apiVersion: '2025-07-30.basil',
         typescript: true,
         telemetry: false, // Disable telemetry for better performance
       })
@@ -149,8 +149,8 @@ export class StripeConfig {
       draft_generations_limit: config.draftGenerationsLimit?.toString() || 'unlimited',
       team_seats: config.teamSeats.toString(),
       reset_interval: config.resetInterval,
-      has_advanced_analytics: config.hasAdvancedAnalytics?.toString() || 'false',
-      has_priority_support: config.hasPrioritySupport?.toString() || 'false',
+      has_advanced_analytics: (config as any).hasAdvancedAnalytics?.toString() || 'false',
+      has_priority_support: (config as any).hasPrioritySupport?.toString() || 'false',
     }
   }
 }

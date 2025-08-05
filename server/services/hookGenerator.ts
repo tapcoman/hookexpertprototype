@@ -1,4 +1,4 @@
-import { HookObject, Platform, Objective, ContentType, HookCategory } from '../../shared/types.js'
+import { HookObject, Platform, Objective, ContentType, HookCategory, PsychologicalDriver } from '../../shared/types.js'
 
 // Enhanced hook taxonomy database based on the research
 export const HOOK_TAXONOMY = {
@@ -188,7 +188,7 @@ export async function generateTriModalHook(
     textualHook: platform === 'instagram' ? 'WATCH THIS\!' : undefined,
     
     framework: selectedFormula.formula,
-    psychologicalDriver: selectedFormula.primaryDriver,
+    psychologicalDriver: selectedFormula.primaryDriver as PsychologicalDriver,
     hookCategory: category,
     riskFactor: selectedFormula.riskFactor,
     

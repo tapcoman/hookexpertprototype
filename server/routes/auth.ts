@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, Response } from 'express'
 import { z } from 'zod'
 import { UserService } from '../services/database.js'
 import { AuthService } from '../services/authService.js'
