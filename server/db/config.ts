@@ -44,7 +44,7 @@ export const developmentConfig: DatabaseConfig = {
   max: 10,
   idle_timeout: 10,
   connect_timeout: 5,
-  ssl: false
+  ssl: 'require' // Enable SSL for Neon in development
 }
 
 export const testConfig: DatabaseConfig = {
