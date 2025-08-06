@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { startupValidator } from '../config/startup.js'
+import { StartupValidator } from '../config/simpleStartup.js'
 import { AppError } from './errorHandler.js'
 import { APIResponse } from '../../shared/types.js'
 
@@ -9,7 +9,8 @@ export type ServiceRequirement = 'required' | 'optional' | 'degraded'
 // Service availability check middleware factory
 export function requireService(serviceName: string, requirement: ServiceRequirement = 'required') {
   return (req: Request, res: Response, next: NextFunction) => {
-    const serviceAvailable = startupValidator.isServiceAvailable(serviceName)
+    const serviceStatus = StartupValidator.getServiceStatus(serviceName)
+    const serviceAvailable = serviceStatus?.status === 'healthy'
     
     switch (requirement) {
       case 'required':
@@ -47,31 +48,32 @@ export function requireService(serviceName: string, requirement: ServiceRequirem
 }
 
 // Database availability middleware
-export const requireDatabase = requireService('Database', 'required')
-export const optionalDatabase = requireService('Database', 'optional')
+export const requireDatabase = requireService('PostgreSQL Database', 'required')
+export const optionalDatabase = requireService('PostgreSQL Database', 'optional')
 
-// Firebase availability middleware  
-export const requireFirebase = requireService('Firebase', 'required')
-export const optionalFirebase = requireService('Firebase', 'optional')
-export const degradedFirebase = requireService('Firebase', 'degraded')
+// Authentication availability middleware  
+export const requireAuth = requireService('JWT Authentication', 'required')
+export const optionalAuth = requireService('JWT Authentication', 'optional')
+export const degradedAuth = requireService('JWT Authentication', 'degraded')
 
 // Stripe availability middleware
-export const requireStripe = requireService('Stripe', 'required')
-export const optionalStripe = requireService('Stripe', 'optional')
+export const requireStripe = requireService('Stripe Payments', 'required')
+export const optionalStripe = requireService('Stripe Payments', 'optional')
+export const degradedStripe = requireService('Stripe Payments', 'degraded')
 
 // OpenAI availability middleware
-export const requireOpenAI = requireService('OpenAI', 'required')
-export const optionalOpenAI = requireService('OpenAI', 'optional')
-export const degradedOpenAI = requireService('OpenAI', 'degraded')
+export const requireOpenAI = requireService('OpenAI API', 'required')
+export const optionalOpenAI = requireService('OpenAI API', 'optional')
+export const degradedOpenAI = requireService('OpenAI API', 'degraded')
 
 // Service status checker middleware
 export function serviceStatusChecker(req: Request, res: Response, next: NextFunction) {
   // Add service statuses to request for handlers to use
   req.serviceStatus = {
-    database: startupValidator.isServiceAvailable('Database') ? 'available' : 'unavailable',
-    firebase: startupValidator.isServiceAvailable('Firebase') ? 'available' : 'unavailable',
-    stripe: startupValidator.isServiceAvailable('Stripe') ? 'available' : 'unavailable',
-    openai: startupValidator.isServiceAvailable('OpenAI') ? 'available' : 'unavailable'
+    database: StartupValidator.isServiceHealthy('PostgreSQL Database') ? 'available' : 'unavailable',
+    auth: StartupValidator.isServiceHealthy('JWT Authentication') ? 'available' : 'unavailable',
+    stripe: StartupValidator.isServiceHealthy('Stripe Payments') ? 'available' : 'unavailable',
+    openai: StartupValidator.isServiceHealthy('OpenAI API') ? 'available' : 'unavailable'
   }
   
   next()

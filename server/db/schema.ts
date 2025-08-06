@@ -15,7 +15,8 @@ import { sql } from 'drizzle-orm'
 export const users = pgTable('users', {
   id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   email: varchar('email').notNull().unique(),
-  firebaseUid: varchar('firebase_uid').unique(),
+  password: text('password'), // bcrypt hashed password for email/password auth
+  firebaseUid: varchar('firebase_uid').unique(), // Keep for migration compatibility
   firstName: varchar('first_name'),
   lastName: varchar('last_name'),
   emailVerified: boolean('email_verified').default(false),

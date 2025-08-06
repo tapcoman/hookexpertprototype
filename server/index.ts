@@ -9,13 +9,13 @@ import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.j
 import { serviceStatusChecker } from './middleware/serviceAvailability.js'
 
 // Import startup validation
-import { validateEnvironmentAndServices } from './config/startup.js'
+import { validateEnvironmentAndServices } from './config/simpleStartup.js'
 
 // Import basic routes  
-import authRoutes from './routes/auth.js'
+import authRoutes from './routes/simpleAuth.js'
 import hookRoutes from './routes/hooks.js'
 import userRoutes from './routes/users.js'
-import debugRoutes from './routes/debug.js'
+import debugRoutes from './routes/simpleDebug.js'
 
 // Load environment variables
 dotenv.config()
@@ -23,15 +23,30 @@ dotenv.config()
 // Perform startup validation
 let startupResult: any = null
 if (process.env.NODE_ENV !== 'test') {
-  startupResult = await validateEnvironmentAndServices()
-  
-  if (!startupResult.canStart) {
-    console.error('❌ Critical startup failures detected. Server cannot start.')
-    console.error('Critical failures:')
-    startupResult.criticalFailures.forEach((failure: string) => {
-      console.error(`  - ${failure}`)
-    })
-    process.exit(1)
+  try {
+    startupResult = await validateEnvironmentAndServices()
+    
+    if (!startupResult.canStart) {
+      console.error('❌ Critical startup failures detected. Server cannot start.')
+      console.error('Critical failures:')
+      startupResult.criticalFailures.forEach((failure: string) => {
+        console.error(`  - ${failure}`)
+      })
+      process.exit(1)
+    }
+  } catch (startupError) {
+    console.error('❌ Fatal error during startup validation:', startupError)
+    console.error('   This indicates a programming error in the startup validation system.')
+    console.error('   The server will attempt to start with degraded functionality.')
+    
+    // Create minimal startup result for degraded mode
+    startupResult = {
+      success: false,
+      canStart: true, // Allow startup but in degraded mode
+      services: [],
+      criticalFailures: ['Startup validation system failed'],
+      warnings: ['Running in degraded mode due to startup validation failure']
+    }
   }
 }
 
@@ -62,8 +77,31 @@ app.use(serviceStatusChecker)
 // Enhanced health check endpoint with actual service testing
 app.get('/api/health', async (req, res) => {
   try {
-    // Get fresh service statuses
-    const currentValidation = await validateEnvironmentAndServices()
+    // Get fresh service statuses with error handling
+    let currentValidation
+    try {
+      currentValidation = await validateEnvironmentAndServices()
+    } catch (validationError) {
+      console.error('Health check validation error:', validationError)
+      
+      // Return degraded status if validation fails
+      return res.status(503).json({
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        version: '2.0.0',
+        serverless: Boolean(process.env.VERCEL),
+        error: 'Service validation system failure',
+        canStart: false,
+        services: {},
+        summary: { total: 0, healthy: 0, degraded: 0, unavailable: 0, not_configured: 0 },
+        warnings: ['Health check system malfunction'],
+        criticalFailures: ['Unable to validate service health'],
+        details: process.env.NODE_ENV === 'development' ? {
+          validationError: validationError instanceof Error ? validationError.message : validationError
+        } : undefined
+      })
+    }
     
     // Determine overall health
     const criticalServicesDown = currentValidation.services

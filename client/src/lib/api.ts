@@ -26,14 +26,24 @@ import {
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-// Token management
+// Token management - now uses localStorage for persistence
 let authToken: string | null = null
 
 export const setAuthToken = (token: string | null) => {
   authToken = token
+  if (token) {
+    localStorage.setItem('auth_token', token)
+  } else {
+    localStorage.removeItem('auth_token')
+  }
 }
 
-export const getAuthToken = () => authToken
+export const getAuthToken = () => {
+  if (!authToken) {
+    authToken = localStorage.getItem('auth_token')
+  }
+  return authToken
+}
 
 // Enhanced fetch wrapper with comprehensive error handling and retry logic
 async function apiFetch<T>(
@@ -182,20 +192,31 @@ async function authApiFetch<T>(
 // ==================== AUTHENTICATION API ====================
 
 export const authApi = {
-  // Verify Firebase token with backend (critical auth operation)
-  verifyToken: (firebaseToken: string) =>
-    authApiFetch<{ user: UserProfile; isAuthenticated: boolean }>('/auth/verify', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${firebaseToken}`,
-      },
+  // Register new user
+  register: (data: { email: string; password: string; firstName: string; lastName: string }) =>
+    apiFetch<{ user: UserProfile; token: string; isNewUser: boolean }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 
-  // Refresh auth token (critical auth operation)
-  refreshToken: (firebaseToken: string) =>
-    authApiFetch<{ token: string }>('/auth/refresh', {
+  // Login user
+  login: (data: { email: string; password: string }) =>
+    apiFetch<{ user: UserProfile; token: string }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ firebaseToken }),
+      body: JSON.stringify(data),
+    }),
+
+  // Verify JWT token with backend (critical auth operation)
+  verifyToken: () =>
+    authApiFetch<{ user: UserProfile; isAuthenticated: boolean }>('/auth/verify', {
+      method: 'GET',
+    }),
+
+  // Update password
+  updatePassword: (data: { currentPassword: string; newPassword: string }) =>
+    authApiFetch<void>('/auth/update-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 
   // Sign out (use regular retry logic)
@@ -205,17 +226,19 @@ export const authApi = {
     }),
 
   // Check auth status (non-critical, fewer retries)
-  checkStatus: (firebaseToken?: string) =>
+  checkStatus: () =>
     apiFetch<{ isAuthenticated: boolean; user?: UserProfile; error?: string }>('/auth/status', {
       method: 'GET',
-      ...(firebaseToken && {
-        headers: {
-          Authorization: `Bearer ${firebaseToken}`,
-        },
-      }),
     }, {
       maxAttempts: 2, // Only retry once for status checks
       baseDelay: 1000
+    }),
+
+  // Delete account
+  deleteAccount: (data: { confirmEmail: string }) =>
+    authApiFetch<void>('/auth/account', {
+      method: 'DELETE',
+      body: JSON.stringify(data),
     }),
 }
 

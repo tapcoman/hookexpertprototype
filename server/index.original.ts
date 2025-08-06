@@ -3,243 +3,176 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
-import { checkDatabaseConnection } from './db/index.js'
-import { checkServerlessConnection, getServerlessStats } from './db/serverless.js'
 
-// Import middleware
-import { globalRateLimit } from './middleware/rateLimiting.js'
-import { requestLogger, errorLogger } from './middleware/logging.js'
+// Import essential middleware
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.js'
-import { initializeFirebase } from './middleware/auth.js'
-import { performanceTracker, errorTracker, trackSystemHealth } from './middleware/analytics.js'
+import { serviceStatusChecker } from './middleware/serviceAvailability.js'
 
-// Import configuration
-import { FirebaseConfig } from './config/firebase.js'
-import { StripeConfig } from './config/stripe.js'
+// Import startup validation
+import { validateEnvironmentAndServices } from './config/startup.js'
 
-// Import routes
+// Import basic routes  
 import authRoutes from './routes/auth.js'
 import hookRoutes from './routes/hooks.js'
 import userRoutes from './routes/users.js'
-import analyticsRoutes from './routes/analytics.js'
-import paymentRoutes from './routes/payments.js'
-
-// Import services
-import { initializeCronJobs } from './services/cronJobs.js'
-import { BusinessIntelligenceService } from './services/businessIntelligence.js'
+import debugRoutes from './routes/debug.js'
 
 // Load environment variables
 dotenv.config()
 
-// Initialize Firebase with enhanced configuration
-async function initializeServices() {
-  const firebaseInitialized = await FirebaseConfig.initialize()
-  
-  if (!firebaseInitialized) {
-    console.warn('⚠️ Firebase initialization failed - authentication features will be limited')
-  }
-
-  // Initialize cron jobs in production
-  if (process.env.NODE_ENV === 'production') {
-    initializeCronJobs()
-  }
-
-  // Start system health tracking
-  setInterval(() => {
-    trackSystemHealth().catch(error => {
-      console.error('System health tracking failed:', error)
-    })
-  }, 5 * 60 * 1000) // Every 5 minutes
-
-  // Start business intelligence calculations
-  if (process.env.NODE_ENV === 'production') {
-    // Run daily calculations every hour (to handle timezone differences)
-    setInterval(() => {
-      BusinessIntelligenceService.runDailyCalculations().catch(error => {
-        console.error('Daily BI calculations failed:', error)
+// Perform startup validation
+let startupResult: any = null
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    startupResult = await validateEnvironmentAndServices()
+    
+    if (!startupResult.canStart) {
+      console.error('❌ Critical startup failures detected. Server cannot start.')
+      console.error('Critical failures:')
+      startupResult.criticalFailures.forEach((failure: string) => {
+        console.error(`  - ${failure}`)
       })
-    }, 60 * 60 * 1000) // Every hour
+      process.exit(1)
+    }
+  } catch (startupError) {
+    console.error('❌ Fatal error during startup validation:', startupError)
+    console.error('   This indicates a programming error in the startup validation system.')
+    console.error('   The server will attempt to start with degraded functionality.')
+    
+    // Create minimal startup result for degraded mode
+    startupResult = {
+      success: false,
+      canStart: true, // Allow startup but in degraded mode
+      services: [],
+      criticalFailures: ['Startup validation system failed'],
+      warnings: ['Running in degraded mode due to startup validation failure']
+    }
   }
 }
 
-// Initialize services
-initializeServices().catch(error => {
-  console.error('Service initialization failed:', error)
-  process.exit(1)
-})
-
+// Create Express app
 const app = express()
 const PORT = process.env.PORT || 3000
-const NODE_ENV = process.env.NODE_ENV || 'development'
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173']
 
-// Trust proxy (important for Railway and other hosting platforms)
-app.set('trust proxy', 1)
-
-// Global rate limiting
-app.use(globalRateLimit)
-
-// Request logging
-app.use(requestLogger)
-
-// Performance tracking middleware
-app.use(performanceTracker)
-
-// Compression middleware
-app.use(compression())
-
-// Security middleware
+// Essential middleware
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.openai.com"],
-    },
-  },
+  contentSecurityPolicy: false, // Disable for development
+  crossOriginEmbedderPolicy: false
 }))
 
-// CORS configuration
 app.use(cors({
-  origin: ALLOWED_ORIGINS,
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }))
 
-// Stripe webhook endpoint needs raw body - handle before general body parsing
-app.use('/api/payments/webhooks/stripe', express.raw({ type: 'application/json' }))
+app.use(compression())
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Body parsing middleware
-app.use(express.json({ 
-  limit: '10mb',
-  type: ['application/json', 'text/plain']
-}))
-app.use(express.urlencoded({ 
-  extended: true, 
-  limit: '10mb' 
-}))
+// Add service status middleware
+app.use(serviceStatusChecker)
 
-// Health check endpoint
+// Enhanced health check endpoint with actual service testing
 app.get('/api/health', async (req, res) => {
   try {
-    // Use serverless connection for Vercel, regular connection otherwise
-    const isServerless = process.env.VERCEL === '1'
-    const dbStatus = isServerless 
-      ? await checkServerlessConnection()
-      : await checkDatabaseConnection()
+    // Get fresh service statuses with error handling
+    let currentValidation
+    try {
+      currentValidation = await validateEnvironmentAndServices()
+    } catch (validationError) {
+      console.error('Health check validation error:', validationError)
+      
+      // Return degraded status if validation fails
+      return res.status(503).json({
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        version: '2.0.0',
+        serverless: Boolean(process.env.VERCEL),
+        error: 'Service validation system failure',
+        canStart: false,
+        services: {},
+        summary: { total: 0, healthy: 0, degraded: 0, unavailable: 0, not_configured: 0 },
+        warnings: ['Health check system malfunction'],
+        criticalFailures: ['Unable to validate service health'],
+        details: process.env.NODE_ENV === 'development' ? {
+          validationError: validationError instanceof Error ? validationError.message : validationError
+        } : undefined
+      })
+    }
     
-    const firebaseStatus = FirebaseConfig.getStatus()
-    const stripeStatus = StripeConfig.getStatus()
+    // Determine overall health
+    const criticalServicesDown = currentValidation.services
+      .filter(s => s.critical && s.status !== 'healthy').length
     
+    const overallStatus = criticalServicesDown > 0 ? 'unhealthy' : 
+                         currentValidation.warnings.length > 0 ? 'degraded' : 'healthy'
+    
+    const statusCode = overallStatus === 'unhealthy' ? 503 : 
+                      overallStatus === 'degraded' ? 200 : 200
+
     const response = {
-      status: 'healthy',
+      status: overallStatus,
       timestamp: new Date().toISOString(),
-      database: dbStatus.connected ? 'connected' : 'disconnected',
-      environment: NODE_ENV,
+      environment: process.env.NODE_ENV || 'development',
       version: '2.0.0',
-      serverless: isServerless,
-      services: {
-        database: dbStatus.connected ? 'operational' : 'down',
-        ai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
-        firebase: {
-          configured: firebaseStatus.configured,
-          initialized: firebaseStatus.initialized,
-          projectId: firebaseStatus.projectId
-        },
-        stripe: {
-          configured: stripeStatus.configured,
-          initialized: stripeStatus.initialized,
-          webhookSecret: stripeStatus.webhookSecret
+      serverless: Boolean(process.env.VERCEL),
+      canStart: currentValidation.canStart,
+      services: currentValidation.services.reduce((acc, service) => {
+        acc[service.name.toLowerCase().replace(/[^a-z0-9]/g, '_')] = {
+          status: service.status,
+          message: service.message,
+          critical: service.critical,
+          lastCheck: service.lastCheck,
+          details: service.details
         }
-      }
+        return acc
+      }, {} as any),
+      summary: {
+        total: currentValidation.services.length,
+        healthy: currentValidation.services.filter(s => s.status === 'healthy').length,
+        degraded: currentValidation.services.filter(s => s.status === 'degraded').length,
+        unavailable: currentValidation.services.filter(s => s.status === 'unavailable').length,
+        not_configured: currentValidation.services.filter(s => s.status === 'not_configured').length
+      },
+      warnings: currentValidation.warnings,
+      criticalFailures: currentValidation.criticalFailures
     }
 
-    // Add serverless-specific stats if available
-    if (isServerless) {
-      (response as any).serverless_stats = getServerlessStats()
-    }
-
-    res.json(response)
+    res.status(statusCode).json(response)
   } catch (error) {
     console.error('Health check error:', error)
     res.status(503).json({
-      status: 'unhealthy',
+      status: 'error',
       timestamp: new Date().toISOString(),
-      error: 'Health check failed',
-      environment: NODE_ENV,
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Health check system failure',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
     })
   }
 })
 
-// API documentation endpoint
-app.get('/api', (req, res) => {
-  res.json({ 
-    message: 'Hook Line Studio API v2.0',
-    version: '2.0.0',
-    documentation: {
-      authentication: '/api/auth',
-      hooks: '/api/hooks',
-      users: '/api/users',
-      analytics: '/api/analytics',
-      payments: '/api/payments',
-      health: '/api/health'
-    },
-    features: [
-      'Firebase Authentication',
-      'AI-Powered Hook Generation',
-      'Psychological Framework Integration',
-      'Analytics & Performance Tracking',
-      'A/B Testing Framework',
-      'User Profiling & Personalization',
-      'Stripe Payment Integration',
-      'Subscription Management',
-      'Usage Tracking & Limits'
-    ]
-  })
-})
-
-// API Routes
+// API routes
 app.use('/api/auth', authRoutes)
-app.use('/api/hooks', hookRoutes)
+app.use('/api/hooks', hookRoutes)  
 app.use('/api/users', userRoutes)
-app.use('/api/analytics', analyticsRoutes)
-app.use('/api/payments', paymentRoutes)
 
-// Error logging middleware (before error handler)
-app.use(errorLogger)
+// Debug routes (only in development or when explicitly enabled)
+if (process.env.NODE_ENV === 'development' || process.env.ENABLE_DEBUG_ROUTES === 'true') {
+  app.use('/api/debug', debugRoutes)
+}
 
-// Error tracking middleware
-app.use(errorTracker)
-
-// Global error handler
+// Error handling
+app.use(notFoundHandler)
 app.use(globalErrorHandler)
 
-// 404 handler
-app.use('*', notFoundHandler)
-
-// Export the app for Vercel serverless deployment
-export { app }
-
-// Start server (only when not in serverless environment)
-if (process.env.VERCEL !== '1') {
+// Start server
+if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log('🚀 Hook Line Studio server running on port', PORT)
-    console.log('📍 Environment:', NODE_ENV)
-    console.log('🔗 Health check: http://localhost:' + PORT + '/api/health')
-  })
-
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully')
-    process.exit(0)
-  })
-
-  process.on('SIGINT', () => {
-    console.log('SIGINT received, shutting down gracefully')
-    process.exit(0)
+    console.log(`🚀 Server running on port ${PORT}`)
+    console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
   })
 }
+
+export { app }

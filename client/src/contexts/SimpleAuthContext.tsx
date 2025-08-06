@@ -1,26 +1,15 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User } from 'firebase/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { firebaseAuth } from '@/lib/firebase'
-import { api, setAuthToken } from '@/lib/api'
+import { simpleAuth, AuthUser, AuthError, isAuthError, getAuthErrorMessage } from '@/lib/simpleAuth'
+import { authApi, setAuthToken } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
 import { analytics } from '@/lib/analytics'
-import { 
-  classifyAuthError, 
-  AuthError, 
-  AuthErrorType, 
-  requiresSignIn,
-  getRecoveryInstructions,
-  logAuthError
-} from '@/lib/auth-errors'
 import type { UserProfile } from '@/types/shared'
 
 // ==================== TYPES ====================
 
 interface AuthState {
-  // Firebase user
-  firebaseUser: User | null
-  // Backend user profile
+  // Current user
   user: UserProfile | null
   // Loading states
   isLoading: boolean
@@ -35,10 +24,8 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   // Authentication methods
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>
   signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<void>
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>
   
   // User profile methods
@@ -54,29 +41,27 @@ interface AuthContextValue extends AuthState {
   // Error helpers
   getErrorMessage: () => string
   getRecoverySteps: () => string[]
-  shouldShowSignIn: () => boolean
 }
 
 // ==================== CONTEXT ====================
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+const SimpleAuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(SimpleAuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within a SimpleAuthProvider')
   }
   return context
 }
 
 // ==================== PROVIDER ====================
 
-interface AuthProviderProps {
+interface SimpleAuthProviderProps {
   children: ReactNode
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
+export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children }) => {
   const [isInitializing, setIsInitializing] = useState(true)
   const [isRetrying, setIsRetrying] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
@@ -98,64 +83,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [])
 
-  // ==================== FIREBASE AUTH STATE ====================
+  // ==================== INITIALIZATION ====================
 
   const handleAuthError = (error: any, context: string) => {
-    const classifiedError = classifyAuthError(error)
-    logAuthError(classifiedError, { context, firebaseUser: firebaseUser?.uid })
-    setError(classifiedError)
+    const authError = isAuthError(error) ? error : new Error(getAuthErrorMessage(error)) as AuthError
+    authError.errorCode = error.response?.data?.errorCode || error.errorCode || 'AUTH_ERROR'
+    authError.userMessage = error.response?.data?.userMessage || error.userMessage || authError.message
+    authError.canRetry = error.response?.data?.canRetry ?? error.canRetry ?? true
+    authError.actionRequired = error.response?.data?.actionRequired || error.actionRequired || ['Try again']
     
-    // Clear auth token on authentication errors
-    if (requiresSignIn(classifiedError)) {
+    console.error(`Auth error in ${context}:`, authError)
+    setError(authError)
+    
+    // Clear auth token on authentication errors that require sign in
+    if (authError.errorCode === 'TOKEN_EXPIRED' || 
+        authError.errorCode === 'TOKEN_INVALID' ||
+        authError.errorCode === 'TOKEN_REVOKED') {
       setAuthToken(null)
     }
   }
 
-  const verifyUserToken = async (user: User) => {
-    try {
-      setIsRetrying(true)
-      
-      // Get Firebase token and verify with backend
-      const firebaseToken = await user.getIdToken(true) // Force refresh
-      await api.auth.verifyToken(firebaseToken)
-      
-      // Set Firebase token for API calls
-      setAuthToken(firebaseToken)
-      
-      // Initialize analytics with user ID
-      analytics.init(user.uid, 'analytics')
-      
-      // Clear any previous errors
-      setError(null)
-      return true
-    } catch (error: any) {
-      handleAuthError(error, 'token_verification')
-      return false
-    } finally {
-      setIsRetrying(false)
-    }
-  }
-
+  // Initialize auth state on app load
   useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChanged(async (user) => {
-      setFirebaseUser(user)
-      
-      if (user) {
-        await verifyUserToken(user)
-      } else {
-        // Clear auth token when signed out
+    const initializeAuth = async () => {
+      try {
+        const token = simpleAuth.getCurrentUserToken()
+        if (token) {
+          setAuthToken(token)
+          
+          // Verify token is still valid
+          const result = await simpleAuth.verifyToken()
+          if (result.isAuthenticated && result.user) {
+            // Initialize analytics with user ID
+            analytics.init(result.user.id, 'analytics')
+            setError(null)
+          }
+        }
+      } catch (error: any) {
+        console.error('Auth initialization error:', error)
+        // Clear invalid token
         setAuthToken(null)
-        // Clear all cached data
-        queryClient.clear()
-        // Clear errors when signing out
-        setError(null)
+        handleAuthError(error, 'initialization')
+      } finally {
+        setIsInitializing(false)
       }
-      
-      setIsInitializing(false)
-    })
+    }
 
-    return unsubscribe
-  }, [queryClient])
+    initializeAuth()
+  }, [])
 
   // ==================== USER PROFILE QUERY ====================
 
@@ -167,32 +142,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   } = useQuery({
     queryKey: queryKeys.userProfile(),
     queryFn: async () => {
-      const response = await api.user.getProfile()
-      return response.data
+      const response = await authApi.verifyToken()
+      return response.data.user
     },
-    enabled: !!firebaseUser && !error,
+    enabled: !!simpleAuth.getCurrentUserToken() && !error,
     retry: (failureCount, error: any) => {
       // Don't retry on authentication errors
-      if (error?.type === AuthErrorType.TOKEN_EXPIRED || 
-          error?.type === AuthErrorType.TOKEN_INVALID ||
-          error?.type === AuthErrorType.TOKEN_REVOKED) {
+      if (error?.response?.data?.errorCode === 'TOKEN_EXPIRED' || 
+          error?.response?.data?.errorCode === 'TOKEN_INVALID' ||
+          error?.response?.data?.errorCode === 'TOKEN_REVOKED') {
         return false
       }
       // Retry on network/server errors up to 3 times
       return failureCount < 3 && (
-        error?.type === AuthErrorType.NETWORK_ERROR ||
-        error?.type === AuthErrorType.SERVER_UNAVAILABLE ||
-        error?.type === AuthErrorType.DATABASE_CONNECTION
+        error?.response?.status >= 500 ||
+        error?.code === 'NETWORK_ERROR'
       )
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     onError: (error: any) => {
-      // Handle user profile fetch errors
-      if (error?.type && error?.userMessage) {
-        handleAuthError(error, 'user_profile_fetch')
-      } else {
-        handleAuthError(error, 'user_profile_fetch')
-      }
+      handleAuthError(error, 'user_profile_fetch')
     },
   })
 
@@ -207,12 +176,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const user = await firebaseAuth.signIn(email, password)
+      const response = await authApi.login({ email, password })
+      const { user, token } = response.data
+      
+      // Set token for future requests
+      setAuthToken(token)
+      
       return user
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
       analytics.track('user_sign_in', { method: 'email' })
-      setError(null) // Clear any previous errors on successful sign in
+      analytics.init(user.id, 'analytics')
+      setError(null)
+      
+      // Trigger user profile refetch
+      refetchUser()
     },
     onError: (error: any) => {
       analytics.track('user_sign_in_failed', { method: 'email', error: error.message })
@@ -221,13 +199,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   })
 
   const signUpMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const user = await firebaseAuth.signUp(email, password)
+    mutationFn: async ({ 
+      email, 
+      password, 
+      firstName, 
+      lastName 
+    }: { 
+      email: string
+      password: string
+      firstName: string
+      lastName: string
+    }) => {
+      const response = await authApi.register({ email, password, firstName, lastName })
+      const { user, token } = response.data
+      
+      // Set token for future requests
+      setAuthToken(token)
+      
       return user
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
       analytics.track('user_sign_up', { method: 'email' })
+      analytics.init(user.id, 'analytics')
       setError(null)
+      
+      // Trigger user profile refetch
+      refetchUser()
     },
     onError: (error: any) => {
       analytics.track('user_sign_up_failed', { method: 'email', error: error.message })
@@ -235,45 +232,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
   })
 
-  const signInWithGoogleMutation = useMutation({
-    mutationFn: async () => {
-      const user = await firebaseAuth.signInWithGoogle()
-      return user
-    },
-    onSuccess: () => {
-      analytics.track('user_sign_in', { method: 'google' })
-      setError(null)
-    },
-    onError: (error: any) => {
-      analytics.track('user_sign_in_failed', { method: 'google', error: error.message })
-      handleAuthError(error, 'google_sign_in')
-    },
-  })
-
   const signOutMutation = useMutation({
     mutationFn: async () => {
-      await firebaseAuth.signOut()
+      await simpleAuth.signOut()
     },
     onSuccess: () => {
       analytics.track('user_sign_out')
+      // Clear auth token
+      setAuthToken(null)
       // Clear all cached data
       queryClient.clear()
       setError(null)
     },
     onError: (error: any) => {
+      // Still clear local state even if server call fails
+      setAuthToken(null)
+      queryClient.clear()
       handleAuthError(error, 'sign_out')
-    },
-  })
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async (email: string) => {
-      await firebaseAuth.resetPassword(email)
-    },
-    onSuccess: () => {
-      setError(null)
-    },
-    onError: (error: any) => {
-      handleAuthError(error, 'password_reset')
     },
   })
 
@@ -282,7 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       currentPassword: string
       newPassword: string
     }) => {
-      await firebaseAuth.updatePassword(currentPassword, newPassword)
+      await simpleAuth.updatePassword(currentPassword, newPassword)
     },
     onSuccess: () => {
       setError(null)
@@ -296,12 +271,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
-      const response = await api.user.updateProfile(data)
+      const response = await authApi.updateProfile?.(data) || { data: null }
       return response.data
     },
     onSuccess: (updatedUser) => {
-      // Update the cached user data
-      queryClient.setQueryData(queryKeys.userProfile(), updatedUser)
+      if (updatedUser) {
+        // Update the cached user data
+        queryClient.setQueryData(queryKeys.userProfile(), updatedUser)
+      }
       setError(null)
     },
     onError: (error: any) => {
@@ -315,7 +292,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return false
     
     // Check if user has remaining credits or active subscription
-    const hasCredits = user.freeCredits > user.usedCredits
+    const hasCredits = (user.freeCredits || 0) > (user.usedCredits || 0)
     const hasActiveSubscription = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing'
     
     return hasCredits || hasActiveSubscription
@@ -335,16 +312,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const retryAuth = async () => {
-    if (!firebaseUser) return
+    const token = simpleAuth.getCurrentUserToken()
+    if (!token) return
     
     try {
       setIsRetrying(true)
       setError(null)
       
-      // Force refresh Firebase token and retry verification
-      const success = await verifyUserToken(firebaseUser)
+      // Retry token verification
+      const result = await simpleAuth.verifyToken()
       
-      if (success) {
+      if (result.isAuthenticated) {
         // Retry user profile fetch
         await refetchUser()
       }
@@ -365,7 +343,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return 'You appear to be offline. Please check your internet connection.'
     }
     
-    return error.userMessage
+    return error.userMessage || error.message
   }
 
   const getRecoverySteps = (): string[] => {
@@ -380,18 +358,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ]
     }
     
-    return getRecoveryInstructions(error)
-  }
-
-  const shouldShowSignIn = (): boolean => {
-    return !!error && requiresSignIn(error)
+    return error.actionRequired || ['Try again', 'Contact support if the issue persists']
   }
 
   // ==================== CONTEXT VALUE ====================
 
   const contextValue: AuthContextValue = {
     // State
-    firebaseUser,
     user: user || null,
     isLoading: isLoadingUser || isRetrying,
     isInitializing,
@@ -403,17 +376,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn: async (email: string, password: string) => {
       await signInMutation.mutateAsync({ email, password })
     },
-    signUp: async (email: string, password: string) => {
-      await signUpMutation.mutateAsync({ email, password })
-    },
-    signInWithGoogle: async () => {
-      await signInWithGoogleMutation.mutateAsync()
+    signUp: async (email: string, password: string, firstName: string, lastName: string) => {
+      await signUpMutation.mutateAsync({ email, password, firstName, lastName })
     },
     signOut: async () => {
       await signOutMutation.mutateAsync()
-    },
-    resetPassword: async (email: string) => {
-      await resetPasswordMutation.mutateAsync(email)
     },
     updatePassword: async (currentPassword: string, newPassword: string) => {
       await updatePasswordMutation.mutateAsync({ currentPassword, newPassword })
@@ -434,13 +401,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Error helpers
     getErrorMessage,
     getRecoverySteps,
-    shouldShowSignIn,
   }
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <SimpleAuthContext.Provider value={contextValue}>
       {children}
-    </AuthContext.Provider>
+    </SimpleAuthContext.Provider>
   )
 }
 
@@ -448,8 +414,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 // Custom hook for accessing auth state only
 export const useAuthState = () => {
-  const { firebaseUser, user, isLoading, isInitializing, error } = useAuth()
-  return { firebaseUser, user, isLoading, isInitializing, error }
+  const { user, isLoading, isInitializing, error } = useAuth()
+  return { user, isLoading, isInitializing, error }
 }
 
 // Custom hook for auth actions only
@@ -457,9 +423,7 @@ export const useAuthActions = () => {
   const {
     signIn,
     signUp,
-    signInWithGoogle,
     signOut,
-    resetPassword,
     updatePassword,
     updateProfile,
     refreshUser,
@@ -469,9 +433,7 @@ export const useAuthActions = () => {
   return {
     signIn,
     signUp,
-    signInWithGoogle,
     signOut,
-    resetPassword,
     updatePassword,
     updateProfile,
     refreshUser,

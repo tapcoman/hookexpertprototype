@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 // Providers
-import { AuthProvider } from '@/contexts/AuthContext'
+import { SimpleAuthProvider } from '@/contexts/SimpleAuthContext'
 import { AppProvider } from '@/contexts/AppContext'
 import { queryClient } from '@/lib/react-query'
 
@@ -11,11 +11,11 @@ import { queryClient } from '@/lib/react-query'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Toaster } from '@/components/ui/Toaster'
 import { MobileLayout } from '@/components/mobile'
-import { ProtectedRoute, PublicRoute, OnboardingRoute } from '@/components/routing/ProtectedRoute'
+import { ProtectedRoute, PublicRoute, OnboardingRoute } from '@/components/routing/SimpleProtectedRoute'
 import { RootRedirect } from '@/components/routing/RootRedirect'
 
 // Pages
-import AuthPage from '@/pages/AuthPage'
+import SimpleAuthPage from '@/pages/SimpleAuthPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import MainAppPage from '@/pages/MainAppPage'
 import FavoritesPage from '@/pages/FavoritesPage'
@@ -35,7 +35,7 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <SimpleAuthProvider>
           <AppProvider>
             <Router>
               <MobileLayout>
@@ -46,7 +46,7 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/auth">
                     <PublicRoute redirectIfAuthenticated={true} redirectTo="/app">
-                      <AuthPage />
+                      <SimpleAuthPage />
                     </PublicRoute>
                   </Route>
                   
@@ -113,7 +113,7 @@ function App() {
             {/* Toast Notifications */}
             <Toaster />
           </AppProvider>
-        </AuthProvider>
+        </SimpleAuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   )

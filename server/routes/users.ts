@@ -1,6 +1,6 @@
 import { Router, Response, Request } from 'express'
 import { z } from 'zod'
-import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js'
+import { verifyJWTToken, AuthenticatedRequest } from '../middleware/simpleAuth.js'
 import { validateRequest } from '../middleware/validation.js'
 import { apiRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -16,7 +16,7 @@ import { APIResponse } from '../../shared/types.js'
 const router = Router()
 
 // All routes require authentication
-router.use(verifyFirebaseToken)
+router.use(verifyJWTToken)
 router.use(apiRateLimit)
 
 // Validation schemas

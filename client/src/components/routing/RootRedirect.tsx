@@ -1,6 +1,6 @@
 import React from 'react'
 import { Redirect, RouteComponentProps } from 'wouter'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 // ==================== TYPES ====================
@@ -16,7 +16,7 @@ type RootRedirectProps = RouteComponentProps
  * - Shows loading state during authentication check
  */
 export const RootRedirect: React.FC<RootRedirectProps> = () => {
-  const { firebaseUser, isInitializing } = useAuth()
+  const { user, isInitializing } = useAuth()
 
   // Show loading state while checking authentication
   if (isInitializing) {
@@ -24,7 +24,7 @@ export const RootRedirect: React.FC<RootRedirectProps> = () => {
   }
 
   // Redirect based on authentication status
-  if (firebaseUser) {
+  if (user) {
     // User is authenticated, redirect to main app
     return <Redirect to="/app" />
   } else {
