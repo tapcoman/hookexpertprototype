@@ -2,7 +2,6 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw, LogIn, Wifi, WifiOff, Clock, Server } from 'lucide-react'
 import { useAuth } from '@/contexts/SimpleAuthContext'
-import { AuthErrorType } from '@/lib/auth-errors'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 
@@ -25,7 +24,6 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
     isRetrying,
     getErrorMessage, 
     getRecoverySteps, 
-    shouldShowSignIn,
     retryAuth,
     clearError
   } = useAuth()
@@ -34,7 +32,14 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
 
   const errorMessage = getErrorMessage()
   const recoverySteps = getRecoverySteps()
-  const needsSignIn = shouldShowSignIn()
+  // Check if this is an auth-related error that requires sign in
+  const errorCode = (error as any)?.errorCode || (error as any)?.type
+  const needsSignIn = error && (
+    errorCode === 'TOKEN_EXPIRED' ||
+    errorCode === 'TOKEN_INVALID' ||
+    errorCode === 'TOKEN_REVOKED' ||
+    errorCode === 'UNAUTHORIZED'
+  )
 
   const handleRetry = () => {
     if (onRetry) {
@@ -57,17 +62,18 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
   const getErrorIcon = () => {
     if (!isOnline) return <WifiOff className="w-8 h-8 text-destructive" />
     
-    switch (error.type) {
-      case AuthErrorType.NETWORK_ERROR:
+    const errorType = (error as any)?.type || (error as any)?.errorCode
+    switch (errorType) {
+      case 'NETWORK_ERROR':
         return <Wifi className="w-8 h-8 text-destructive" />
-      case AuthErrorType.TIMEOUT_ERROR:
+      case 'TIMEOUT_ERROR':
         return <Clock className="w-8 h-8 text-destructive" />
-      case AuthErrorType.SERVER_UNAVAILABLE:
-      case AuthErrorType.DATABASE_CONNECTION:
+      case 'SERVER_UNAVAILABLE':
+      case 'DATABASE_CONNECTION':
         return <Server className="w-8 h-8 text-destructive" />
-      case AuthErrorType.TOKEN_EXPIRED:
-      case AuthErrorType.TOKEN_INVALID:
-      case AuthErrorType.TOKEN_REVOKED:
+      case 'TOKEN_EXPIRED':
+      case 'TOKEN_INVALID':
+      case 'TOKEN_REVOKED':
         return <LogIn className="w-8 h-8 text-destructive" />
       default:
         return <AlertTriangle className="w-8 h-8 text-destructive" />
@@ -77,21 +83,22 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
   const getErrorTitle = () => {
     if (!isOnline) return 'No Internet Connection'
     
-    switch (error.type) {
-      case AuthErrorType.TOKEN_EXPIRED:
+    const errorType = (error as any)?.type || (error as any)?.errorCode
+    switch (errorType) {
+      case 'TOKEN_EXPIRED':
         return 'Session Expired'
-      case AuthErrorType.TOKEN_INVALID:
-      case AuthErrorType.TOKEN_REVOKED:
+      case 'TOKEN_INVALID':
+      case 'TOKEN_REVOKED':
         return 'Authentication Required'
-      case AuthErrorType.NETWORK_ERROR:
+      case 'NETWORK_ERROR':
         return 'Connection Problem'
-      case AuthErrorType.TIMEOUT_ERROR:
+      case 'TIMEOUT_ERROR':
         return 'Request Timed Out'
-      case AuthErrorType.SERVER_UNAVAILABLE:
+      case 'SERVER_UNAVAILABLE':
         return 'Service Unavailable'
-      case AuthErrorType.DATABASE_CONNECTION:
+      case 'DATABASE_CONNECTION':
         return 'Database Issue'
-      case AuthErrorType.RATE_LIMITED:
+      case 'RATE_LIMITED':
         return 'Too Many Attempts'
       default:
         return 'Something Went Wrong'
@@ -179,7 +186,7 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
         )}
 
         {/* Retry countdown */}
-        {error.retryAfter && (
+        {(error as any)?.retryAfter && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -187,18 +194,18 @@ export const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
             className="mt-4 text-sm text-muted-foreground"
           >
             <Clock className="w-4 h-4 inline mr-1" />
-            Please wait {error.retryAfter} seconds before retrying
+            Please wait {(error as any).retryAfter} seconds before retrying
           </motion.div>
         )}
 
         {/* Technical details (development only) */}
-        {process.env.NODE_ENV === 'development' && error.technicalDetails && (
+        {process.env.NODE_ENV === 'development' && (error as any)?.technicalDetails && (
           <details className="mt-6 text-left">
             <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
               Technical Details (Development)
             </summary>
             <pre className="mt-2 p-3 bg-muted rounded text-xs font-mono text-muted-foreground overflow-auto max-h-32">
-              {JSON.stringify(error.technicalDetails, null, 2)}
+              {JSON.stringify((error as any).technicalDetails, null, 2)}
             </pre>
           </details>
         )}
@@ -226,14 +233,20 @@ export const InlineAuthError: React.FC<InlineAuthErrorProps> = ({
     error, 
     isRetrying,
     getErrorMessage,
-    retryAuth,
-    shouldShowSignIn
+    retryAuth
   } = useAuth()
 
   if (!error) return null
 
   const errorMessage = getErrorMessage()
-  const needsSignIn = shouldShowSignIn()
+  // Check if this is an auth-related error that requires sign in
+  const errorCode = (error as any)?.errorCode || (error as any)?.type
+  const needsSignIn = error && (
+    errorCode === 'TOKEN_EXPIRED' ||
+    errorCode === 'TOKEN_INVALID' ||
+    errorCode === 'TOKEN_REVOKED' ||
+    errorCode === 'UNAUTHORIZED'
+  )
 
   const handleRetry = () => {
     if (onRetry) {

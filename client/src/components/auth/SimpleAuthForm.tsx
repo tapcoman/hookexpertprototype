@@ -166,8 +166,12 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                 placeholder="Enter your email"
                 {...signInForm.register('email')}
                 disabled={isFormLoading}
-                error={signInForm.formState.errors.email?.message}
               />
+              {signInForm.formState.errors.email && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {signInForm.formState.errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -179,7 +183,6 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   placeholder="Enter your password"
                   {...signInForm.register('password')}
                   disabled={isFormLoading}
-                  error={signInForm.formState.errors.password?.message}
                   className="pr-10"
                 />
                 <button
@@ -195,6 +198,11 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   )}
                 </button>
               </div>
+              {signInForm.formState.errors.password && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {signInForm.formState.errors.password.message}
+                </p>
+              )}
             </div>
 
             <Button
@@ -226,8 +234,12 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   placeholder="First name"
                   {...signUpForm.register('firstName')}
                   disabled={isFormLoading}
-                  error={signUpForm.formState.errors.firstName?.message}
                 />
+                {signUpForm.formState.errors.firstName && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {signUpForm.formState.errors.firstName.message}
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -238,8 +250,12 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   placeholder="Last name"
                   {...signUpForm.register('lastName')}
                   disabled={isFormLoading}
-                  error={signUpForm.formState.errors.lastName?.message}
                 />
+                {signUpForm.formState.errors.lastName && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {signUpForm.formState.errors.lastName.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -251,8 +267,12 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                 placeholder="Enter your email"
                 {...signUpForm.register('email')}
                 disabled={isFormLoading}
-                error={signUpForm.formState.errors.email?.message}
               />
+              {signUpForm.formState.errors.email && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {signUpForm.formState.errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -266,7 +286,6 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                     onChange: (e) => handlePasswordChange(e.target.value)
                   })}
                   disabled={isFormLoading}
-                  error={signUpForm.formState.errors.password?.message}
                   className="pr-10"
                 />
                 <button
@@ -282,6 +301,11 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   )}
                 </button>
               </div>
+              {signUpForm.formState.errors.password && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {signUpForm.formState.errors.password.message}
+                </p>
+              )}
 
               {/* Password Requirements */}
               {!passwordValidation.isValid && passwordValidation.errors.length > 0 && (
@@ -303,7 +327,6 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   placeholder="Confirm your password"
                   {...signUpForm.register('confirmPassword')}
                   disabled={isFormLoading}
-                  error={signUpForm.formState.errors.confirmPassword?.message}
                   className="pr-10"
                 />
                 <button
@@ -319,6 +342,11 @@ export const SimpleAuthForm: React.FC<SimpleAuthFormProps> = ({
                   )}
                 </button>
               </div>
+              {signUpForm.formState.errors.confirmPassword && (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {signUpForm.formState.errors.confirmPassword.message}
+                </p>
+              )}
             </div>
 
             <Button

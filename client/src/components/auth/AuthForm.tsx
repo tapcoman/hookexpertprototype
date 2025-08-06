@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,8 +10,7 @@ import {
   LogIn, 
   UserPlus,
   Zap,
-  ArrowRight,
-  AlertCircle
+  ArrowRight
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card'
@@ -44,7 +42,6 @@ interface AuthFormProps {
   onSignUp: (data: SignUpData) => void
   onGoogleSignIn: () => void
   isLoading?: boolean
-  error?: string
   className?: string
 }
 
@@ -53,7 +50,6 @@ const AuthForm: React.FC<AuthFormProps> = ({
   onSignUp,
   onGoogleSignIn,
   isLoading = false,
-  error,
   className
 }) => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')

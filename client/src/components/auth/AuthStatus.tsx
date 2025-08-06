@@ -19,15 +19,12 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
   className = ''
 }) => {
   const { 
-    firebaseUser, 
     user, 
     isLoading, 
     isInitializing, 
     isRetrying,
     error, 
-    isOnline,
-    retryAuth,
-    getErrorMessage
+    isOnline
   } = useAuth()
 
   // Show nothing during initial load
@@ -79,7 +76,7 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
   }
 
   // Success state (authenticated)
-  if (firebaseUser && user) {
+  if (user) {
     if (variant === 'compact') {
       return (
         <motion.div
@@ -126,7 +123,7 @@ export const AuthStatus: React.FC<AuthStatusProps> = ({
 // ==================== CONNECTION STATUS MONITOR ====================
 
 export const ConnectionStatus: React.FC<{ className?: string }> = ({ className = '' }) => {
-  const { isOnline, error, isRetrying } = useAuth()
+  const { isOnline, isRetrying } = useAuth()
 
   return (
     <AnimatePresence>
@@ -177,12 +174,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   showLoading = true
 }) => {
   const { 
-    firebaseUser, 
     user, 
     isLoading, 
     isInitializing, 
-    error,
-    shouldShowSignIn
+    error
   } = useAuth()
 
   // Show loading during initialization
@@ -199,7 +194,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // Show error state
   if (error) {
-    if (shouldShowSignIn() && requireAuth) {
+    // Check if this is an auth-related error that requires sign in
+    const errorCode = (error as any)?.errorCode || (error as any)?.type
+    const needsSignIn = error && (
+      errorCode === 'TOKEN_EXPIRED' ||
+      errorCode === 'TOKEN_INVALID' ||
+      errorCode === 'TOKEN_REVOKED' ||
+      errorCode === 'UNAUTHORIZED'
+    )
+    
+    if (needsSignIn && requireAuth) {
       return fallback || (
         <div className="flex items-center justify-center min-h-[200px]">
           <AuthErrorDisplay />
@@ -228,7 +232,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   // Check authentication requirement
-  if (requireAuth && (!firebaseUser || !user)) {
+  if (requireAuth && !user) {
     return fallback || (
       <div className="flex items-center justify-center min-h-[200px]">
         <div className="text-center">
