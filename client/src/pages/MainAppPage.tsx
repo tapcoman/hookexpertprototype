@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useMutation } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { useGenerationState, useNotifications } from '@/contexts/AppContext'
 import { useAnalytics } from '@/lib/analytics'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'

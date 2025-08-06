@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { Redirect } from 'wouter'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 // ==================== TYPES ====================

@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertCircle, Loader2, WifiOff } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { AuthErrorDisplay, InlineAuthError } from './AuthErrorBoundary'
 import { Button } from '@/components/ui/Button'
 

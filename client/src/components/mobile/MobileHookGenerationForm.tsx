@@ -16,7 +16,7 @@ import { Card, CardContent } from '../ui/Card'
 import { Badge } from '../ui/Badge'
 import { Progress } from '../ui/Progress'
 import { useToast } from '../../hooks/useToast'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/SimpleAuthContext'
 import { cn } from '../../lib/utils'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 

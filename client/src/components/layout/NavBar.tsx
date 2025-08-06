@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/DropdownMenu'
 import Container from './Container'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/SimpleAuthContext'
 import { getInitials, cn } from '../../lib/utils'
 
 interface NavBarProps {

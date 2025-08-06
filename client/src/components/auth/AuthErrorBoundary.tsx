@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, RefreshCw, LogIn, Wifi, WifiOff, Clock, Server } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { AuthErrorType } from '@/lib/auth-errors'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'

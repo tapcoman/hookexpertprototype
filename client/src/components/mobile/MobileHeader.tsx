@@ -14,7 +14,7 @@ import {
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
 import { Avatar } from '../ui/Avatar'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/SimpleAuthContext'
 import { cn } from '../../lib/utils'
 
 interface MobileHeaderProps {
