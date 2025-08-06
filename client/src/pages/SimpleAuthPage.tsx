@@ -4,7 +4,7 @@ import { useLocation } from 'wouter'
 import { useAuth } from '@/contexts/SimpleAuthContext'
 import { useNotifications } from '@/contexts/AppContext'
 import { SimpleAuthForm } from '@/components/auth/SimpleAuthForm'
-import { Container } from '@/components/layout/Container'
+import Container from '@/components/layout/Container'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 // ==================== COMPONENT ====================

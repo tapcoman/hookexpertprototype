@@ -24,7 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   redirectTo,
   fallback,
 }) => {
-  const { firebaseUser, user, isLoading, isInitializing } = useAuth()
+  const { user, isLoading, isInitializing } = useAuth()
 
   // Show loading state while initializing
   if (isInitializing || isLoading) {
@@ -32,13 +32,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check authentication requirement
-  if (requireAuth && !firebaseUser) {
+  if (requireAuth && !user) {
     return <Redirect to={redirectTo || '/auth'} />
-  }
-
-  // Check if user profile exists (for authenticated routes)
-  if (requireAuth && firebaseUser && !user) {
-    return <LoadingSpinner className="flex items-center justify-center min-h-screen" />
   }
 
   // Check onboarding requirement
@@ -67,7 +62,7 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
   redirectIfAuthenticated = false,
   redirectTo = '/app',
 }) => {
-  const { firebaseUser, isInitializing } = useAuth()
+  const { user, isInitializing } = useAuth()
 
   // Show loading state while initializing
   if (isInitializing) {
@@ -75,7 +70,7 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({
   }
 
   // Redirect authenticated users if required
-  if (redirectIfAuthenticated && firebaseUser) {
+  if (redirectIfAuthenticated && user) {
     return <Redirect to={redirectTo} />
   }
 
@@ -89,7 +84,7 @@ interface OnboardingRouteProps {
 }
 
 export const OnboardingRoute: React.FC<OnboardingRouteProps> = ({ children }) => {
-  const { firebaseUser, user, isLoading, isInitializing } = useAuth()
+  const { user, isLoading, isInitializing } = useAuth()
 
   // Show loading state while initializing
   if (isInitializing || isLoading) {
@@ -97,7 +92,7 @@ export const OnboardingRoute: React.FC<OnboardingRouteProps> = ({ children }) =>
   }
 
   // Redirect to auth if not authenticated
-  if (!firebaseUser) {
+  if (!user) {
     return <Redirect to="/auth" />
   }
 

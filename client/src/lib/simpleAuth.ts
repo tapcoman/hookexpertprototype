@@ -16,12 +16,8 @@ export interface AuthResult {
   isNewUser?: boolean
 }
 
-export interface AuthError extends Error {
-  errorCode?: string
-  userMessage?: string
-  canRetry?: boolean
-  actionRequired?: string[]
-}
+// Re-export AuthError from auth-errors for backward compatibility
+export type { AuthError, AuthErrorType } from './auth-errors'
 
 // ==================== AUTHENTICATION FUNCTIONS ====================
 
@@ -29,33 +25,34 @@ export const simpleAuth = {
   // Sign up with email and password
   signUp: async (email: string, password: string, firstName: string, lastName: string): Promise<AuthUser> => {
     try {
-      const response = await api.post('/api/auth/register', {
+      const response = await api.auth.register({
         email,
         password,
         firstName,
         lastName
       })
 
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Registration failed')
+      if (!response.success) {
+        throw new Error(response.error || 'Registration failed')
       }
 
-      return response.data.data.user
+      return response.data?.user as AuthUser
     } catch (error: any) {
       console.error('Simple auth sign up error:', error)
       
-      // Create a proper AuthError
+      // Create a proper Error with additional properties
       const authError = new Error(
         error.response?.data?.userMessage || 
         error.response?.data?.error || 
         error.message || 
         'Registration failed'
-      ) as AuthError
+      )
       
-      authError.errorCode = error.response?.data?.errorCode
-      authError.userMessage = error.response?.data?.userMessage
-      authError.canRetry = error.response?.data?.canRetry
-      authError.actionRequired = error.response?.data?.actionRequired
+      // Add custom properties for compatibility
+      ;(authError as any).errorCode = error.response?.data?.errorCode
+      ;(authError as any).userMessage = error.response?.data?.userMessage
+      ;(authError as any).canRetry = error.response?.data?.canRetry
+      ;(authError as any).actionRequired = error.response?.data?.actionRequired
       
       throw authError
     }
@@ -64,31 +61,32 @@ export const simpleAuth = {
   // Sign in with email and password
   signIn: async (email: string, password: string): Promise<AuthUser> => {
     try {
-      const response = await api.post('/api/auth/login', {
+      const response = await api.auth.login({
         email,
         password
       })
 
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Login failed')
+      if (!response.success) {
+        throw new Error(response.error || 'Login failed')
       }
 
-      return response.data.data.user
+      return response.data?.user as AuthUser
     } catch (error: any) {
       console.error('Simple auth sign in error:', error)
       
-      // Create a proper AuthError
+      // Create a proper Error with additional properties
       const authError = new Error(
         error.response?.data?.userMessage || 
         error.response?.data?.error || 
         error.message || 
         'Login failed'
-      ) as AuthError
+      )
       
-      authError.errorCode = error.response?.data?.errorCode
-      authError.userMessage = error.response?.data?.userMessage
-      authError.canRetry = error.response?.data?.canRetry
-      authError.actionRequired = error.response?.data?.actionRequired
+      // Add custom properties for compatibility
+      ;(authError as any).errorCode = error.response?.data?.errorCode
+      ;(authError as any).userMessage = error.response?.data?.userMessage
+      ;(authError as any).canRetry = error.response?.data?.canRetry
+      ;(authError as any).actionRequired = error.response?.data?.actionRequired
       
       throw authError
     }
@@ -97,7 +95,7 @@ export const simpleAuth = {
   // Sign out
   signOut: async (): Promise<void> => {
     try {
-      await api.post('/api/auth/logout')
+      await api.auth.signOut()
     } catch (error: any) {
       console.error('Simple auth sign out error:', error)
       // Don't throw error for logout failures - we'll clear local state anyway
@@ -107,13 +105,13 @@ export const simpleAuth = {
   // Update password
   updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
     try {
-      const response = await api.post('/api/auth/update-password', {
+      const response = await api.auth.updatePassword({
         currentPassword,
         newPassword
       })
 
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Password update failed')
+      if (!response.success) {
+        throw new Error(response.error || 'Password update failed')
       }
     } catch (error: any) {
       console.error('Simple auth update password error:', error)
@@ -123,12 +121,13 @@ export const simpleAuth = {
         error.response?.data?.error || 
         error.message || 
         'Password update failed'
-      ) as AuthError
+      )
       
-      authError.errorCode = error.response?.data?.errorCode
-      authError.userMessage = error.response?.data?.userMessage
-      authError.canRetry = error.response?.data?.canRetry
-      authError.actionRequired = error.response?.data?.actionRequired
+      // Add custom properties for compatibility
+      ;(authError as any).errorCode = error.response?.data?.errorCode
+      ;(authError as any).userMessage = error.response?.data?.userMessage
+      ;(authError as any).canRetry = error.response?.data?.canRetry
+      ;(authError as any).actionRequired = error.response?.data?.actionRequired
       
       throw authError
     }
@@ -142,8 +141,8 @@ export const simpleAuth = {
   // Get authentication status
   getAuthStatus: async (): Promise<{ isAuthenticated: boolean; user?: AuthUser }> => {
     try {
-      const response = await api.get('/api/auth/status')
-      return response.data.data
+      const response = await api.auth.checkStatus()
+      return response.data || { isAuthenticated: false }
     } catch (error: any) {
       console.error('Auth status check error:', error)
       return { isAuthenticated: false }
@@ -153,13 +152,13 @@ export const simpleAuth = {
   // Verify current token
   verifyToken: async (): Promise<{ user: AuthUser; isAuthenticated: boolean }> => {
     try {
-      const response = await api.get('/api/auth/verify')
+      const response = await api.auth.verifyToken()
       
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Token verification failed')
+      if (!response.success) {
+        throw new Error(response.error || 'Token verification failed')
       }
 
-      return response.data.data
+      return response.data || { user: {} as AuthUser, isAuthenticated: false }
     } catch (error: any) {
       console.error('Token verification error:', error)
       
@@ -168,12 +167,13 @@ export const simpleAuth = {
         error.response?.data?.error || 
         error.message || 
         'Token verification failed'
-      ) as AuthError
+      )
       
-      authError.errorCode = error.response?.data?.errorCode
-      authError.userMessage = error.response?.data?.userMessage
-      authError.canRetry = error.response?.data?.canRetry
-      authError.actionRequired = error.response?.data?.actionRequired
+      // Add custom properties for compatibility
+      ;(authError as any).errorCode = error.response?.data?.errorCode
+      ;(authError as any).userMessage = error.response?.data?.userMessage
+      ;(authError as any).canRetry = error.response?.data?.canRetry
+      ;(authError as any).actionRequired = error.response?.data?.actionRequired
       
       throw authError
     }
@@ -182,8 +182,8 @@ export const simpleAuth = {
 
 // ==================== ERROR HANDLING ====================
 
-export function isAuthError(error: any): error is AuthError {
-  return error && typeof error === 'object' && 'errorCode' in error
+export function isAuthError(error: any): error is any {
+  return error && typeof error === 'object' && ('errorCode' in error || 'type' in error)
 }
 
 export function getAuthErrorMessage(error: any): string {

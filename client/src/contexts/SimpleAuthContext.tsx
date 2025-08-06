@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { simpleAuth, AuthUser, AuthError, isAuthError, getAuthErrorMessage } from '@/lib/simpleAuth'
-import { authApi, setAuthToken } from '@/lib/api'
+import { simpleAuth, AuthError, isAuthError, getAuthErrorMessage } from '@/lib/simpleAuth'
+import { api, authApi, setAuthToken } from '@/lib/api'
 import { queryKeys } from '@/lib/react-query'
 import { analytics } from '@/lib/analytics'
 import type { UserProfile } from '@/types/shared'
@@ -86,19 +86,20 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   // ==================== INITIALIZATION ====================
 
   const handleAuthError = (error: any, context: string) => {
-    const authError = isAuthError(error) ? error : new Error(getAuthErrorMessage(error)) as AuthError
-    authError.errorCode = error.response?.data?.errorCode || error.errorCode || 'AUTH_ERROR'
-    authError.userMessage = error.response?.data?.userMessage || error.userMessage || authError.message
-    authError.canRetry = error.response?.data?.canRetry ?? error.canRetry ?? true
-    authError.actionRequired = error.response?.data?.actionRequired || error.actionRequired || ['Try again']
+    const authError = isAuthError(error) ? error : new Error(getAuthErrorMessage(error))
+    ;(authError as any).errorCode = error.response?.data?.errorCode || error.errorCode || 'AUTH_ERROR'
+    ;(authError as any).userMessage = error.response?.data?.userMessage || error.userMessage || authError.message
+    ;(authError as any).canRetry = error.response?.data?.canRetry ?? error.canRetry ?? true
+    ;(authError as any).actionRequired = error.response?.data?.actionRequired || error.actionRequired || ['Try again']
     
     console.error(`Auth error in ${context}:`, authError)
     setError(authError)
     
     // Clear auth token on authentication errors that require sign in
-    if (authError.errorCode === 'TOKEN_EXPIRED' || 
-        authError.errorCode === 'TOKEN_INVALID' ||
-        authError.errorCode === 'TOKEN_REVOKED') {
+    const errorCode = (authError as any).errorCode
+    if (errorCode === 'TOKEN_EXPIRED' || 
+        errorCode === 'TOKEN_INVALID' ||
+        errorCode === 'TOKEN_REVOKED') {
       setAuthToken(null)
     }
   }
@@ -143,7 +144,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     queryKey: queryKeys.userProfile(),
     queryFn: async () => {
       const response = await authApi.verifyToken()
-      return response.data.user
+      const user = response.data?.user
+      if (!user) {
+        throw new Error('No user data received from server')
+      }
+      return user as UserProfile
     },
     enabled: !!simpleAuth.getCurrentUserToken() && !error,
     retry: (failureCount, error: any) => {
@@ -160,9 +165,8 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       )
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    onError: (error: any) => {
-      handleAuthError(error, 'user_profile_fetch')
-    },
+    // Note: onError is handled via useEffect below for React Query v4+
+    // The error is captured via userQueryError
   })
 
   // Monitor user query errors and update auth error state
@@ -177,14 +181,18 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   const signInMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const response = await authApi.login({ email, password })
-      const { user, token } = response.data
+      const { user, token } = response.data || {}
+      
+      if (!user || !token) {
+        throw new Error('Invalid response from authentication service')
+      }
       
       // Set token for future requests
       setAuthToken(token)
       
       return user
     },
-    onSuccess: (user) => {
+    onSuccess: (user: UserProfile) => {
       analytics.track('user_sign_in', { method: 'email' })
       analytics.init(user.id, 'analytics')
       setError(null)
@@ -211,14 +219,18 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       lastName: string
     }) => {
       const response = await authApi.register({ email, password, firstName, lastName })
-      const { user, token } = response.data
+      const { user, token } = response.data || {}
+      
+      if (!user || !token) {
+        throw new Error('Invalid response from authentication service')
+      }
       
       // Set token for future requests
       setAuthToken(token)
       
       return user
     },
-    onSuccess: (user) => {
+    onSuccess: (user: UserProfile) => {
       analytics.track('user_sign_up', { method: 'email' })
       analytics.init(user.id, 'analytics')
       setError(null)
@@ -271,7 +283,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
-      const response = await authApi.updateProfile?.(data) || { data: null }
+      const response = await api.user.updateProfile(data)
       return response.data
     },
     onSuccess: (updatedUser) => {
@@ -292,15 +304,17 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     if (!user) return false
     
     // Check if user has remaining credits or active subscription
-    const hasCredits = (user.freeCredits || 0) > (user.usedCredits || 0)
-    const hasActiveSubscription = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing'
+    const userTyped = user as any
+    const hasCredits = (userTyped.freeCredits || 0) > (userTyped.usedCredits || 0)
+    const hasActiveSubscription = userTyped.subscriptionStatus === 'active' || userTyped.subscriptionStatus === 'trialing'
     
     return hasCredits || hasActiveSubscription
   }
 
   const hasActiveSubscription = (): boolean => {
     if (!user) return false
-    return user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing'
+    const userTyped = user as any
+    return userTyped.subscriptionStatus === 'active' || userTyped.subscriptionStatus === 'trialing'
   }
 
   const clearError = () => {

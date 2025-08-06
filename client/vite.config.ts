@@ -49,7 +49,6 @@ export default defineConfig({
           ],
           animation: ['framer-motion'],
           query: ['@tanstack/react-query'],
-          firebase: ['firebase/app', 'firebase/auth'],
           routing: ['wouter'],
           icons: ['lucide-react']
         },
