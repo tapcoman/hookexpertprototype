@@ -466,31 +466,119 @@ export class StripeService {
   // ==================== USAGE TRACKING & CREDIT SYSTEM ====================
 
   /**
-   * Check if user can generate hooks
+   * Check if user can generate hooks with enhanced tier-based logic
    */
   static async checkGenerationLimits(userId: string, modelType: 'gpt-4o' | 'gpt-4o-mini'): Promise<GenerationStatus> {
     try {
       const usage = await this.getCurrentUsageTracking(userId)
       const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
       
-      if (!user.length || !usage) {
+      if (!user.length) {
+        // Initialize new user with free plan defaults
+        await this.initializeFreeUserTracking(userId)
+        const newUsage = await this.getCurrentUsageTracking(userId)
+        if (!newUsage) {
+          return {
+            canGenerate: false,
+            reason: 'Failed to initialize user tracking',
+            remainingProGenerations: 0,
+            remainingDraftGenerations: 0,
+            subscriptionPlan: 'free',
+            usagePercentage: 0,
+          }
+        }
+        return this.checkGenerationLimits(userId, modelType)
+      }
+
+      const userData = user[0]
+      const planName = userData.subscriptionPlan || 'free'
+      const isSubscriptionActive = userData.subscriptionStatus === 'active' || 
+                                   userData.subscriptionStatus === 'trialing' || 
+                                   userData.isPremium
+
+      // Get plan configuration
+      const planConfig = StripeConfig.PLAN_CONFIGURATIONS[planName as keyof typeof StripeConfig.PLAN_CONFIGURATIONS]
+      if (!planConfig) {
+        throw new Error(`Invalid plan configuration: ${planName}`)
+      }
+
+      // Check if model is allowed for this plan
+      if (!planConfig.allowedModels.includes(modelType)) {
+        const upgradePlan = modelType === 'gpt-4o' ? 'Starter plan' : 'any paid plan'
         return {
           canGenerate: false,
-          reason: 'User or usage data not found',
+          reason: `${modelType === 'gpt-4o' ? 'Smart AI (GPT-4o)' : 'Draft (GPT-4o-mini)'} requires ${upgradePlan}. Upgrade to access this feature.`,
           remainingProGenerations: 0,
-          remainingDraftGenerations: 0,
-          subscriptionPlan: 'free',
-          usagePercentage: 0,
+          remainingDraftGenerations: planName === 'free' ? Math.max(0, 5 - (userData.draftGenerationsUsed || 0)) : 0,
+          subscriptionPlan: planName as SubscriptionPlanName,
+          usagePercentage: 100,
+          requiresUpgrade: true,
+          modelNotAllowed: true,
         }
       }
 
-      const isPro = modelType === 'gpt-4o'
-      const planName = user[0].subscriptionPlan || 'free'
+      // For non-active subscriptions, use legacy free credits system
+      if (!isSubscriptionActive && planName === 'free') {
+        const freeCredits = userData.freeCredits || 5
+        const usedCredits = userData.usedCredits || 0
+        const draftUsed = userData.draftGenerationsUsed || 0
+        
+        // Check if we need to reset monthly limit
+        const weeklyReset = userData.weeklyDraftReset || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        const now = new Date()
+        const monthsSinceReset = (now.getTime() - weeklyReset.getTime()) / (30 * 24 * 60 * 60 * 1000)
+        
+        if (monthsSinceReset >= 1) {
+          // Reset monthly draft generations
+          await db
+            .update(users)
+            .set({
+              draftGenerationsUsed: 0,
+              weeklyDraftReset: now,
+              updatedAt: sql`NOW()`
+            })
+            .where(eq(users.id, userId))
+          
+          return this.checkGenerationLimits(userId, modelType)
+        }
 
-      // Check if current period has expired
+        const remainingCredits = Math.max(0, freeCredits - usedCredits)
+        const remainingDraft = Math.max(0, 5 - draftUsed) // 5 monthly limit for free users
+
+        // Free users can only use GPT-4o-mini and are limited to 5/month
+        const canGenerate = remainingDraft > 0
+        const usagePercentage = (draftUsed / 5) * 100
+
+        return {
+          canGenerate,
+          reason: canGenerate ? '' : 'Monthly limit reached. Upgrade to Starter for 100 Smart AI generations!',
+          remainingProGenerations: 0, // Free users get no pro generations
+          remainingDraftGenerations: remainingDraft,
+          subscriptionPlan: 'free' as SubscriptionPlanName,
+          usagePercentage,
+          requiresUpgrade: !canGenerate,
+          upgradeMessage: !canGenerate ? 'Get 100 Smart AI generations for just $9/month with Starter plan' : undefined,
+        }
+      }
+
+      // For active subscriptions, use advanced usage tracking
+      if (!usage) {
+        // Initialize usage tracking for paid users
+        await this.initializeUsageTracking(userId, planConfig as any, { 
+          current_period_end: Math.floor((userData.currentPeriodEnd?.getTime() || Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000),
+          id: userData.stripeSubscriptionId || 'trial'
+        } as any)
+        
+        const newUsage = await this.getCurrentUsageTracking(userId)
+        if (!newUsage) {
+          throw new Error('Failed to initialize usage tracking')
+        }
+        return this.checkGenerationLimits(userId, modelType)
+      }
+
+      // Check if current period has expired and reset if needed
       if (new Date() > usage.periodEnd) {
         await this.resetUsageTracking(userId)
-        // Refetch after reset
         const updatedUsage = await this.getCurrentUsageTracking(userId)
         if (!updatedUsage) {
           throw new Error('Failed to reset usage tracking')
@@ -498,11 +586,35 @@ export class StripeService {
         return this.checkGenerationLimits(userId, modelType)
       }
 
+      const isPro = modelType === 'gpt-4o'
+      
       if (isPro) {
+        // Pro generations (GPT-4o)
         const limit = usage.proGenerationsLimit
         const used = usage.proGenerationsUsed || 0
         const remaining = limit ? Math.max(0, limit - used) : Infinity
         const canGenerate = limit === null || used < limit
+        
+        // Enhanced messaging based on plan and usage
+        let reason = ''
+        let upgradeMessage = ''
+        
+        if (!canGenerate && limit !== null) {
+          reason = `Smart AI limit reached (${used}/${limit} this month)`
+          
+          // Suggest upgrade based on current plan
+          switch (planName) {
+            case 'starter':
+              upgradeMessage = 'Upgrade to Creator for 200 Smart AI generations ($15/month)'
+              break
+            case 'creator':
+              upgradeMessage = 'Upgrade to Pro for 400 Smart AI generations ($24/month)'
+              break
+            case 'pro':
+              upgradeMessage = 'Consider Teams plan for unlimited generations ($59/month)'
+              break
+          }
+        }
 
         // Check for overage allowance if at limit
         if (!canGenerate && limit !== null) {
@@ -510,48 +622,59 @@ export class StripeService {
           const overageUsed = usage.proOverageUsed || 0
           const overageRemaining = Math.max(0, maxOverage - overageUsed)
           
-          return {
-            canGenerate: overageRemaining > 0,
-            reason: overageRemaining > 0 ? 'Using overage allowance' : 'Pro generation limit exceeded',
-            remainingProGenerations: overageRemaining,
-            remainingDraftGenerations: usage.draftGenerationsLimit ? 
-              Math.max(0, usage.draftGenerationsLimit - (usage.draftGenerationsUsed || 0)) : Infinity,
-            subscriptionPlan: planName as SubscriptionPlanName,
-            usagePercentage: (used / limit) * 100,
+          if (overageRemaining > 0) {
+            return {
+              canGenerate: true,
+              reason: `Using overage allowance (${overageRemaining} Smart AI generations remaining)`,
+              remainingProGenerations: overageRemaining,
+              remainingDraftGenerations: usage.draftGenerationsLimit ? 
+                Math.max(0, usage.draftGenerationsLimit - (usage.draftGenerationsUsed || 0)) : 999999,
+              subscriptionPlan: planName as SubscriptionPlanName,
+              usagePercentage: ((used + overageUsed) / (limit + maxOverage)) * 100,
+              isOverage: true,
+            }
           }
         }
 
         return {
           canGenerate,
-          reason: canGenerate ? '' : 'Pro generation limit exceeded',
+          reason,
           remainingProGenerations: remaining === Infinity ? 999999 : remaining,
           remainingDraftGenerations: usage.draftGenerationsLimit ? 
-            Math.max(0, usage.draftGenerationsLimit - (usage.draftGenerationsUsed || 0)) : Infinity,
+            Math.max(0, usage.draftGenerationsLimit - (usage.draftGenerationsUsed || 0)) : 999999,
           subscriptionPlan: planName as SubscriptionPlanName,
           usagePercentage: limit ? (used / limit) * 100 : 0,
+          requiresUpgrade: !canGenerate,
+          upgradeMessage: !canGenerate ? upgradeMessage : undefined,
         }
       } else {
-        // Draft generations (gpt-4o-mini)
+        // Draft generations (GPT-4o-mini) 
         const limit = usage.draftGenerationsLimit
         const used = usage.draftGenerationsUsed || 0
         const remaining = limit ? Math.max(0, limit - used) : Infinity
         const canGenerate = limit === null || used < limit
+        
+        let reason = ''
+        if (!canGenerate && limit !== null) {
+          reason = `Draft limit reached (${used}/${limit} this month)`
+        }
 
         return {
           canGenerate,
-          reason: canGenerate ? '' : 'Draft generation limit exceeded',
+          reason,
           remainingProGenerations: usage.proGenerationsLimit ? 
-            Math.max(0, usage.proGenerationsLimit - (usage.proGenerationsUsed || 0)) : Infinity,
+            Math.max(0, usage.proGenerationsLimit - (usage.proGenerationsUsed || 0)) : 999999,
           remainingDraftGenerations: remaining === Infinity ? 999999 : remaining,
           subscriptionPlan: planName as SubscriptionPlanName,
           usagePercentage: limit ? (used / limit) * 100 : 0,
+          requiresUpgrade: false, // Draft generations typically unlimited for paid users
         }
       }
     } catch (error) {
       logger.error('Failed to check generation limits', { userId, modelType, error: error instanceof Error ? error.message : String(error) })
       return {
         canGenerate: false,
-        reason: 'Error checking limits',
+        reason: 'Error checking limits. Please try again.',
         remainingProGenerations: 0,
         remainingDraftGenerations: 0,
         subscriptionPlan: 'free',
@@ -561,15 +684,54 @@ export class StripeService {
   }
 
   /**
-   * Record hook generation usage
+   * Record hook generation usage with enhanced tracking
    */
   static async recordGeneration(userId: string, modelType: 'gpt-4o' | 'gpt-4o-mini'): Promise<void> {
     try {
       const isPro = modelType === 'gpt-4o'
-      const usage = await this.getCurrentUsageTracking(userId)
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
       
+      if (!user.length) {
+        throw new Error('User not found')
+      }
+
+      const userData = user[0]
+      const planName = userData.subscriptionPlan || 'free'
+      const isSubscriptionActive = userData.subscriptionStatus === 'active' || 
+                                   userData.subscriptionStatus === 'trialing' || 
+                                   userData.isPremium
+
+      // For free users, update legacy counters
+      if (!isSubscriptionActive && planName === 'free') {
+        if (isPro) {
+          // This shouldn't happen as free users can't use GPT-4o, but handle gracefully
+          logger.warn(`Free user ${userId} attempted to use GPT-4o`, { modelType, plan: planName })
+          return
+        }
+
+        // Update draft generations for free users
+        const currentDraftUsed = userData.draftGenerationsUsed || 0
+        await db
+          .update(users)
+          .set({
+            draftGenerationsUsed: currentDraftUsed + 1,
+            usedCredits: (userData.usedCredits || 0) + 1, // Maintain legacy counter
+            updatedAt: sql`NOW()`
+          })
+          .where(eq(users.id, userId))
+
+        logger.info(`Recorded free user generation for ${userId}`, { 
+          modelType,
+          newDraftUsage: currentDraftUsed + 1,
+          newTotalUsage: (userData.usedCredits || 0) + 1
+        })
+        return
+      }
+
+      // For paid users, use advanced usage tracking
+      const usage = await this.getCurrentUsageTracking(userId)
       if (!usage) {
-        throw new Error('Usage tracking not found')
+        throw new Error('Usage tracking not found for paid user')
       }
 
       if (isPro) {
@@ -577,15 +739,34 @@ export class StripeService {
         const limit = usage.proGenerationsLimit
         
         if (limit && currentUsed >= limit) {
-          // Use overage
-          await db
-            .update(usageTracking)
-            .set({ 
-              proOverageUsed: (usage.proOverageUsed || 0) + 1,
-              overageCharges: (usage.overageCharges || 0) + StripeConfig.USAGE_LIMITS.OVERAGE_PRICE_PER_GENERATION,
-              updatedAt: sql`NOW()`
+          // Use overage allowance
+          const maxOverage = Math.floor(limit * StripeConfig.USAGE_LIMITS.MAX_OVERAGE_PERCENTAGE)
+          const currentOverage = usage.proOverageUsed || 0
+          
+          if (currentOverage < maxOverage) {
+            await db
+              .update(usageTracking)
+              .set({ 
+                proOverageUsed: currentOverage + 1,
+                overageCharges: (usage.overageCharges || 0) + StripeConfig.USAGE_LIMITS.OVERAGE_PRICE_PER_GENERATION,
+                updatedAt: sql`NOW()`
+              })
+              .where(eq(usageTracking.id, usage.id))
+
+            logger.info(`Recorded overage generation for user ${userId}`, { 
+              modelType, 
+              overageUsed: currentOverage + 1,
+              maxOverage
             })
-            .where(eq(usageTracking.id, usage.id))
+          } else {
+            logger.warn(`User ${userId} exceeded overage limit for pro generations`, {
+              currentUsed,
+              limit,
+              currentOverage,
+              maxOverage
+            })
+            throw new Error('Overage limit exceeded')
+          }
         } else {
           await db
             .update(usageTracking)
@@ -594,32 +775,50 @@ export class StripeService {
               updatedAt: sql`NOW()`
             })
             .where(eq(usageTracking.id, usage.id))
+
+          logger.info(`Recorded pro generation for user ${userId}`, { 
+            modelType, 
+            newUsage: currentUsed + 1,
+            limit: limit || 'unlimited'
+          })
         }
+
+        // Update user table for backward compatibility
+        await db
+          .update(users)
+          .set({
+            proGenerationsUsed: currentUsed + 1,
+            updatedAt: sql`NOW()`
+          })
+          .where(eq(users.id, userId))
+
       } else {
+        // Draft generations (GPT-4o-mini)
+        const currentUsed = usage.draftGenerationsUsed || 0
         await db
           .update(usageTracking)
           .set({ 
-            draftGenerationsUsed: (usage.draftGenerationsUsed || 0) + 1,
+            draftGenerationsUsed: currentUsed + 1,
             updatedAt: sql`NOW()`
           })
           .where(eq(usageTracking.id, usage.id))
+
+        // Update user table for backward compatibility  
+        await db
+          .update(users)
+          .set({
+            draftGenerationsUsed: currentUsed + 1,
+            updatedAt: sql`NOW()`
+          })
+          .where(eq(users.id, userId))
+
+        logger.info(`Recorded draft generation for user ${userId}`, { 
+          modelType,
+          newUsage: currentUsed + 1,
+          limit: usage.draftGenerationsLimit || 'unlimited'
+        })
       }
 
-      // Also update user table for backward compatibility
-      await db
-        .update(users)
-        .set({
-          proGenerationsUsed: isPro ? (usage.proGenerationsUsed || 0) + 1 : usage.proGenerationsUsed,
-          draftGenerationsUsed: !isPro ? (usage.draftGenerationsUsed || 0) + 1 : usage.draftGenerationsUsed,
-          updatedAt: sql`NOW()`
-        })
-        .where(eq(users.id, userId))
-
-      logger.info(`Recorded generation usage for user ${userId}`, { 
-        modelType, 
-        isPro,
-        newUsage: isPro ? (usage.proGenerationsUsed || 0) + 1 : (usage.draftGenerationsUsed || 0) + 1
-      })
     } catch (error) {
       logger.error('Failed to record generation usage', { 
         userId, 
@@ -716,6 +915,36 @@ export class StripeService {
       overageCharges: 0,
       lastResetAt: now,
       nextResetAt: periodEnd,
+    })
+  }
+
+  /**
+   * Initialize tracking for free users
+   */
+  private static async initializeFreeUserTracking(userId: string): Promise<void> {
+    const now = new Date()
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+
+    // Initialize basic usage tracking for free users
+    await db.insert(usageTracking).values({
+      userId,
+      periodStart: now,
+      periodEnd: nextMonth,
+      proGenerationsUsed: 0,
+      draftGenerationsUsed: 0,
+      proGenerationsLimit: 0, // No pro generations for free
+      draftGenerationsLimit: 5, // 5 draft generations per month
+      subscriptionPlan: 'free',
+      stripeSubscriptionId: null,
+      proOverageUsed: 0,
+      overageCharges: 0,
+      lastResetAt: now,
+      nextResetAt: nextMonth,
+    })
+
+    logger.info(`Initialized free user tracking for ${userId}`, {
+      draftLimit: 5,
+      resetPeriod: 'monthly'
     })
   }
 

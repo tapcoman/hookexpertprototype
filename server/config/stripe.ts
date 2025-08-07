@@ -44,61 +44,66 @@ export class StripeConfig {
     }
   }
 
-  // Subscription plan configurations - Updated to match requirements
+  // Subscription plan configurations - Updated to match pricing requirements
   static readonly PLAN_CONFIGURATIONS = {
     free: {
       name: 'free',
       displayName: 'Free',
       price: 0,
-      proGenerationsLimit: 0, // No pro generations on free plan
-      draftGenerationsLimit: 10, // 10 hooks/month
+      proGenerationsLimit: 0, // No GPT-4o generations on free plan
+      draftGenerationsLimit: 5, // 5 Draft generations/month (GPT-4o-mini only)
       teamSeats: 1,
       trialPeriodDays: 0,
       resetInterval: 'month' as const,
+      allowedModels: ['gpt-4o-mini'], // Only GPT-4o-mini allowed
     },
     starter: {
       name: 'starter',
       displayName: 'Starter',
       price: 900, // $9.00
-      proGenerationsLimit: 100, // 100 hooks/month
-      draftGenerationsLimit: null, // unlimited
+      proGenerationsLimit: 100, // 100 Pro generations/month (GPT-4o)
+      draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
+      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
     },
     creator: {
       name: 'creator',
       displayName: 'Creator',
       price: 1500, // $15.00
-      proGenerationsLimit: 300, // 300 hooks/month
-      draftGenerationsLimit: null, // unlimited
+      proGenerationsLimit: 200, // 200 Pro generations/month (GPT-4o)
+      draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
       isPopular: true,
+      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
     },
     pro: {
       name: 'pro',
       displayName: 'Pro',
       price: 2400, // $24.00
-      proGenerationsLimit: 1000, // 1000 hooks/month
-      draftGenerationsLimit: null, // unlimited
+      proGenerationsLimit: 400, // 400 Pro generations/month (GPT-4o)
+      draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
       hasAdvancedAnalytics: true,
+      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
     },
     teams: {
       name: 'teams',
       displayName: 'Teams',
       price: 5900, // $59.00
-      proGenerationsLimit: null, // Unlimited hooks
-      draftGenerationsLimit: null, // unlimited
+      proGenerationsLimit: null, // Unlimited Pro generations
+      draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 3,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
       hasAdvancedAnalytics: true,
       hasPrioritySupport: true,
+      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
     },
   } as const
 

@@ -17,13 +17,53 @@ function getOpenAIClient() {
   return openaiClient
 }
 
+// Smart model selection based on user's subscription tier
+export function selectOptimalModel(user, requestedModel = null) {
+  const subscriptionStatus = user.subscriptionStatus || 'free'
+  const isPremium = user.isPremium
+  const planName = user.subscriptionPlan || 'free'
+  const isSubscriptionActive = subscriptionStatus === 'active' || 
+                               subscriptionStatus === 'trialing' || 
+                               isPremium
+
+  // Free users can only use GPT-4o-mini
+  if (!isSubscriptionActive && planName === 'free') {
+    return {
+      selectedModel: 'gpt-4o-mini',
+      reason: 'Draft AI (GPT-4o-mini) for free users',
+      wasDowngraded: requestedModel === 'gpt-4o'
+    }
+  }
+
+  // Paid users can choose, but default to GPT-4o for better results
+  if (isSubscriptionActive) {
+    const defaultModel = 'gpt-4o' // Smart AI as default for paid users
+    const selectedModel = requestedModel || defaultModel
+    
+    return {
+      selectedModel,
+      reason: selectedModel === 'gpt-4o' ? 
+        `Smart AI (GPT-4o) - Premium quality hooks` : 
+        `Draft AI (GPT-4o-mini) - Fast generation`,
+      wasDowngraded: false
+    }
+  }
+
+  // Fallback
+  return {
+    selectedModel: 'gpt-4o-mini',
+    reason: 'Default model selection',
+    wasDowngraded: requestedModel === 'gpt-4o'
+  }
+}
+
 // Hook generation with full psychological framework
 export async function generateEnhancedHooks({
   userId,
   platform,
   objective,
   topic,
-  modelType = 'gpt-4o-mini'
+  modelType = null // Allow null to enable smart selection
 }) {
   try {
     console.log('Starting enhanced hook generation for user:', userId)
@@ -33,6 +73,17 @@ export async function generateEnhancedHooks({
     if (!user) {
       throw new Error('User not found')
     }
+
+    // Smart model selection - choose optimal model for user's plan
+    const modelSelection = selectOptimalModel(user, modelType)
+    const selectedModelType = modelSelection.selectedModel
+    
+    console.log('Model selection:', {
+      requested: modelType,
+      selected: selectedModelType,
+      reason: modelSelection.reason,
+      wasDowngraded: modelSelection.wasDowngraded
+    })
 
     const userContext = {
       company: user.company,
@@ -136,7 +187,7 @@ Format each hook as JSON:
     
     const openai = getOpenAIClient()
     const completion = await openai.chat.completions.create({
-      model: modelType,
+      model: selectedModelType,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -209,7 +260,7 @@ Format each hook as JSON:
         platform,
         objective,
         topic,
-        modelType,
+        modelType: selectedModelType, // Use the actually selected model
         hooks,
         topThreeVariants,
         psychologicalStrategy: {
@@ -234,6 +285,13 @@ Format each hook as JSON:
       id: generationId,
       hooks,
       topThreeVariants,
+      modelType: selectedModelType,
+      modelSelection: {
+        requested: modelType,
+        selected: selectedModelType,
+        reason: modelSelection.reason,
+        wasDowngraded: modelSelection.wasDowngraded
+      },
       psychologicalStrategy: {
         selectedStrategy: 'Multi-framework approach with user personalization',
         psychologicalReasoning: 'Diversified psychological triggers to maximize engagement potential',
@@ -295,68 +353,236 @@ function extractHooksFromText(text, platform, objective, topic) {
   return hooks
 }
 
-// Check if user can generate hooks (credits/subscription)
-export async function checkGenerationLimits(userId) {
+// Check if user can generate hooks with tier-based logic
+export async function checkGenerationLimits(userId, modelType = 'gpt-4o-mini') {
   try {
     const user = await findUserById(userId)
     if (!user) {
       return { canGenerate: false, reason: 'User not found' }
     }
 
-    const freeCredits = user.freeCredits || 0
-    const usedCredits = user.usedCredits || 0
-    const subscriptionStatus = user.subscriptionStatus
+    const subscriptionStatus = user.subscriptionStatus || 'free'
     const isPremium = user.isPremium
+    const planName = user.subscriptionPlan || 'free'
+    const isSubscriptionActive = subscriptionStatus === 'active' || 
+                                 subscriptionStatus === 'trialing' || 
+                                 isPremium
 
-    // Check if user has active subscription
-    if (subscriptionStatus === 'active' || subscriptionStatus === 'trialing' || isPremium) {
-      return { canGenerate: true, reason: 'Active subscription' }
-    }
+    // Enhanced limits based on subscription tier
+    const isPro = modelType === 'gpt-4o'
+    
+    // Free users logic
+    if (!isSubscriptionActive && planName === 'free') {
+      if (isPro) {
+        return {
+          canGenerate: false,
+          reason: 'Smart AI (GPT-4o) requires Starter plan. Upgrade to access premium features.',
+          requiresUpgrade: true,
+          modelNotAllowed: true,
+          upgradeMessage: 'Get 100 Smart AI generations for just $9/month with Starter plan'
+        }
+      }
 
-    // Check free credits
-    if (freeCredits > usedCredits) {
-      return { 
-        canGenerate: true, 
-        reason: 'Free credits available',
-        remainingCredits: freeCredits - usedCredits
+      // Check monthly draft limit for free users
+      const draftUsed = user.draftGenerationsUsed || 0
+      const monthlyLimit = 5
+      
+      // Check if we need to reset monthly counter
+      const lastReset = user.weeklyDraftReset || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      const now = new Date()
+      const daysSinceReset = (now - lastReset) / (24 * 60 * 60 * 1000)
+      
+      let remainingDraft = monthlyLimit - draftUsed
+      if (daysSinceReset >= 30) {
+        // Reset monthly counter
+        remainingDraft = monthlyLimit
+      }
+
+      const canGenerate = remainingDraft > 0
+
+      return {
+        canGenerate,
+        reason: canGenerate ? 
+          `${remainingDraft} Draft generations remaining this month` : 
+          'Monthly limit reached. Upgrade to Starter for 100 Smart AI generations!',
+        remainingCredits: Math.max(0, remainingDraft),
+        remainingProGenerations: 0,
+        remainingDraftGenerations: Math.max(0, remainingDraft),
+        subscriptionPlan: 'free',
+        usagePercentage: (draftUsed / monthlyLimit) * 100,
+        requiresUpgrade: !canGenerate,
+        upgradeMessage: !canGenerate ? 'Get 100 Smart AI generations for just $9/month' : undefined
       }
     }
 
-    return { 
-      canGenerate: false, 
-      reason: 'No credits remaining. Please upgrade to continue generating hooks.',
+    // Active subscription users - simplified limits check
+    if (isSubscriptionActive) {
+      // Get plan limits based on subscription
+      const planLimits = {
+        starter: { pro: 100, draft: null },
+        creator: { pro: 200, draft: null }, 
+        pro: { pro: 400, draft: null },
+        teams: { pro: null, draft: null }
+      }
+
+      const limits = planLimits[planName] || { pro: 100, draft: null }
+
+      if (isPro) {
+        const proUsed = user.proGenerationsUsed || 0
+        const proLimit = limits.pro
+        
+        if (proLimit && proUsed >= proLimit) {
+          let upgradeMessage = ''
+          switch (planName) {
+            case 'starter':
+              upgradeMessage = 'Upgrade to Creator for 200 Smart AI generations ($15/month)'
+              break
+            case 'creator':
+              upgradeMessage = 'Upgrade to Pro for 400 Smart AI generations ($24/month)'
+              break
+            case 'pro':
+              upgradeMessage = 'Consider Teams plan for unlimited generations ($59/month)'
+              break
+          }
+
+          return {
+            canGenerate: false,
+            reason: `Smart AI limit reached (${proUsed}/${proLimit} this month)`,
+            remainingProGenerations: 0,
+            remainingDraftGenerations: 999999, // Unlimited drafts for paid users
+            subscriptionPlan: planName,
+            usagePercentage: (proUsed / proLimit) * 100,
+            requiresUpgrade: true,
+            upgradeMessage
+          }
+        }
+
+        const remaining = proLimit ? Math.max(0, proLimit - proUsed) : 999999
+
+        return {
+          canGenerate: true,
+          reason: proLimit ? `${remaining} Smart AI generations remaining` : 'Unlimited Smart AI generations',
+          remainingProGenerations: remaining,
+          remainingDraftGenerations: 999999,
+          subscriptionPlan: planName,
+          usagePercentage: proLimit ? (proUsed / proLimit) * 100 : 0
+        }
+      } else {
+        // Draft generations are unlimited for paid users
+        return {
+          canGenerate: true,
+          reason: 'Unlimited Draft generations',
+          remainingProGenerations: limits.pro ? Math.max(0, limits.pro - (user.proGenerationsUsed || 0)) : 999999,
+          remainingDraftGenerations: 999999,
+          subscriptionPlan: planName,
+          usagePercentage: 0
+        }
+      }
+    }
+
+    // Fallback for edge cases
+    return {
+      canGenerate: false,
+      reason: 'Unable to determine subscription status. Please contact support.',
       requiresUpgrade: true
     }
+
   } catch (error) {
     console.error('Error checking generation limits:', error)
-    return { canGenerate: false, reason: 'Failed to check generation limits' }
+    return { 
+      canGenerate: false, 
+      reason: 'Failed to check generation limits. Please try again.',
+      subscriptionPlan: 'free',
+      usagePercentage: 0
+    }
   }
 }
 
-// Update user credits after generation
-export async function updateUserCredits(userId, modelType) {
+// Update user credits after generation with tier-based tracking
+export async function updateUserCredits(userId, modelType = 'gpt-4o-mini') {
   try {
     const user = await findUserById(userId)
     if (!user) {
+      console.error(`User ${userId} not found for credit update`)
       return false
     }
 
-    // Don't update credits for premium users
-    if (user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing' || user.isPremium) {
+    const subscriptionStatus = user.subscriptionStatus || 'free'
+    const isPremium = user.isPremium
+    const planName = user.subscriptionPlan || 'free'
+    const isSubscriptionActive = subscriptionStatus === 'active' || 
+                                 subscriptionStatus === 'trialing' || 
+                                 isPremium
+
+    const isPro = modelType === 'gpt-4o'
+
+    // For free users, update legacy credits and new tracking
+    if (!isSubscriptionActive && planName === 'free') {
+      if (isPro) {
+        // Free users shouldn't be able to use GPT-4o, but handle gracefully
+        console.warn(`Free user ${userId} attempted to use GPT-4o`)
+        return false
+      }
+
+      // Update draft generation counter and legacy credits
+      const newDraftUsed = (user.draftGenerationsUsed || 0) + 1
+      const newUsedCredits = (user.usedCredits || 0) + 1
+
+      await db.sql`
+        UPDATE users 
+        SET 
+          draft_generations_used = ${newDraftUsed},
+          used_credits = ${newUsedCredits}, 
+          updated_at = NOW()
+        WHERE id = ${userId}
+      `
+
+      console.log(`Updated free user credits for ${userId}: draft_used = ${newDraftUsed}, total_used = ${newUsedCredits}`)
       return true
     }
 
-    // Increment used credits for free users
-    const newUsedCredits = (user.usedCredits || 0) + 1
+    // For active subscription users, update appropriate counter
+    if (isSubscriptionActive) {
+      if (isPro) {
+        // Update pro generation counter
+        const newProUsed = (user.proGenerationsUsed || 0) + 1
 
-    await db.sql`
-      UPDATE users 
-      SET used_credits = ${newUsedCredits}, updated_at = NOW()
-      WHERE id = ${userId}
-    `
+        await db.sql`
+          UPDATE users 
+          SET 
+            pro_generations_used = ${newProUsed},
+            updated_at = NOW()
+          WHERE id = ${userId}
+        `
 
-    console.log(`Updated credits for user ${userId}: used_credits = ${newUsedCredits}`)
-    return true
+        console.log(`Updated pro credits for user ${userId}: pro_used = ${newProUsed}`)
+        return true
+      } else {
+        // Update draft generation counter (unlimited for paid users, but track for analytics)
+        const newDraftUsed = (user.draftGenerationsUsed || 0) + 1
+
+        await db.sql`
+          UPDATE users 
+          SET 
+            draft_generations_used = ${newDraftUsed},
+            updated_at = NOW()
+          WHERE id = ${userId}
+        `
+
+        console.log(`Updated draft credits for paid user ${userId}: draft_used = ${newDraftUsed}`)
+        return true
+      }
+    }
+
+    // Fallback - should not reach here
+    console.warn(`Unexpected subscription state for user ${userId}:`, {
+      subscriptionStatus,
+      isPremium,
+      planName,
+      isSubscriptionActive
+    })
+    return false
+
   } catch (error) {
     console.error('Error updating user credits:', error)
     return false

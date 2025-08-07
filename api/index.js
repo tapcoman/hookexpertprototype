@@ -10,6 +10,12 @@ import {
   addToFavorites, 
   removeFromFavorites 
 } from './lib/hooksData.js'
+import { 
+  getSubscriptionStatus,
+  getPricingPlans,
+  getUsageAnalytics,
+  createUpgradeSession
+} from './lib/subscription.js'
 
 export default async function handler(req, res) {
   try {
@@ -761,6 +767,226 @@ export default async function handler(req, res) {
       }
     }
     
+    // Handle subscription status endpoint
+    if (req.url === '/api/subscription/status' || req.url?.endsWith('/subscription/status')) {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const result = await getSubscriptionStatus(decoded.userId)
+        
+        if (!result.success) {
+          return res.status(500).json(result)
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Subscription status retrieved successfully',
+          data: result.data
+        })
+        
+      } catch (error) {
+        console.error('Subscription status error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get subscription status',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
+    // Handle subscription plans endpoint
+    if (req.url === '/api/subscription/plans' || req.url?.endsWith('/subscription/plans')) {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        // Get current user's plan for comparison
+        const userStatus = await getSubscriptionStatus(decoded.userId)
+        const currentPlan = userStatus.success ? userStatus.data.currentPlan : 'free'
+        
+        const result = await getPricingPlans(currentPlan)
+        
+        if (!result.success) {
+          return res.status(500).json(result)
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Pricing plans retrieved successfully',
+          data: result.data
+        })
+        
+      } catch (error) {
+        console.error('Subscription plans error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get subscription plans',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
+    // Handle subscription upgrade endpoint
+    if (req.url === '/api/subscription/upgrade' || req.url?.endsWith('/subscription/upgrade')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const { planName } = req.body
+        
+        if (!planName) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required field',
+            message: 'planName is required'
+          })
+        }
+        
+        // Validate plan name
+        const validPlans = ['starter', 'creator', 'pro']
+        if (!validPlans.includes(planName)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid plan',
+            message: `Plan must be one of: ${validPlans.join(', ')}`
+          })
+        }
+        
+        const result = await createUpgradeSession(decoded.userId, planName)
+        
+        if (!result.success) {
+          return res.status(500).json(result)
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Upgrade session created successfully',
+          data: result.data
+        })
+        
+      } catch (error) {
+        console.error('Subscription upgrade error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create upgrade session',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
+    // Handle subscription usage endpoint
+    if (req.url === '/api/subscription/usage' || req.url?.endsWith('/subscription/usage')) {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const result = await getUsageAnalytics(decoded.userId)
+        
+        if (!result.success) {
+          return res.status(500).json(result)
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Usage analytics retrieved successfully',
+          data: result.data
+        })
+        
+      } catch (error) {
+        console.error('Subscription usage error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get usage analytics',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
     // Handle analytics endpoints (to prevent infinite loop)
     if (req.url?.includes('/analytics/track')) {
       // Just return success to stop the infinite loop - don't actually track for now
@@ -793,6 +1019,10 @@ export default async function handler(req, res) {
         '/api/hooks/generations/{id}', 
         '/api/hooks/favorites', 
         '/api/hooks/favorites/{id}', 
+        '/api/subscription/status',
+        '/api/subscription/plans',
+        '/api/subscription/upgrade',
+        '/api/subscription/usage',
         '/api/analytics/track'
       ]
     })

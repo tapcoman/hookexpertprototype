@@ -410,6 +410,11 @@ export type GenerationStatus = {
   resetDate?: Date
   subscriptionPlan: SubscriptionPlan
   usagePercentage: number
+  requiresUpgrade?: boolean
+  upgradeMessage?: string
+  modelNotAllowed?: boolean
+  isOverage?: boolean
+  remainingCredits?: number
 }
 
 export type SubscriptionOverview = {
