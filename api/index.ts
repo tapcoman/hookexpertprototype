@@ -24,15 +24,45 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
     
-    // For auth endpoints, return a temporary response
+    // Handle auth endpoints
+    if (req.url?.includes('/auth/register')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // For now, return a mock successful registration
+        return res.status(200).json({
+          success: true,
+          message: 'Registration endpoint working',
+          user: { email: 'test@example.com', id: '123' },
+          token: 'mock-jwt-token'
+        })
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          error: 'Registration failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+    
     if (req.url?.includes('/auth/')) {
       return res.status(503).json({
-        error: 'Authentication service temporarily unavailable',
+        error: 'Other auth endpoints temporarily unavailable',
         message: 'Setting up serverless environment'
       })
     }
     
-    return res.status(404).json({ error: 'Not found' })
+    // Debug: show what URL we're getting
+    console.log('Request URL:', req.url, 'Method:', req.method)
+    
+    return res.status(404).json({ 
+      error: 'Not found',
+      url: req.url,
+      method: req.method,
+      availableRoutes: ['/api/health', '/api/auth/*']
+    })
     
   } catch (error) {
     console.error('Function error:', error)
