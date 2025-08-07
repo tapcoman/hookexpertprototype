@@ -20,7 +20,13 @@
     
     /* Accent Colors */
     --coral-red: 352 83% 61%; /* #ff4757 */
-    --golden-yellow: 39 100% 69%; /* #ffcc66 */\n    \n    /* Swiss Design System Colors */\n    --swiss-red: 0 75% 55%; /* #e52323 - Primary Swiss red */\n    --swiss-gray: 0 0% 34%; /* #555555 - Swiss text gray */\n    --swiss-charcoal: 0 0% 13%; /* #212121 - Swiss charcoal */\n    --swiss-light-gray: 0 0% 96%; /* #f5f5f5 - Swiss light gray */
+    --golden-yellow: 39 100% 69%; /* #ffcc66 */
+    
+    /* Swiss Design System Colors */
+    --swiss-red: 0 75% 55%; /* #e52323 - Primary Swiss red */
+    --swiss-gray: 0 0% 34%; /* #555555 - Swiss text gray */
+    --swiss-charcoal: 0 0% 13%; /* #212121 - Swiss charcoal */
+    --swiss-light-gray: 0 0% 96%; /* #f5f5f5 - Swiss light gray */
     
     /* Dark Bases */
     --dark-gray: 0 0% 13%; /* #212121 */
