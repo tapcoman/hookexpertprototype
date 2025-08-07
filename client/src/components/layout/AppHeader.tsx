@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Button } from '../ui/Button'
-import { Avatar, AvatarFallback } from '../ui/avatar'
+import { Avatar, AvatarFallback } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
 
 const AppHeader: React.FC = () => {
