@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { 
- 
   SortAsc, 
   SortDesc, 
   Grid, 
@@ -55,8 +54,7 @@ const HookResults: React.FC<HookResultsProps> = ({
   const [sortBy, setSortBy] = useState<'score' | 'wordCount' | 'riskFactor'>('score')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [filterBy, setFilterBy] = useState<'all' | 'low' | 'medium' | 'high'>('all')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'feed' | 'compact'>('feed')
 
   // Filter and sort hooks
   const filteredAndSortedHooks = useMemo(() => {
@@ -67,10 +65,7 @@ const HookResults: React.FC<HookResultsProps> = ({
       filtered = filtered.filter(hook => hook.riskFactor === filterBy)
     }
 
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(hook => hook.hookCategory === selectedCategory)
-    }
+    // Note: Category filtering removed for simplified 2025 UI
 
     // Sort hooks
     return filtered.sort((a, b) => {
@@ -97,13 +92,9 @@ const HookResults: React.FC<HookResultsProps> = ({
 
       return sortOrder === 'desc' ? bValue - aValue : aValue - bValue
     })
-  }, [hooks, filterBy, selectedCategory, sortBy, sortOrder])
+  }, [hooks, filterBy, sortBy, sortOrder])
 
-  // Get unique categories
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(hooks.map(hook => hook.hookCategory)))
-    return uniqueCategories
-  }, [hooks])
+  // Note: Categories removed for simplified 2025 UI
 
   const handleExport = () => {
     const exportData = filteredAndSortedHooks.map(hook => ({
@@ -141,11 +132,10 @@ const HookResults: React.FC<HookResultsProps> = ({
   if (isLoading) {
     return (
       <div className={cn("space-y-6", className)}>
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded mb-4" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="space-y-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded-lg" />
+              <div key={i} className="h-32 modern-surface rounded-xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -155,12 +145,14 @@ const HookResults: React.FC<HookResultsProps> = ({
 
   if (hooks.length === 0) {
     return (
-      <div className={cn("text-center py-12", className)}>
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-          <Zap className="w-8 h-8 text-muted-foreground" />
+      <div className={cn("text-center py-16", className)}>
+        <div className="max-w-4xl mx-auto">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 modern-surface">
+            <Zap className="w-10 h-10" style={{ color: 'hsl(var(--text-secondary))' }} />
+          </div>
+          <h3 className="text-xl font-medium mb-3" style={{ color: 'hsl(var(--text-primary))' }}>No hooks generated yet</h3>
+          <p style={{ color: 'hsl(var(--text-secondary))' }}>Generate some hooks to see them here.</p>
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">No hooks generated yet</h3>
-        <p className="text-muted-foreground">Generate some hooks to see them here.</p>
       </div>
     )
   }
@@ -171,174 +163,166 @@ const HookResults: React.FC<HookResultsProps> = ({
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Generated Hooks</h2>
-            <p className="text-muted-foreground">
-              {filteredAndSortedHooks.length} of {hooks.length} hooks
+            <h2 className="text-3xl font-bold" style={{ color: 'hsl(var(--text-primary))' }}>Hook Results</h2>
+            <p className="text-base" style={{ color: 'hsl(var(--text-secondary))' }}>
+              {filteredAndSortedHooks.length} of {hooks.length} generated
               {topic && (
                 <span className="ml-2">
-                  for "<span className="font-medium">{topic}</span>"  
+                  • <span className="font-medium">{topic}</span>  
                 </span>
               )}
             </p>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" onClick={handleExport} className="modern-surface">
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="modern-surface">
               <Share className="w-4 h-4 mr-2" />
               Share
             </Button>
           </div>
         </div>
 
-        {/* Filters and Controls */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Modern Filter Bar */}
+        <div className="modern-surface p-4 rounded-xl">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Simplified filters */}
+              <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
+                <SelectTrigger className="w-32 modern-surface">
+                  <SelectValue placeholder="Risk" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Risk</SelectItem>
+                  <SelectItem value="low">Low Risk</SelectItem>
+                  <SelectItem value="medium">Medium Risk</SelectItem>
+                  <SelectItem value="high">High Risk</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {/* Risk Filter */}
-            <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="All Risk" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Risk</SelectItem>
-                <SelectItem value="low">Low Risk</SelectItem>
-                <SelectItem value="medium">Medium Risk</SelectItem>
-                <SelectItem value="high">High Risk</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                <SelectTrigger className="w-32 modern-surface">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="score">Score</SelectItem>
+                  <SelectItem value="wordCount">Words</SelectItem>
+                  <SelectItem value="riskFactor">Risk</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="score">Score</SelectItem>
-                <SelectItem value="wordCount">Word Count</SelectItem>
-                <SelectItem value="riskFactor">Risk Level</SelectItem>
-              </SelectContent>
-            </Select>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="text-sm" 
+                style={{ color: 'hsl(var(--text-secondary))' }}
+              >
+                {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+              </Button>
+            </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            >
-              {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-1 ml-auto">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1 ml-auto">
+              <Button
+                variant={viewMode === 'feed' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('feed')}
+                className="text-sm"
+              >
+                <List className="w-4 h-4 mr-1" />
+                Feed
+              </Button>
+              <Button
+                variant={viewMode === 'compact' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('compact')}
+                className="text-sm"
+              >
+                <Grid className="w-4 h-4 mr-1" />
+                Compact
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Results Tabs */}
-      <Tabs defaultValue="standard" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="standard">Standard View</TabsTrigger>
-          <TabsTrigger value="trimodal">Tri-Modal View</TabsTrigger>
-        </TabsList>
+      {/* Modern Feed Layout */}
+      <div className="max-w-4xl mx-auto">
+        <div className={cn(
+          viewMode === 'feed' 
+            ? "space-y-3"
+            : "grid grid-cols-1 md:grid-cols-2 gap-4"
+        )}>
+          {filteredAndSortedHooks.map((hook, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+            >
+              <HookCard
+                hook={hook}
+                platform={platform || ''}
+                objective={objective || ''}
+                isFavorite={favoriteIds.has(`${index}`)}
+                onFavoriteToggle={() => onFavoriteToggle?.(index)}
+                onCopy={() => onCopyHook?.(hook)}
+              />
+            </motion.div>
+          ))}
+        </div>
+        
+        {/* Optional Tri-Modal View Toggle */}
+        <div className="mt-8 text-center">
+          <Tabs defaultValue="standard" className="inline-flex">
+            <TabsList className="modern-surface">
+              <TabsTrigger value="standard">Standard</TabsTrigger>
+              <TabsTrigger value="trimodal">Detailed</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="standard" className="space-y-6">
-          {/* Standard Hook Cards */}
-          <div className={cn(
-            viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "space-y-4"
-          )}>
-            {filteredAndSortedHooks.map((hook, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <HookCard
-                  hook={hook}
-                  platform={platform || ''}
-                  objective={objective || ''}
-                  isFavorite={favoriteIds.has(`${index}`)}
-                  onFavoriteToggle={() => onFavoriteToggle?.(index)}
-                  onCopy={() => onCopyHook?.(hook)}
-                  className={viewMode === 'list' ? "max-w-none" : ""}
-                />
-              </motion.div>
-            ))}
-          </div>
-        </TabsContent>
+            <TabsContent value="trimodal" className="mt-6">
+              <TriModalHookResults
+                hooks={filteredAndSortedHooks.slice(0, 3)}
+                platform={platform || ''}
+                objective={objective || ''}
+                onFavoriteToggle={onFavoriteToggle || (() => {})}
+                onCopyHook={onCopyHook || (() => {})}
+                favoriteIds={favoriteIds}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
-        <TabsContent value="trimodal" className="space-y-6">
-          {/* Tri-Modal Hook Results */}
-          <TriModalHookResults
-            hooks={filteredAndSortedHooks}
-            platform={platform || ''}
-            objective={objective || ''}
-            onFavoriteToggle={onFavoriteToggle || (() => {})}
-            onCopyHook={onCopyHook || (() => {})}
-            favoriteIds={favoriteIds}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Summary Stats */}
+      {/* Minimal Summary Stats */}
       {filteredAndSortedHooks.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-border">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {(filteredAndSortedHooks.reduce((sum, hook) => sum + hook.score, 0) / filteredAndSortedHooks.length).toFixed(1)}
+        <div className="max-w-4xl mx-auto mt-8">
+          <div className="modern-surface p-4 rounded-xl">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-6">
+                <div>
+                  <span style={{ color: 'hsl(var(--text-secondary))' }}>Avg Score: </span>
+                  <span className="font-medium" style={{ color: 'hsl(var(--text-primary))' }}>
+                    {(filteredAndSortedHooks.reduce((sum, hook) => sum + hook.score, 0) / filteredAndSortedHooks.length).toFixed(1)}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: 'hsl(var(--text-secondary))' }}>Avg Words: </span>
+                  <span className="font-medium" style={{ color: 'hsl(var(--text-primary))' }}>
+                    {Math.round(filteredAndSortedHooks.reduce((sum, hook) => sum + hook.wordCount, 0) / filteredAndSortedHooks.length)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <span style={{ color: 'hsl(var(--text-secondary))' }}>Low Risk: </span>
+                <span className="font-medium" style={{ color: 'hsl(var(--text-primary))' }}>
+                  {filteredAndSortedHooks.filter(hook => hook.riskFactor === 'low').length}
+                </span>
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">Avg Score</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {Math.round(filteredAndSortedHooks.reduce((sum, hook) => sum + hook.wordCount, 0) / filteredAndSortedHooks.length)}
-            </div>
-            <div className="text-sm text-muted-foreground">Avg Words</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {filteredAndSortedHooks.filter(hook => hook.riskFactor === 'low').length}
-            </div>
-            <div className="text-sm text-muted-foreground">Low Risk</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-foreground">
-              {Math.round((filteredAndSortedHooks.reduce((sum, hook) => sum + hook.specificityScore, 0) / filteredAndSortedHooks.length) * 100)}%
-            </div>
-            <div className="text-sm text-muted-foreground">Avg Specificity</div>
           </div>
         </div>
       )}

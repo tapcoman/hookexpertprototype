@@ -59,23 +59,25 @@
   }
 
   .dark {
-    /* ChatGPT-5 Inspired Dark Theme - Cosmic Gradient */
-    --background: 240 10% 8%;
-    --foreground: 0 0% 98%;
-    --card: rgba(255, 255, 255, 0.05);
-    --card-foreground: 0 0% 98%;
-    --popover: rgba(255, 255, 255, 0.08);
-    --popover-foreground: 0 0% 98%;
+    /* Modern 2025 Dark Theme - Sophisticated & Content-First */
+    --background: 240 12% 6%;
+    --foreground: 250 100% 98%;
+    --card: 240 15% 9%;
+    --card-foreground: 250 100% 98%;
+    --popover: 240 15% 10%;
+    --popover-foreground: 250 100% 98%;
     
-    /* Cosmic Theme Colors */
-    --cosmic-dark: 240 10% 8%;
-    --cosmic-purple: 270 60% 20%;
-    --cosmic-blue: 220 70% 15%;
-    --cosmic-accent: 280 100% 70%;
-    --cosmic-surface: rgba(255, 255, 255, 0.05);
-    --cosmic-border: rgba(255, 255, 255, 0.1);
-    --text-primary: 0 0% 98%;
-    --text-secondary: 240 5% 75%;
+    /* Modern 2025 Theme - Sophisticated Palette */
+    --surface-primary: 240 12% 6%;     /* Deep space background */
+    --surface-secondary: 240 15% 9%;   /* Card surfaces */
+    --surface-tertiary: 240 18% 12%;   /* Elevated surfaces */
+    --text-primary: 250 100% 98%;      /* High contrast white */
+    --text-secondary: 240 8% 65%;      /* Subtle readable gray */
+    --text-tertiary: 240 5% 50%;       /* Muted text */
+    --accent-electric: 240 85% 70%;    /* Electric indigo */
+    --accent-success: 140 85% 65%;     /* Success green */
+    --border-subtle: 240 15% 20%;      /* Subtle borders */
+    --border-strong: 240 25% 35%;      /* Strong borders */
     
     /* Viral Energy Dark Mode - Maintaining vibrancy */
     --primary: 350 100% 70%;
@@ -97,18 +99,18 @@
     --instagram-brand: 315 85% 75%;
     --youtube-brand: 0 85% 65%;
     
-    /* Enhanced System Colors - Cosmic Dark */
-    --secondary: rgba(255, 255, 255, 0.08);
-    --secondary-foreground: 0 0% 98%;
-    --muted: rgba(255, 255, 255, 0.06);
-    --muted-foreground: 240 5% 75%;
-    --accent: rgba(124, 58, 237, 0.2);
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: rgba(255, 255, 255, 0.1);
-    --input: rgba(255, 255, 255, 0.05);
-    --ring: 280 100% 70%;
+    /* Enhanced System Colors - 2025 Modern */
+    --secondary: 240 18% 12%;
+    --secondary-foreground: 240 8% 65%;
+    --muted: 240 15% 11%;
+    --muted-foreground: 240 8% 65%;
+    --accent: 240 85% 70%;
+    --accent-foreground: 240 15% 9%;
+    --destructive: 0 85% 65%;
+    --destructive-foreground: 250 100% 98%;
+    --border: 240 15% 20%;
+    --input: 240 15% 11%;
+    --ring: 240 85% 70%;
     
     /* Quality Score Colors - Dark Mode */
     --score-high: 45 100% 65%;
@@ -297,7 +299,30 @@
     box-shadow: 0 0 20px hsl(var(--youtube-brand) / 0.3);
   }
   
-  /* ChatGPT-5 Inspired Cosmic Theme Classes */
+  /* Modern 2025 Design System Classes */
+  .modern-surface {
+    background: hsl(var(--surface-secondary));
+    border: 1px solid hsl(var(--border-subtle));
+  }
+  
+  .modern-surface-elevated {
+    background: hsl(var(--surface-tertiary));
+    border: 1px solid hsl(var(--border-strong));
+  }
+  
+  .content-first-card {
+    background: hsl(var(--surface-secondary));
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .content-first-card:hover {
+    background: hsl(var(--surface-tertiary));
+    border-color: hsl(var(--border-strong));
+    transform: translateY(-1px);
+  }
+  
   .cosmic-glass {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(12px) saturate(180%);
