@@ -294,7 +294,7 @@ export default async function handler(req, res) {
       error: 'Not found',
       url: req.url,
       method: req.method,
-      availableRoutes: ['/api/health', '/api/auth/*']
+      availableRoutes: ['/api/health', '/api/auth/*', '/api/users/onboarding', '/api/analytics/track']
     })
     
   } catch (error) {
