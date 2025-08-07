@@ -17,8 +17,8 @@ import hookRoutes from './routes/hooks.js'
 import userRoutes from './routes/users.js'
 import debugRoutes from './routes/simpleDebug.js'
 
-// Load environment variables
-dotenv.config()
+// Load environment variables from parent directory
+dotenv.config({ path: '../.env' })
 
 // Perform startup validation
 let startupResult: any = null
