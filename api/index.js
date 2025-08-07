@@ -1,6 +1,7 @@
 // Vercel serverless API with real database authentication
 import { createUser, loginUser, findUserById, verifyToken, generateToken } from './lib/auth.js'
 import { testConnection } from './lib/db.js'
+import { generateEnhancedHooks, checkGenerationLimits, updateUserCredits } from './lib/hookGenerator.js'
 
 export default async function handler(req, res) {
   try {
@@ -363,6 +364,133 @@ export default async function handler(req, res) {
       }
     }
     
+    // Handle hook generation endpoints
+    if (req.url === '/api/hooks/generate/enhanced' || req.url?.endsWith('/hooks/generate/enhanced')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const { platform, objective, topic, modelType } = req.body
+        
+        // Validate required fields
+        if (!platform || !objective || !topic) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Platform, objective, and topic are required'
+          })
+        }
+        
+        // Validate enum values
+        const validPlatforms = ['tiktok', 'instagram', 'youtube']
+        const validObjectives = ['watch_time', 'shares', 'saves', 'ctr', 'follows']
+        const validModels = ['gpt-4o', 'gpt-4o-mini']
+        
+        if (!validPlatforms.includes(platform)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid platform',
+            message: `Platform must be one of: ${validPlatforms.join(', ')}`
+          })
+        }
+        
+        if (!validObjectives.includes(objective)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid objective',
+            message: `Objective must be one of: ${validObjectives.join(', ')}`
+          })
+        }
+        
+        if (modelType && !validModels.includes(modelType)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid model type',
+            message: `Model type must be one of: ${validModels.join(', ')}`
+          })
+        }
+        
+        if (topic.length < 10 || topic.length > 1000) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid topic length',
+            message: 'Topic must be between 10 and 1000 characters'
+          })
+        }
+        
+        console.log('Hook generation request:', {
+          userId: decoded.userId,
+          platform,
+          objective,
+          topicLength: topic.length,
+          modelType: modelType || 'gpt-4o-mini'
+        })
+        
+        // Check generation limits
+        const generationStatus = await checkGenerationLimits(decoded.userId)
+        if (!generationStatus.canGenerate) {
+          return res.status(429).json({
+            success: false,
+            error: 'Generation limit reached',
+            message: generationStatus.reason,
+            data: { generationStatus }
+          })
+        }
+        
+        console.log('Generation limits checked - user can generate')
+        
+        // Generate hooks using the enhanced generator
+        const result = await generateEnhancedHooks({
+          userId: decoded.userId,
+          platform,
+          objective,
+          topic,
+          modelType: modelType || 'gpt-4o-mini'
+        })
+        
+        console.log(`Hook generation successful - generated ${result.hooks.length} hooks`)
+        
+        // Update user credits if needed
+        await updateUserCredits(decoded.userId, modelType || 'gpt-4o-mini')
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Hooks generated successfully',
+          data: result
+        })
+        
+      } catch (error) {
+        console.error('Hook generation error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Hook generation failed',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
     // Handle analytics endpoints (to prevent infinite loop)
     if (req.url?.includes('/analytics/track')) {
       // Just return success to stop the infinite loop - don't actually track for now
@@ -386,7 +514,7 @@ export default async function handler(req, res) {
       error: 'Not found',
       url: req.url,
       method: req.method,
-      availableRoutes: ['/api/health', '/api/auth/*', '/api/users/onboarding', '/api/analytics/track']
+      availableRoutes: ['/api/health', '/api/auth/*', '/api/users/onboarding', '/api/hooks/generate/enhanced', '/api/analytics/track']
     })
     
   } catch (error) {
