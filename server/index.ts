@@ -20,6 +20,12 @@ import debugRoutes from './routes/simpleDebug.js'
 // Load environment variables from parent directory
 dotenv.config({ path: '../.env' })
 
+// Debug environment loading
+console.log('Environment loading debug:')
+console.log('- NODE_ENV:', process.env.NODE_ENV)
+console.log('- DATABASE_URL exists:', !!process.env.DATABASE_URL)
+console.log('- PORT:', process.env.PORT)
+
 // Perform startup validation
 let startupResult: any = null
 if (process.env.NODE_ENV !== 'test') {
@@ -169,9 +175,19 @@ app.use(globalErrorHandler)
 
 // Start server
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`)
     console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`)
+  })
+  
+  server.on('error', (error: any) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use`)
+      process.exit(1)
+    } else {
+      console.error('❌ Server error:', error)
+    }
   })
 }
 

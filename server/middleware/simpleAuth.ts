@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { db } from '../db/index.js'
-import { users } from '../db/sqlite-schema.js'
+import { users } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { APIResponse } from '../../shared/types.js'
 import { logSecurityEvent } from './logging.js'

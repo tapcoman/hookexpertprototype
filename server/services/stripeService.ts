@@ -12,7 +12,7 @@ import {
   type PaymentHistory,
   type UsageTracking as UsageTrackingType,
   type WebhookEvent
-} from '../db/sqlite-schema.js'
+} from '../db/schema.js'
 import { stripe } from '../config/stripe.js'
 import { StripeConfig } from '../config/stripe.js'
 import { logger } from '../middleware/logging.js'

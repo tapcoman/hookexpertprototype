@@ -1,22 +1,25 @@
 import { 
-  sqliteTable as table, 
+  pgTable, 
+  varchar, 
   text, 
+  boolean, 
   integer, 
-  index,
-  primaryKey
-} from 'drizzle-orm/sqlite-core'
+  timestamp, 
+  jsonb, 
+  index 
+} from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 // ==================== USERS TABLE ====================
 
-export const users = table('users', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  email: text('email').notNull().unique(),
+export const users = pgTable('users', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar('email').notNull().unique(),
   password: text('password'), // bcrypt hashed password for email/password auth
-  firebaseUid: text('firebase_uid').unique(), // Keep for migration compatibility
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
+  firebaseUid: varchar('firebase_uid').unique(), // Keep for migration compatibility
+  firstName: varchar('first_name'),
+  lastName: varchar('last_name'),
+  emailVerified: boolean('email_verified').default(false),
   
   // Profile Information
   company: text('company'),

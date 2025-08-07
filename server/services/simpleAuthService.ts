@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import { UserService, PsychologicalProfileService } from './database.js'
 import { logBusinessEvent, logSecurityEvent } from '../middleware/logging.js'
 import { AuthenticationError, ValidationError } from '../middleware/errorHandler.js'
-import { NewUser } from '../db/sqlite-schema.js'
+import { NewUser } from '../db/schema.js'
 import { generateJWTToken } from '../middleware/simpleAuth.js'
 
 // Simple authentication service without Firebase
