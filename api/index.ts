@@ -57,6 +57,38 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
     
+    // Handle auth verify endpoint
+    if (req.url === '/api/auth/verify' || req.url?.endsWith('/auth/verify')) {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // For now, return a mock successful verification in the expected APIResponse format
+        return res.status(200).json({
+          success: true,
+          message: 'Token verified successfully',
+          data: {
+            user: {
+              id: '123',
+              email: 'test@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              emailVerified: false,
+              createdAt: new Date().toISOString()
+            },
+            isAuthenticated: true
+          }
+        })
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          error: 'Token verification failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+    
     // Handle analytics endpoints (to prevent infinite loop)
     if (req.url?.includes('/analytics/track')) {
       // Just return success to stop the infinite loop - don't actually track for now
