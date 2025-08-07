@@ -66,6 +66,9 @@ export default async function handler(req, res) {
               firstName: user.firstName,
               lastName: user.lastName,
               emailVerified: user.emailVerified,
+              freeCredits: user.freeCredits || 5,
+              usedCredits: user.usedCredits || 0,
+              subscriptionStatus: user.subscriptionStatus || 'free',
               createdAt: user.createdAt
             },
             token,
@@ -131,8 +134,8 @@ export default async function handler(req, res) {
               firstName: user.firstName,
               lastName: user.lastName,
               emailVerified: user.emailVerified,
-              freeCredits: user.freeCredits,
-              usedCredits: user.usedCredits,
+              freeCredits: user.freeCredits || 5,
+              usedCredits: user.usedCredits || 0,
               subscriptionStatus: user.subscriptionStatus,
               createdAt: user.createdAt
             },
@@ -187,8 +190,8 @@ export default async function handler(req, res) {
               firstName: result.user.firstName,
               lastName: result.user.lastName,
               emailVerified: result.user.emailVerified,
-              freeCredits: result.user.freeCredits,
-              usedCredits: result.user.usedCredits,
+              freeCredits: result.user.freeCredits || 5,
+              usedCredits: result.user.usedCredits || 0,
               subscriptionStatus: result.user.subscriptionStatus,
               createdAt: result.user.createdAt
             },
@@ -251,7 +254,12 @@ export default async function handler(req, res) {
         return res.status(200).json({
           success: true,
           message: 'Onboarding completed successfully',
-          data: updatedUser
+          data: {
+            ...updatedUser,
+            freeCredits: updatedUser.freeCredits || 5,
+            usedCredits: updatedUser.usedCredits || 0,
+            subscriptionStatus: updatedUser.subscriptionStatus || 'free'
+          }
         })
       } catch (error) {
         console.error('Onboarding error:', error)
