@@ -1,5 +1,7 @@
-// Simple Vercel API entry point 
+// Vercel serverless API with real database authentication
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createUser, loginUser, findUserById, verifyToken } from './lib/auth'
+import { testConnection } from './lib/db'
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -31,24 +33,49 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       try {
-        // For now, return a mock successful registration in the expected APIResponse format
+        const { email, password, firstName, lastName } = req.body
+        
+        if (!email || !password || !firstName || !lastName) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Email, password, firstName, and lastName are required'
+          })
+        }
+        
+        // Create user in database
+        const user = await createUser({ email, password, firstName, lastName })
+        
+        if (!user) {
+          return res.status(409).json({
+            success: false,
+            error: 'User already exists',
+            message: 'A user with this email already exists'
+          })
+        }
+        
+        // Generate token
+        const { createUser: _, loginUser: __, ...authModule } = await import('./lib/auth')
+        const token = authModule.generateToken(user.id)
+        
         return res.status(200).json({
           success: true,
           message: 'User registered successfully',
           data: {
             user: {
-              id: '123',
-              email: 'test@example.com',
-              firstName: 'Test',
-              lastName: 'User',
-              emailVerified: false,
-              createdAt: new Date().toISOString()
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              emailVerified: user.emailVerified,
+              createdAt: user.createdAt
             },
-            token: 'mock-jwt-token-12345',
+            token,
             isNewUser: true
           }
         })
       } catch (error) {
+        console.error('Registration error:', error)
         return res.status(500).json({
           success: false,
           error: 'Registration failed',
@@ -64,26 +91,117 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       try {
-        // For now, return a mock successful verification in the expected APIResponse format
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'No token provided',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        // Get user from database
+        const user = await findUserById(decoded.userId)
+        
+        if (!user) {
+          return res.status(401).json({
+            success: false,
+            error: 'User not found',
+            message: 'User associated with this token no longer exists'
+          })
+        }
+        
         return res.status(200).json({
           success: true,
           message: 'Token verified successfully',
           data: {
             user: {
-              id: '123',
-              email: 'test@example.com',
-              firstName: 'Test',
-              lastName: 'User',
-              emailVerified: false,
-              createdAt: new Date().toISOString()
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              emailVerified: user.emailVerified,
+              freeCredits: user.freeCredits,
+              usedCredits: user.usedCredits,
+              subscriptionStatus: user.subscriptionStatus,
+              createdAt: user.createdAt
             },
             isAuthenticated: true
           }
         })
       } catch (error) {
+        console.error('Token verification error:', error)
         return res.status(500).json({
           success: false,
           error: 'Token verification failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+    
+    // Handle auth login endpoint
+    if (req.url === '/api/auth/login' || req.url?.endsWith('/auth/login')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        const { email, password } = req.body
+        
+        if (!email || !password) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Email and password are required'
+          })
+        }
+        
+        // Attempt login
+        const result = await loginUser(email, password)
+        
+        if (!result) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid credentials',
+            message: 'Email or password is incorrect'
+          })
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Login successful',
+          data: {
+            user: {
+              id: result.user.id,
+              email: result.user.email,
+              firstName: result.user.firstName,
+              lastName: result.user.lastName,
+              emailVerified: result.user.emailVerified,
+              freeCredits: result.user.freeCredits,
+              usedCredits: result.user.usedCredits,
+              subscriptionStatus: result.user.subscriptionStatus,
+              createdAt: result.user.createdAt
+            },
+            token: result.token
+          }
+        })
+      } catch (error) {
+        console.error('Login error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Login failed',
           message: error instanceof Error ? error.message : 'Unknown error'
         })
       }
