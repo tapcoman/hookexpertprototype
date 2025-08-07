@@ -94,6 +94,14 @@ const HookResults: React.FC<HookResultsProps> = ({
     })
   }, [hooks, filterBy, sortBy, sortOrder])
 
+  // Identify the highest scoring hook from all hooks (not just filtered)
+  const highestScoringHook = useMemo(() => {
+    if (hooks.length === 0) return null
+    return hooks.reduce((prev, current) => 
+      (prev.score > current.score) ? prev : current
+    )
+  }, [hooks])
+
   // Note: Categories removed for simplified 2025 UI
 
   const handleExport = () => {
@@ -270,6 +278,7 @@ const HookResults: React.FC<HookResultsProps> = ({
                 isFavorite={favoriteIds.has(`${index}`)}
                 onFavoriteToggle={() => onFavoriteToggle?.(index)}
                 onCopy={() => onCopyHook?.(hook)}
+                isHighestScoring={highestScoringHook && hook.verbalHook === highestScoringHook.verbalHook && hook.score === highestScoringHook.score}
               />
             </motion.div>
           ))}

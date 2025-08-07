@@ -5,7 +5,11 @@ import {
   Heart, 
   MoreHorizontal,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  Sparkles,
+  Target,
+  TrendingUp
 } from 'lucide-react'
 import type { HookObject } from '@/types/shared'
 import { cn } from '../../lib/utils'
@@ -20,6 +24,7 @@ interface HookCardProps {
   showDetails?: boolean
   isFavorite?: boolean
   isConnected?: boolean
+  isHighestScoring?: boolean
   onFavoriteToggle?: () => void
   onCopy?: () => void
   className?: string
@@ -32,11 +37,12 @@ const HookCard: React.FC<HookCardProps> = ({
   showDetails = true,
   isFavorite = false,
   isConnected: _isConnected = false,
+  isHighestScoring = false,
   onFavoriteToggle,
   onCopy,
   className
 }) => {
-  const [showExpanded, setShowExpanded] = useState(false)
+  const [showExpanded, setShowExpanded] = useState(isHighestScoring)
   const [copySuccess, setCopySuccess] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const { toast } = useToast()
@@ -84,7 +90,11 @@ const HookCard: React.FC<HookCardProps> = ({
 
   return (
     <motion.article
-      className={cn("group relative content-first-card", className)}
+      className={cn(
+        "group relative",
+        isHighestScoring ? "premium-hook-card" : "content-first-card",
+        className
+      )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -96,11 +106,20 @@ const HookCard: React.FC<HookCardProps> = ({
         {/* Header with minimal metadata */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
+            {/* Premium Badge for Highest Scoring */}
+            {isHighestScoring && (
+              <div className="premium-badge flex items-center gap-1">
+                <Trophy className="w-3 h-3" />
+                Highest Scoring
+              </div>
+            )}
+            
             {/* Quality Score Badge */}
             <div className={cn(
               "px-2.5 py-1 rounded-full text-sm font-medium border",
-              getScoreBadgeColor(hook.score)
+              isHighestScoring ? "golden-score-badge" : getScoreBadgeColor(hook.score)
             )}>
+              {isHighestScoring && <Trophy className="w-3 h-3 mr-1 trophy-icon inline" />}
               {hook.score.toFixed(1)}
             </div>
             
@@ -236,6 +255,44 @@ const HookCard: React.FC<HookCardProps> = ({
                   <span style={{ color: 'hsl(var(--text-tertiary))' }}>{Math.round(hook.freshnessScore * 100)}%</span>
                 </div>
               </div>
+              
+              {/* Success Factors - Only for Highest Scoring Hook */}
+              {isHighestScoring && (
+                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'hsl(var(--premium-gold) / 0.2)' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--premium-gold))' }} />
+                    <span className="font-medium text-sm" style={{ color: 'hsl(var(--premium-gold))' }}>
+                      Why This Hook Scored Highest
+                    </span>
+                  </div>
+                  <div className="success-factors-grid">
+                    {hook.specificityScore > 0.8 && (
+                      <div className="success-factor">
+                        <Target className="success-factor-icon" />
+                        <span style={{ color: 'hsl(var(--text-secondary))' }}>High Specificity</span>
+                      </div>
+                    )}
+                    {hook.freshnessScore > 0.7 && (
+                      <div className="success-factor">
+                        <Sparkles className="success-factor-icon" />
+                        <span style={{ color: 'hsl(var(--text-secondary))' }}>Original Approach</span>
+                      </div>
+                    )}
+                    {hook.score >= 4.5 && (
+                      <div className="success-factor">
+                        <TrendingUp className="success-factor-icon" />
+                        <span style={{ color: 'hsl(var(--text-secondary))' }}>Premium Quality</span>
+                      </div>
+                    )}
+                    {hook.riskFactor === 'low' && (
+                      <div className="success-factor">
+                        <CheckCircle2 className="success-factor-icon" />
+                        <span style={{ color: 'hsl(var(--text-secondary))' }}>Platform Safe</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
