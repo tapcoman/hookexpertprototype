@@ -45,6 +45,7 @@
     "db:test-teardown": "NODE_ENV=test npm run db:reset"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/stripe": "^8.0.416",
     "bcrypt": "^6.0.0",
