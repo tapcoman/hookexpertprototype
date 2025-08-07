@@ -10,11 +10,17 @@ import { HookGenerationLoading } from '@/components/ui/LoadingSpinner'
 import HookCard from '@/components/hook/HookCard'
 import EmptyState from '@/components/ui/EmptyState'
 import AppHeader from '@/components/layout/AppHeader'
+import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { Badge } from '@/components/ui/Badge'
 import { api } from '@/lib/api'
 import { Sparkles, Target, TrendingUp, PlayCircle, Users } from 'lucide-react'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
-// ==================== MATERIAL DESIGN HOOK GENERATION FORM ====================
+// ==================== SHADCN UI HOOK GENERATION FORM ====================
 
 interface HookGenerationFormProps {
   onGenerate: (data: GenerateHooksRequest) => void
@@ -58,7 +64,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   const handleTopicChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     setCharCount(value.length)
-    setFormData((prev: any) => ({ ...prev, topic: value }))
+    setFormData(prev => ({ ...prev, topic: value }))
   }
 
   const platforms = [
@@ -68,11 +74,11 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   ]
 
   const objectives = [
-    { value: 'watch_time', label: 'Watch Time', icon: PlayCircle, description: 'Keep viewers watching' },
-    { value: 'shares', label: 'Shares', icon: TrendingUp, description: 'Drive viral sharing' },
-    { value: 'saves', label: 'Saves', icon: Target, description: 'High save rates' },
-    { value: 'ctr', label: 'Click Rate', icon: Sparkles, description: 'Increase clicks' },
-    { value: 'follows', label: 'Followers', icon: Users, description: 'Grow audience' },
+    { value: 'watch_time', label: 'Watch Time', icon: PlayCircle },
+    { value: 'shares', label: 'Shares', icon: TrendingUp },
+    { value: 'saves', label: 'Saves', icon: Target },
+    { value: 'ctr', label: 'Click Rate', icon: Sparkles },
+    { value: 'follows', label: 'Followers', icon: Users },
   ]
 
   const canGenerate = user && (
@@ -83,187 +89,165 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="md-elevated-card">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="md-headline-large mb-4">
-            Generate Viral Hooks
-          </h1>
-          <p className="md-body-large" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">Generate Viral Hooks</CardTitle>
+          <CardDescription className="text-lg">
             Create platform-optimized hooks that drive engagement
-          </p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Platform Selection */}
-          <div className="space-y-4">
-            <label className="md-title-small block">
-              Choose Platform
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {platforms.map((platform) => (
-                <motion.button
-                  key={platform.value}
-                  type="button"
-                  onClick={() => setFormData((prev: any) => ({ ...prev, platform: platform.value as Platform }))}
-                  className={`md-state-layer p-4 rounded-xl border-2 text-left transition-all duration-200 ${
-                    formData.platform === platform.value
-                      ? 'border-current'
-                      : 'border-transparent'
-                  }`}
-                  style={{
-                    backgroundColor: formData.platform === platform.value 
-                      ? 'rgb(var(--md-sys-color-secondary-container))'
-                      : 'rgb(var(--md-sys-color-surface-variant))',
-                    color: formData.platform === platform.value
-                      ? 'rgb(var(--md-sys-color-on-secondary-container))'
-                      : 'rgb(var(--md-sys-color-on-surface-variant))',
-                    borderColor: formData.platform === platform.value
-                      ? 'rgb(var(--md-sys-color-primary))'
-                      : 'rgb(var(--md-sys-color-outline-variant))'
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-2xl">{platform.icon}</span>
-                    <span className="md-title-medium font-medium">{platform.label}</span>
-                  </div>
-                  <p className="md-body-small opacity-80">{platform.description}</p>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Objective Selection */}
-          <div className="space-y-4">
-            <label className="md-title-small block">
-              Optimization Goal
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {objectives.map((objective) => {
-                const Icon = objective.icon
-                return (
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Platform Selection */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Choose Platform</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {platforms.map((platform) => (
                   <motion.button
-                    key={objective.value}
+                    key={platform.value}
                     type="button"
-                    onClick={() => setFormData((prev: any) => ({ ...prev, objective: objective.value as Objective }))}
-                    className={`md-filter-chip p-3 text-center ${
-                      formData.objective === objective.value ? 'selected' : ''
+                    onClick={() => setFormData(prev => ({ ...prev, platform: platform.value as Platform }))}
+                    className={`p-4 rounded-lg border-2 text-left transition-all duration-200 hover:shadow-md ${
+                      formData.platform === platform.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Icon className="w-5 h-5 mx-auto mb-1" />
-                    <div className="md-label-medium">{objective.label}</div>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="text-2xl">{platform.icon}</span>
+                      <span className="font-medium">{platform.label}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{platform.description}</p>
                   </motion.button>
-                )
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Topic Input */}
-          <div className="space-y-4">
-            <div className="md-outlined-text-field">
-              <textarea
-                value={formData.topic}
-                onChange={handleTopicChange}
-                placeholder=" "
-                rows={4}
-                className={errors.topic ? '!border-red-500' : ''}
-                style={{ minHeight: '120px' }}
-              />
-              <label>Video Topic</label>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <p className="md-body-small" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
-                Be specific and descriptive for best results
-              </p>
-              <span className={`md-body-small ${
-                charCount < 10 ? 'text-red-500' : 
-                charCount > 800 ? 'text-amber-500' : 
-                'opacity-60'
-              }`}>
-                {charCount}/1000
-              </span>
-            </div>
-            
-            {errors.topic && (
-              <motion.p 
-                className="md-body-small text-red-500"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+            {/* Objective Selection */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium">Optimization Goal</h3>
+              <Select
+                value={formData.objective}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, objective: value as Objective }))}
               >
-                {errors.topic}
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select optimization goal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {objectives.map((objective) => {
+                    const Icon = objective.icon
+                    return (
+                      <SelectItem key={objective.value} value={objective.value}>
+                        <div className="flex items-center space-x-2">
+                          <Icon className="w-4 h-4" />
+                          <span>{objective.label}</span>
+                        </div>
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Topic Input */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="topic" className="text-sm font-medium">
+                  Video Topic
+                </label>
+                <Textarea
+                  id="topic"
+                  value={formData.topic}
+                  onChange={handleTopicChange}
+                  placeholder="Describe your video concept in detail... e.g., 'I tried eating only white foods for 30 days and the results shocked me'"
+                  className={`min-h-[120px] resize-none ${errors.topic ? 'border-destructive' : ''}`}
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-muted-foreground">
+                    Be specific and descriptive for best results
+                  </p>
+                  <span className={`text-sm ${
+                    charCount < 10 ? 'text-destructive' : 
+                    charCount > 800 ? 'text-yellow-600' : 
+                    'text-muted-foreground'
+                  }`}>
+                    {charCount}/1000
+                  </span>
+                </div>
+                {errors.topic && (
+                  <motion.p 
+                    className="text-sm text-destructive"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {errors.topic}
+                  </motion.p>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isLoading || !canGenerate}
+              className="w-full h-12"
+              size="lg"
+            >
+              <AnimatePresence mode="wait">
+                {isLoading ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Generating...</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="generate"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Generate 10 Hooks</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Button>
+
+            {!canGenerate && (
+              <motion.p 
+                className="text-center text-sm text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.3 }}
+              >
+                No credits remaining.{' '}
+                <a 
+                  href="/pricing" 
+                  className="font-medium text-primary hover:underline"
+                >
+                  Upgrade your plan
+                </a>{' '}
+                to continue.
               </motion.p>
             )}
-          </div>
-
-          {/* Submit Button */}
-          <motion.button
-            type="submit"
-            disabled={isLoading || !canGenerate}
-            className={`w-full md-filled-button h-12 ${
-              !canGenerate ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            whileHover={canGenerate ? { scale: 1.02 } : {}}
-            whileTap={canGenerate ? { scale: 0.98 } : {}}
-          >
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center space-x-2"
-                >
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Generating...</span>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="generate"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center space-x-2"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span>Generate 10 Hooks</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
-
-          {!canGenerate && (
-            <motion.p 
-              className="text-center md-body-small"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.3 }}
-            >
-              No credits remaining.{' '}
-              <a 
-                href="/pricing" 
-                className="font-medium hover:underline transition-colors duration-200"
-                style={{ color: 'rgb(var(--md-sys-color-primary))' }}
-              >
-                Upgrade your plan
-              </a>{' '}
-              to continue.
-            </motion.p>
-          )}
-        </form>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
 
-// ==================== MATERIAL DESIGN HOOK RESULTS ====================
+// ==================== SHADCN UI HOOK RESULTS ====================
 
 interface HookResultsProps {
   generation: any
@@ -283,13 +267,11 @@ const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCop
       className="space-y-8"
     >
       {/* Header */}
-      <div className="text-center space-y-3 pb-6 border-b border-gray-200">
-        <h2 className="md-headline-medium">
-          Your Viral Hooks
-        </h2>
-        <p className="md-body-medium" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold">Your Viral Hooks</h2>
+        <p className="text-muted-foreground">
           <span className="font-semibold">{generation.hooks.length}</span> hooks generated for{' '}
-          <span className="font-medium capitalize">{generation.platform}</span>
+          <Badge variant="secondary" className="capitalize">{generation.platform}</Badge>
         </p>
       </div>
 
@@ -464,10 +446,10 @@ const MainAppPageContent: React.FC = () => {
   }
 
   return (
-    <div style={{ backgroundColor: 'rgb(var(--md-sys-color-background))' }}>
+    <div className="min-h-screen bg-background">
       <AppHeader />
       
-      {/* Material Design Layout */}
+      {/* Clean shadcn/ui Layout */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-8">
           

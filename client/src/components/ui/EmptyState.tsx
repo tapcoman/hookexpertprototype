@@ -1,6 +1,8 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles, Play, ArrowRight } from 'lucide-react'
+import { Sparkles, Play, ArrowRight, Target, Brain, Zap } from 'lucide-react'
+import { Button } from './Button'
+import { Card, CardContent } from './Card'
 
 interface EmptyStateProps {
   onGenerateSample?: () => void
@@ -19,28 +21,21 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Material Design Icon */}
+        {/* Icon */}
         <motion.div 
-          className="w-24 h-24 mx-auto mb-8 relative"
+          className="w-20 h-20 mx-auto mb-8 relative"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div 
-            className="w-full h-full rounded-2xl flex items-center justify-center relative overflow-hidden"
-            style={{ backgroundColor: 'rgb(var(--md-sys-color-primary-container))' }}
-          >
-            <Sparkles 
-              className="w-12 h-12 z-10" 
-              style={{ color: 'rgb(var(--md-sys-color-on-primary-container))' }}
-            />
+          <div className="w-full h-full rounded-2xl flex items-center justify-center bg-primary/10 relative overflow-hidden">
+            <Sparkles className="w-10 h-10 text-primary z-10" />
             
             {/* Subtle gradient overlay */}
             <motion.div
-              className="absolute inset-0 opacity-20"
-              style={{ backgroundColor: 'rgb(var(--md-sys-color-primary))' }}
+              className="absolute inset-0 bg-primary/5"
               animate={{ 
-                opacity: [0.1, 0.3, 0.1],
+                opacity: [0.5, 1, 0.5],
                 scale: [1, 1.05, 1]
               }}
               transition={{
@@ -52,19 +47,18 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           </div>
         </motion.div>
 
-        {/* Material Design Typography */}
+        {/* Typography */}
         <motion.h2 
-          className="md-headline-large mb-4"
+          className="text-3xl font-bold mb-4 text-foreground"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          Ready to Create?
+          Ready to Create Viral Hooks?
         </motion.h2>
         
         <motion.p 
-          className="md-body-large mb-4"
-          style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+          className="text-lg mb-4 text-muted-foreground"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
@@ -73,8 +67,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </motion.p>
         
         <motion.p 
-          className="md-body-medium mb-12"
-          style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+          className="text-sm mb-8 text-muted-foreground"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
@@ -82,114 +75,96 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           Choose your platform • Describe your content • Get 10 optimized hooks in seconds
         </motion.p>
 
-        {/* Material Design Action Buttons */}
+        {/* Action Buttons */}
         <motion.div 
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.6 }}
         >
-          <motion.button 
+          <Button 
             onClick={onGenerateSample}
-            className="md-filled-button flex items-center space-x-3 px-8 py-4"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="px-8 py-3"
+            size="lg"
+            asChild
           >
-            <Sparkles className="w-5 h-5" />
-            <span>Try Sample Hook</span>
-            <ArrowRight className="w-4 h-4" />
-          </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center space-x-2"
+            >
+              <Sparkles className="w-5 h-5" />
+              <span>Try Sample Hook</span>
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          </Button>
           
-          <motion.button 
+          <Button 
             onClick={onWatchTutorial}
-            className="md-outlined-button flex items-center space-x-3 px-8 py-4"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            variant="outline"
+            className="px-8 py-3"
+            size="lg"
+            asChild
           >
-            <Play className="w-5 h-5" />
-            <span>Watch Tutorial</span>
-          </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center space-x-2"
+            >
+              <Play className="w-5 h-5" />
+              <span>Watch Tutorial</span>
+            </motion.button>
+          </Button>
         </motion.div>
         
-        {/* Feature highlights with Material Design */}
+        {/* Feature highlights */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 pt-16"
-          style={{ borderTop: '1px solid rgb(var(--md-sys-color-outline-variant))' }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 pt-12 border-t"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.6 }}
         >
-          <div className="text-center">
-            <div 
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
-            >
-              <div 
-                className="w-6 h-6 rounded-lg" 
-                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
-              />
-            </div>
-            <h4 
-              className="md-title-small mb-1"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
-            >
-              Platform Optimized
-            </h4>
-            <p 
-              className="md-body-small"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
-            >
-              TikTok, Instagram, YouTube
-            </p>
-          </div>
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardContent className="text-center pt-6">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Target className="w-6 h-6 text-primary" />
+              </div>
+              <h4 className="font-semibold mb-2 text-foreground">
+                Platform Optimized
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                TikTok, Instagram, YouTube
+              </p>
+            </CardContent>
+          </Card>
           
-          <div className="text-center">
-            <div 
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
-            >
-              <div 
-                className="w-6 h-6 rounded-lg" 
-                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
-              />
-            </div>
-            <h4 
-              className="md-title-small mb-1"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
-            >
-              Psychology Based
-            </h4>
-            <p 
-              className="md-body-small"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
-            >
-              Scientifically proven frameworks
-            </p>
-          </div>
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardContent className="text-center pt-6">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-6 h-6 text-primary" />
+              </div>
+              <h4 className="font-semibold mb-2 text-foreground">
+                Psychology Based
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Scientifically proven frameworks
+              </p>
+            </CardContent>
+          </Card>
           
-          <div className="text-center">
-            <div 
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
-            >
-              <div 
-                className="w-6 h-6 rounded-lg" 
-                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
-              />
-            </div>
-            <h4 
-              className="md-title-small mb-1"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
-            >
-              30 Second Results
-            </h4>
-            <p 
-              className="md-body-small"
-              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
-            >
-              Lightning fast generation
-            </p>
-          </div>
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardContent className="text-center pt-6">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-6 h-6 text-primary" />
+              </div>
+              <h4 className="font-semibold mb-2 text-foreground">
+                Lightning Fast
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Results in under 30 seconds
+              </p>
+            </CardContent>
+          </Card>
         </motion.div>
       </motion.div>
     </div>
