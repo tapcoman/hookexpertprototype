@@ -8,6 +8,9 @@ import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { HookGenerationLoading, LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import HookCard from '@/components/hook/HookCard'
+import EmptyState from '@/components/ui/EmptyState'
+import RecentTopics from '@/components/hook/RecentTopics'
+import AppHeader from '@/components/layout/AppHeader'
 import { api } from '@/lib/api'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
@@ -53,8 +56,8 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
 
   const platforms = [
     { value: 'tiktok', label: 'TikTok', description: 'Optimized for TikTok\'s algorithm' },
-    { value: 'instagram', label: 'Instagram', description: 'Perfect for Reels and Stories' },
-    { value: 'youtube', label: 'YouTube', description: 'Great for Shorts and videos' },
+    { value: 'instagram', label: 'Reels', description: 'Perfect for Instagram Reels' },
+    { value: 'youtube', label: 'Shorts', description: 'Great for YouTube Shorts' },
   ]
 
   const objectives = [
@@ -72,150 +75,89 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-lg shadow-sm border p-6"
-    >
-      <h2 className="text-xl font-semibold text-foreground mb-4">Generate Viral Hooks</h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Hooks</h2>
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Platform Selection */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-3">
-            Platform
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {platforms.map((platform) => (
-              <label
+              <button
                 key={platform.value}
-                className={`cursor-pointer border rounded-lg p-4 transition-colors ${
+                type="button"
+                onClick={() => setFormData((prev: any) => ({ ...prev, platform: platform.value as Platform }))}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   formData.platform === platform.value
-                    ? 'border-primary bg-primary/5'
-                    : 'border-input hover:border-primary/50'
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <input
-                  type="radio"
-                  name="platform"
-                  value={platform.value}
-                  checked={formData.platform === platform.value}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, platform: e.target.value as Platform }))}
-                  className="sr-only"
-                />
-                <div className="font-medium text-foreground mb-1">{platform.label}</div>
-                <div className="text-sm text-muted-foreground">{platform.description}</div>
-              </label>
+                {platform.label}
+              </button>
             ))}
           </div>
         </div>
 
         {/* Objective Selection */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-3">
-            Primary Objective
-          </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <select
+            value={formData.objective}
+            onChange={(e) => setFormData((prev: any) => ({ ...prev, objective: e.target.value as Objective }))}
+            className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
             {objectives.map((objective) => (
-              <label
-                key={objective.value}
-                className={`cursor-pointer border rounded-lg p-3 transition-colors ${
-                  formData.objective === objective.value
-                    ? 'border-primary bg-primary/5'
-                    : 'border-input hover:border-primary/50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="objective"
-                  value={objective.value}
-                  checked={formData.objective === objective.value}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, objective: e.target.value as Objective }))}
-                  className="sr-only"
-                />
-                <div className="font-medium text-foreground text-sm mb-1">{objective.label}</div>
-                <div className="text-xs text-muted-foreground">{objective.description}</div>
-              </label>
+              <option key={objective.value} value={objective.value}>
+                {objective.label}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Topic Input */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Topic or Content Idea
-          </label>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">Video Topic</span>
+          </div>
           <textarea
             value={formData.topic}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, topic: e.target.value }))}
-            placeholder="Describe what your content is about... (e.g., 'How to increase productivity using AI tools for remote work')"
+            placeholder="Describe your video idea... e.g., '7-day sugar-free experiment results'"
             rows={4}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-              errors.topic ? 'border-destructive' : 'border-input'
+            className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+              errors.topic ? 'border-red-300' : 'border-gray-200'
             }`}
           />
-          {errors.topic && <p className="text-sm text-destructive mt-1">{errors.topic}</p>}
-          <div className="flex justify-between items-center mt-1">
-            <p className="text-xs text-muted-foreground">
-              Be specific for better results
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formData.topic.length}/1000
-            </p>
-          </div>
-        </div>
-
-        {/* Model Selection */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            AI Model
-          </label>
-          <select
-            value={formData.modelType}
-            onChange={(e) => setFormData((prev: any) => ({ ...prev, modelType: e.target.value as 'gpt-4o' | 'gpt-4o-mini' }))}
-            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>
-            <option value="gpt-4o">GPT-4o (Premium Quality)</option>
-          </select>
-          <p className="text-xs text-muted-foreground mt-1">
-            {formData.modelType === 'gpt-4o' ? 'Higher quality, uses pro credits' : 'Good quality, uses draft credits'}
+          {errors.topic && <p className="text-sm text-red-600 mt-1">{errors.topic}</p>}
+          <p className="text-xs text-gray-500 mt-2">
+            Be specific about what your video will cover
           </p>
         </div>
 
-        {/* Usage Info */}
-        {user && (
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Available Credits:</span>
-              <span className="font-medium">
-                {user.freeCredits - user.usedCredits} free credits
-                {user.subscriptionStatus === 'active' && ' + unlimited pro credits'}
-              </span>
-            </div>
-          </div>
-        )}
+
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading || !canGenerate}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isLoading ? (
             <LoadingSpinner size="sm" />
           ) : (
-            'Generate Hooks'
+            'Generate 10 Hooks'
           )}
         </button>
 
         {!canGenerate && (
-          <p className="text-sm text-muted-foreground text-center">
-            No credits remaining. <a href="/pricing" className="text-primary hover:underline">Upgrade your plan</a> to continue.
+          <p className="text-sm text-gray-500 text-center">
+            No credits remaining. <a href="/pricing" className="text-blue-600 hover:underline">Upgrade your plan</a> to continue.
           </p>
         )}
       </form>
-    </motion.div>
+    </div>
   )
 }
 
@@ -384,80 +326,159 @@ const MainAppPageContent: React.FC = () => {
     })
   }
 
+  const handleGenerateSample = () => {
+    const sampleData: GenerateHooksRequest = {
+      platform: 'tiktok',
+      objective: 'watch_time',
+      topic: '7-day sugar-free experiment results - what happened to my energy levels',
+      modelType: 'gpt-4o-mini'
+    }
+    handleGenerate(sampleData)
+  }
+
+  const handleWatchTutorial = () => {
+    // Open tutorial video or modal
+    window.open('https://youtube.com/watch?v=tutorial', '_blank')
+  }
+
+  // Mock recent topics for demo
+  const recentTopics = [
+    {
+      id: '1',
+      topic: '5 morning habits that changed my productivity',
+      platform: 'tiktok' as const,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
+    },
+    {
+      id: '2', 
+      topic: 'Why I quit my 6-figure job to become a creator',
+      platform: 'instagram' as const,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
+    },
+    {
+      id: '3',
+      topic: 'The truth about passive income (reality check)',
+      platform: 'youtube' as const,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
+    }
+  ]
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* Welcome Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Welcome back, {user?.firstName || 'Creator'}!
-        </h1>
-        <p className="text-muted-foreground">
-          Ready to create some viral hooks? Let's get started.
-        </p>
-      </motion.div>
-
-      {/* Generation Form */}
-      <HookGenerationForm
-        onGenerate={handleGenerate}
-        isLoading={generateHooksMutation.isPending}
-      />
-
-      {/* Loading State */}
-      {generateHooksMutation.isPending && (
-        <HookGenerationLoading />
-      )}
-
-      {/* Results */}
-      {currentGeneration && !generateHooksMutation.isPending && (
-        <HookResults
-          generation={currentGeneration}
-          onFavorite={handleFavorite}
-          onCopy={handleCopy}
-          favoriteHooks={favoriteHooks}
-        />
-      )}
-
-      {/* Getting Started Tips */}
-      {!currentGeneration && !generateHooksMutation.isPending && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-muted/50 rounded-lg p-6"
-        >
-          <h3 className="text-lg font-semibold text-foreground mb-4">Tips for Better Hooks</h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Be Specific</h4>
-              <p className="text-muted-foreground">
-                "5 AI tools that save me 10 hours per week" works better than "AI tools for productivity"
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Include Numbers</h4>
-              <p className="text-muted-foreground">
-                Numbers create curiosity and promise specific value to your audience
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Focus on Benefits</h4>
-              <p className="text-muted-foreground">
-                Explain what your audience will gain or how their life will improve
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Create Urgency</h4>
-              <p className="text-muted-foreground">
-                Use time-sensitive language to encourage immediate engagement
-              </p>
-            </div>
+    <>
+      {/* Desktop Layout */}
+      <div className="hidden lg:block min-h-screen bg-gray-50">
+        <AppHeader />
+        
+        <div className="flex h-[calc(100vh-80px)]">
+          {/* Left Sidebar - Form */}
+          <div className="w-1/3 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+            <HookGenerationForm
+              onGenerate={handleGenerate}
+              isLoading={generateHooksMutation.isPending}
+            />
+            
+            <RecentTopics 
+              topics={recentTopics}
+              onTopicClick={(topic) => {
+                // Auto-fill form with selected topic
+                const formData: GenerateHooksRequest = {
+                  platform: topic.platform,
+                  objective: 'watch_time',
+                  topic: topic.topic,
+                  modelType: 'gpt-4o-mini'
+                }
+                handleGenerate(formData)
+              }}
+            />
           </div>
-        </motion.div>
-      )}
-    </div>
+
+          {/* Right Main Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Loading State */}
+            {generateHooksMutation.isPending && (
+              <div className="flex-1 flex items-center justify-center">
+                <HookGenerationLoading />
+              </div>
+            )}
+
+            {/* Results */}
+            {currentGeneration && !generateHooksMutation.isPending && (
+              <div className="flex-1 p-6 overflow-y-auto">
+                <HookResults
+                  generation={currentGeneration}
+                  onFavorite={handleFavorite}
+                  onCopy={handleCopy}
+                  favoriteHooks={favoriteHooks}
+                />
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!currentGeneration && !generateHooksMutation.isPending && (
+              <EmptyState 
+                onGenerateSample={handleGenerateSample}
+                onWatchTutorial={handleWatchTutorial}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Layout - Falls back to original design */}
+      <div className="lg:hidden">
+        <div className="max-w-4xl mx-auto p-6 space-y-8">
+          {/* Welcome Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
+          >
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Welcome back, {user?.firstName || 'Creator'}!
+            </h1>
+            <p className="text-muted-foreground">
+              Ready to create some viral hooks? Let's get started.
+            </p>
+          </motion.div>
+
+          {/* Generation Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-lg shadow-sm border p-6"
+          >
+            <h2 className="text-xl font-semibold text-foreground mb-4">Generate Viral Hooks</h2>
+            <HookGenerationForm
+              onGenerate={handleGenerate}
+              isLoading={generateHooksMutation.isPending}
+            />
+          </motion.div>
+
+          {/* Loading State */}
+          {generateHooksMutation.isPending && (
+            <HookGenerationLoading />
+          )}
+
+          {/* Results */}
+          {currentGeneration && !generateHooksMutation.isPending && (
+            <HookResults
+              generation={currentGeneration}
+              onFavorite={handleFavorite}
+              onCopy={handleCopy}
+              favoriteHooks={favoriteHooks}
+            />
+          )}
+
+          {/* Empty State */}
+          {!currentGeneration && !generateHooksMutation.isPending && (
+            <EmptyState 
+              onGenerateSample={handleGenerateSample}
+              onWatchTutorial={handleWatchTutorial}
+            />
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 
