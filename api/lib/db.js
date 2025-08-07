@@ -1,46 +1,44 @@
-const { neon } = require('@neondatabase/serverless')
+import { neon } from '@neondatabase/serverless'
 
 // Simple database setup for Vercel serverless functions
+let sql
+let db
+let testConnection
+
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable is not set')
   // Return a mock connection for now to prevent crashes
-  module.exports = {
-    db: {
-      query: async () => ({ rows: [] })
-    },
-    testConnection: async () => ({ success: false, error: 'No database URL configured' })
+  db = {
+    query: async () => ({ rows: [] })
   }
-  return
-}
+  testConnection = async () => ({ success: false, error: 'No database URL configured' })
+} else {
+  // Create Neon SQL connection
+  sql = neon(process.env.DATABASE_URL)
 
-// Create Neon SQL connection
-const sql = neon(process.env.DATABASE_URL)
+  // Create a simple query interface
+  db = {
+    query: async (text, params) => {
+      try {
+        const result = await sql(text, params)
+        return { rows: result }
+      } catch (error) {
+        console.error('Database query error:', error)
+        throw error
+      }
+    }
+  }
 
-// Create a simple query interface
-const db = {
-  query: async (text, params) => {
+  // Simple health check
+  testConnection = async () => {
     try {
-      const result = await sql(text, params)
-      return { rows: result }
+      const result = await sql`SELECT 1 as test`
+      return { success: true, result }
     } catch (error) {
-      console.error('Database query error:', error)
-      throw error
+      console.error('Database connection failed:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   }
 }
 
-// Simple health check
-async function testConnection() {
-  try {
-    const result = await sql`SELECT 1 as test`
-    return { success: true, result }
-  } catch (error) {
-    console.error('Database connection failed:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-}
-
-module.exports = {
-  db,
-  testConnection
-}
+export { db, testConnection }

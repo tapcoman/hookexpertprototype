@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const { db } = require('./db.js')
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { db } from './db.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secure-jwt-secret-key-for-testing-minimum-32-characters'
 
@@ -122,7 +122,7 @@ async function loginUser(email, password) {
   }
 }
 
-module.exports = {
+export {
   hashPassword,
   verifyPassword,
   generateToken,

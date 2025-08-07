@@ -1,8 +1,8 @@
 // Vercel serverless API with real database authentication
-const { createUser, loginUser, findUserById, verifyToken } = require('./lib/auth.js')
-const { testConnection } = require('./lib/db.js')
+import { createUser, loginUser, findUserById, verifyToken, generateToken } from './lib/auth.js'
+import { testConnection } from './lib/db.js'
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     // Set basic headers
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -54,7 +54,6 @@ module.exports = async function handler(req, res) {
         }
         
         // Generate token
-        const { generateToken } = require('./lib/auth.js')
         const token = generateToken(user.id)
         
         return res.status(200).json({
