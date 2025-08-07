@@ -20,13 +20,16 @@ if (!process.env.DATABASE_URL) {
   db = {
     query: async (text, params) => {
       try {
+        // Neon expects parameterized queries to be executed directly
         const result = await sql(text, params)
         return { rows: result }
       } catch (error) {
         console.error('Database query error:', error)
         throw error
       }
-    }
+    },
+    // Add the sql function for direct usage
+    sql: sql
   }
 
   // Simple health check
@@ -41,4 +44,4 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
-export { db, testConnection }
+export { db, sql, testConnection }

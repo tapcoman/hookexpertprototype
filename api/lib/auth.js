@@ -38,11 +38,16 @@ function verifyToken(token) {
 // Find user by email
 async function findUserByEmail(email) {
   try {
-    const result = await db.query(
-      'SELECT * FROM users WHERE email = $1 LIMIT 1',
-      [email]
-    )
-    return result.rows[0] || null
+    if (!db.sql) {
+      console.error('Database not initialized')
+      return null
+    }
+    const result = await db.sql`
+      SELECT * FROM users 
+      WHERE email = ${email} 
+      LIMIT 1
+    `
+    return result[0] || null
   } catch (error) {
     console.error('Error finding user by email:', error)
     return null
@@ -52,11 +57,16 @@ async function findUserByEmail(email) {
 // Find user by ID
 async function findUserById(id) {
   try {
-    const result = await db.query(
-      'SELECT * FROM users WHERE id = $1 LIMIT 1',
-      [id]
-    )
-    return result.rows[0] || null
+    if (!db.sql) {
+      console.error('Database not initialized')
+      return null
+    }
+    const result = await db.sql`
+      SELECT * FROM users 
+      WHERE id = ${id} 
+      LIMIT 1
+    `
+    return result[0] || null
   } catch (error) {
     console.error('Error finding user by ID:', error)
     return null
@@ -66,24 +76,39 @@ async function findUserById(id) {
 // Create new user
 async function createUser(userData) {
   try {
+    if (!db.sql) {
+      console.error('Database not initialized')
+      return null
+    }
+    
     const hashedPassword = await hashPassword(userData.password)
+    const email = userData.email.toLowerCase()
+    const firstName = userData.firstName
+    const lastName = userData.lastName
     
-    const result = await db.query(
-      `INSERT INTO users (email, password, first_name, last_name, email_verified, free_credits, used_credits)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [
-        userData.email.toLowerCase(),
-        hashedPassword,
-        userData.firstName,
-        userData.lastName,
-        false,
-        5,
-        0
-      ]
-    )
+    const result = await db.sql`
+      INSERT INTO users (
+        email, 
+        password, 
+        first_name, 
+        last_name, 
+        email_verified, 
+        free_credits, 
+        used_credits
+      )
+      VALUES (
+        ${email},
+        ${hashedPassword},
+        ${firstName},
+        ${lastName},
+        ${false},
+        ${5},
+        ${0}
+      )
+      RETURNING *
+    `
     
-    return result.rows[0] || null
+    return result[0] || null
   } catch (error) {
     console.error('Error creating user:', error)
     // Check if it's a unique constraint error
