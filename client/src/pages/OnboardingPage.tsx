@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation } from 'wouter'
 import { useMutation } from '@tanstack/react-query'
-import { } from '@/contexts/SimpleAuthContext'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import { useNotifications } from '@/contexts/AppContext'
 import { OnboardingRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -489,9 +489,10 @@ const Step3WhatYouMake: React.FC<StepProps> = ({ data, onChange, onNext, onBack,
         <button
           onClick={validateAndSubmit}
           disabled={isLoading}
-          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-md font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
+          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-md font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {isLoading ? <LoadingSpinner size="sm" /> : 'Complete Setup'}
+          {isLoading && <LoadingSpinner size="sm" />}
+          {isLoading ? 'Setting up your profile...' : 'Complete Setup'}
         </button>
       </div>
     </motion.div>
@@ -511,18 +512,39 @@ const OnboardingPageContent: React.FC = () => {
 
   const [, setLocation] = useLocation()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
+  const { refreshUser } = useAuth()
 
   const onboardingMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
+      console.log('🚀 Starting onboarding with data:', data)
       const response = await api.user.completeOnboarding(data)
+      console.log('✅ Onboarding API response:', response.data)
       return response.data
     },
-    onSuccess: () => {
-      showSuccessNotification('Welcome to Hook Line Studio!', 'Your profile has been set up successfully.')
-      setLocation('/app')
+    onSuccess: async (data) => {
+      console.log('🎉 Onboarding completed successfully, refreshing user context...')
+      try {
+        // Refresh user profile to get updated onboarding data
+        await refreshUser()
+        console.log('🔄 User context refreshed successfully')
+        
+        showSuccessNotification('Welcome to Hook Line Studio!', 'Your profile has been set up successfully.')
+        
+        // Small delay to ensure UI updates before navigation
+        setTimeout(() => {
+          console.log('🧭 Navigating to /app')
+          setLocation('/app')
+        }, 100)
+      } catch (refreshError) {
+        console.error('❌ Failed to refresh user context:', refreshError)
+        showErrorNotification('Setup Warning', 'Your profile was saved but there was an issue refreshing the page. Please refresh manually.')
+        // Still navigate to app even if refresh fails
+        setTimeout(() => setLocation('/app'), 1000)
+      }
     },
     onError: (error: any) => {
-      showErrorNotification('Setup Failed', error.message)
+      console.error('❌ Onboarding failed:', error)
+      showErrorNotification('Setup Failed', error.message || 'Failed to complete onboarding. Please try again.')
     },
   })
 
@@ -532,9 +554,11 @@ const OnboardingPageContent: React.FC = () => {
 
   const handleNext = () => {
     if (currentStep < 3) {
+      console.log(`📝 Moving to step ${currentStep + 1}`)
       setCurrentStep(currentStep + 1)
     } else {
       // Submit onboarding data
+      console.log('📋 Submitting onboarding data:', formData)
       onboardingMutation.mutate(formData as OnboardingData)
     }
   }

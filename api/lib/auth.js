@@ -43,7 +43,41 @@ async function findUserByEmail(email) {
       return null
     }
     const result = await db.sql`
-      SELECT * FROM users 
+      SELECT 
+        id,
+        email,
+        password,
+        firebase_uid as "firebaseUid",
+        first_name as "firstName",
+        last_name as "lastName",
+        email_verified as "emailVerified",
+        company,
+        industry,
+        role,
+        audience,
+        voice,
+        banned_terms as "bannedTerms",
+        safety,
+        preferred_hook_categories as "preferredHookCategories",
+        psychological_risk_tolerance as "psychologicalRiskTolerance",
+        creativity_preference as "creativityPreference",
+        urgency_preference as "urgencyPreference",
+        personality_insights as "personalityInsights",
+        pro_generations_used as "proGenerationsUsed",
+        draft_generations_used as "draftGenerationsUsed",
+        weekly_draft_reset as "weeklyDraftReset",
+        free_credits as "freeCredits",
+        used_credits as "usedCredits",
+        is_premium as "isPremium",
+        stripe_customer_id as "stripeCustomerId",
+        stripe_subscription_id as "stripeSubscriptionId",
+        subscription_status as "subscriptionStatus",
+        subscription_plan as "subscriptionPlan",
+        current_period_end as "currentPeriodEnd",
+        cancel_at_period_end as "cancelAtPeriodEnd",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM users 
       WHERE email = ${email} 
       LIMIT 1
     `
@@ -62,7 +96,41 @@ async function findUserById(id) {
       return null
     }
     const result = await db.sql`
-      SELECT * FROM users 
+      SELECT 
+        id,
+        email,
+        password,
+        firebase_uid as "firebaseUid",
+        first_name as "firstName",
+        last_name as "lastName",
+        email_verified as "emailVerified",
+        company,
+        industry,
+        role,
+        audience,
+        voice,
+        banned_terms as "bannedTerms",
+        safety,
+        preferred_hook_categories as "preferredHookCategories",
+        psychological_risk_tolerance as "psychologicalRiskTolerance",
+        creativity_preference as "creativityPreference",
+        urgency_preference as "urgencyPreference",
+        personality_insights as "personalityInsights",
+        pro_generations_used as "proGenerationsUsed",
+        draft_generations_used as "draftGenerationsUsed",
+        weekly_draft_reset as "weeklyDraftReset",
+        free_credits as "freeCredits",
+        used_credits as "usedCredits",
+        is_premium as "isPremium",
+        stripe_customer_id as "stripeCustomerId",
+        stripe_subscription_id as "stripeSubscriptionId",
+        subscription_status as "subscriptionStatus",
+        subscription_plan as "subscriptionPlan",
+        current_period_end as "currentPeriodEnd",
+        cancel_at_period_end as "cancelAtPeriodEnd",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM users 
       WHERE id = ${id} 
       LIMIT 1
     `
@@ -155,7 +223,10 @@ async function updateUserOnboarding(userId, onboardingData) {
       return null
     }
     
-    // Extract data from onboarding
+    console.log('Updating user onboarding for userId:', userId)
+    console.log('Onboarding data received:', onboardingData)
+    
+    // Extract data from onboarding with proper defaults
     const {
       company,
       industry,
@@ -169,7 +240,7 @@ async function updateUserOnboarding(userId, onboardingData) {
       successfulHooks
     } = onboardingData
     
-    // Update user with onboarding data
+    // Update user with onboarding data and return complete user object
     const result = await db.sql`
       UPDATE users 
       SET 
@@ -178,16 +249,67 @@ async function updateUserOnboarding(userId, onboardingData) {
         role = ${role || null},
         audience = ${audience || null},
         voice = ${voice || null},
-        banned_terms = ${bannedTerms || []},
+        banned_terms = ${JSON.stringify(bannedTerms || [])},
         safety = ${safety || 'standard'},
         updated_at = NOW()
       WHERE id = ${userId}
-      RETURNING *
+      RETURNING 
+        id,
+        email,
+        first_name as "firstName",
+        last_name as "lastName",
+        email_verified as "emailVerified",
+        company,
+        industry,
+        role,
+        audience,
+        voice,
+        banned_terms as "bannedTerms",
+        safety,
+        preferred_hook_categories as "preferredHookCategories",
+        psychological_risk_tolerance as "psychologicalRiskTolerance",
+        creativity_preference as "creativityPreference",
+        urgency_preference as "urgencyPreference",
+        personality_insights as "personalityInsights",
+        pro_generations_used as "proGenerationsUsed",
+        draft_generations_used as "draftGenerationsUsed",
+        weekly_draft_reset as "weeklyDraftReset",
+        free_credits as "freeCredits",
+        used_credits as "usedCredits",
+        is_premium as "isPremium",
+        stripe_customer_id as "stripeCustomerId",
+        stripe_subscription_id as "stripeSubscriptionId",
+        subscription_status as "subscriptionStatus",
+        subscription_plan as "subscriptionPlan",
+        current_period_end as "currentPeriodEnd",
+        cancel_at_period_end as "cancelAtPeriodEnd",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
     `
     
-    return result[0] || null
+    const updatedUser = result[0]
+    
+    if (updatedUser) {
+      console.log('User successfully updated:', {
+        id: updatedUser.id,
+        company: updatedUser.company,
+        industry: updatedUser.industry,
+        role: updatedUser.role,
+        voice: updatedUser.voice
+      })
+    } else {
+      console.error('No user returned after update for userId:', userId)
+    }
+    
+    return updatedUser || null
   } catch (error) {
     console.error('Error updating user onboarding:', error)
+    console.error('Error details:', {
+      userId,
+      onboardingData,
+      errorMessage: error.message,
+      errorStack: error.stack
+    })
     throw error
   }
 }

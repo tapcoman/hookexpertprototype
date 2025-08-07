@@ -31,6 +31,7 @@ interface AuthContextValue extends AuthState {
   // User profile methods
   updateProfile: (data: Partial<UserProfile>) => Promise<void>
   refreshUser: () => Promise<void>
+  handleOnboardingComplete: () => Promise<void>
   
   // Utility methods
   clearError: () => void
@@ -143,28 +144,52 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   } = useQuery({
     queryKey: queryKeys.userProfile(),
     queryFn: async () => {
+      console.log('[SimpleAuthContext] Fetching user profile...')
       const response = await authApi.verifyToken()
       const user = response.data?.user
+      
       if (!user) {
+        console.error('[SimpleAuthContext] No user data received from server')
         throw new Error('No user data received from server')
       }
+      
+      console.log('[SimpleAuthContext] User profile fetched:', {
+        userId: user.id,
+        email: user.email,
+        hasCompany: Boolean(user.company),
+        hasIndustry: Boolean(user.industry),
+        hasRole: Boolean(user.role),
+        onboardingComplete: Boolean(user.company && user.industry && user.role)
+      })
+      
       return user as UserProfile
     },
     enabled: !!simpleAuth.getCurrentUserToken() && !error,
     retry: (failureCount, error: any) => {
+      console.log(`[SimpleAuthContext] User query retry attempt ${failureCount + 1}:`, error)
+      
       // Don't retry on authentication errors
       if (error?.response?.data?.errorCode === 'TOKEN_EXPIRED' || 
           error?.response?.data?.errorCode === 'TOKEN_INVALID' ||
           error?.response?.data?.errorCode === 'TOKEN_REVOKED') {
+        console.log('[SimpleAuthContext] Not retrying due to auth error')
         return false
       }
+      
       // Retry on network/server errors up to 3 times
-      return failureCount < 3 && (
+      const shouldRetry = failureCount < 3 && (
         error?.response?.status >= 500 ||
         error?.code === 'NETWORK_ERROR'
       )
+      
+      console.log(`[SimpleAuthContext] Should retry: ${shouldRetry}`)
+      return shouldRetry
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: (attemptIndex) => {
+      const delay = Math.min(1000 * 2 ** attemptIndex, 10000)
+      console.log(`[SimpleAuthContext] Retry delay: ${delay}ms`)
+      return delay
+    },
     // Note: onError is handled via useEffect below for React Query v4+
     // The error is captured via userQueryError
   })
@@ -172,9 +197,29 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
   // Monitor user query errors and update auth error state
   useEffect(() => {
     if (userQueryError && !error) {
+      console.error('[SimpleAuthContext] User profile query error:', userQueryError)
       handleAuthError(userQueryError, 'user_profile_query')
     }
   }, [userQueryError, error])
+
+  // Log user state changes for debugging
+  useEffect(() => {
+    if (user) {
+      console.log('[SimpleAuthContext] User context updated:', {
+        userId: user.id,
+        email: user.email,
+        hasCompany: Boolean(user.company),
+        hasIndustry: Boolean(user.industry),
+        hasRole: Boolean(user.role),
+        onboardingComplete: Boolean(user.company && user.industry && user.role),
+        company: user.company || 'not set',
+        industry: user.industry || 'not set',
+        role: user.role || 'not set'
+      })
+    } else {
+      console.log('[SimpleAuthContext] User context cleared')
+    }
+  }, [user])
 
   // ==================== AUTHENTICATION MUTATIONS ====================
 
@@ -193,11 +238,20 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       return user
     },
     onSuccess: (user: UserProfile) => {
+      console.log('[SimpleAuthContext] Sign in successful:', {
+        userId: user.id,
+        email: user.email,
+        hasCompany: Boolean(user.company),
+        hasIndustry: Boolean(user.industry),
+        hasRole: Boolean(user.role)
+      })
+      
       analytics.track('user_sign_in', { method: 'email' })
       analytics.init(user.id, 'analytics')
       setError(null)
       
-      // Trigger user profile refetch
+      // Invalidate and trigger user profile refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
       refetchUser()
     },
     onError: (error: any) => {
@@ -231,11 +285,20 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       return user
     },
     onSuccess: (user: UserProfile) => {
+      console.log('[SimpleAuthContext] Sign up successful:', {
+        userId: user.id,
+        email: user.email,
+        hasCompany: Boolean(user.company),
+        hasIndustry: Boolean(user.industry),
+        hasRole: Boolean(user.role)
+      })
+      
       analytics.track('user_sign_up', { method: 'email' })
       analytics.init(user.id, 'analytics')
       setError(null)
       
-      // Trigger user profile refetch
+      // Invalidate and trigger user profile refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
       refetchUser()
     },
     onError: (error: any) => {
@@ -283,17 +346,41 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<UserProfile>) => {
+      console.log('[SimpleAuthContext] Starting profile update:', { 
+        updates: Object.keys(data),
+        hasCompany: Boolean(data.company),
+        hasIndustry: Boolean(data.industry),
+        hasRole: Boolean(data.role)
+      })
       const response = await api.user.updateProfile(data)
       return response.data
     },
     onSuccess: (updatedUser) => {
+      console.log('[SimpleAuthContext] Profile update successful:', {
+        userId: updatedUser?.id,
+        hasCompany: Boolean(updatedUser?.company),
+        hasIndustry: Boolean(updatedUser?.industry),
+        hasRole: Boolean(updatedUser?.role),
+        updatedFields: updatedUser ? Object.keys(updatedUser).filter(key => 
+          ['company', 'industry', 'role'].includes(key) && updatedUser[key as keyof UserProfile]
+        ) : []
+      })
+      
       if (updatedUser) {
         // Update the cached user data
         queryClient.setQueryData(queryKeys.userProfile(), updatedUser)
+        
+        // Track analytics for profile completion
+        analytics.track('profile_updated', {
+          hasCompany: Boolean(updatedUser.company),
+          hasIndustry: Boolean(updatedUser.industry),
+          hasRole: Boolean(updatedUser.role)
+        })
       }
       setError(null)
     },
     onError: (error: any) => {
+      console.error('[SimpleAuthContext] Profile update failed:', error)
       handleAuthError(error, 'profile_update')
     },
   })
@@ -321,13 +408,37 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
     setError(null)
   }
 
-  const refreshUser = async () => {
-    await refetchUser()
+  const refreshUser = async (): Promise<void> => {
+    console.log('[SimpleAuthContext] Refreshing user profile...')
+    
+    try {
+      // Invalidate and refetch user profile
+      await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
+      const result = await refetchUser()
+      
+      console.log('[SimpleAuthContext] User profile refreshed:', {
+        success: Boolean(result.data),
+        userId: result.data?.id,
+        hasCompany: Boolean(result.data?.company),
+        hasIndustry: Boolean(result.data?.industry),
+        hasRole: Boolean(result.data?.role)
+      })
+      
+      return Promise.resolve()
+    } catch (error) {
+      console.error('[SimpleAuthContext] Failed to refresh user profile:', error)
+      throw error
+    }
   }
 
-  const retryAuth = async () => {
+  const retryAuth = async (): Promise<void> => {
     const token = simpleAuth.getCurrentUserToken()
-    if (!token) return
+    if (!token) {
+      console.log('[SimpleAuthContext] No token available for retry')
+      return
+    }
+    
+    console.log('[SimpleAuthContext] Retrying authentication...')
     
     try {
       setIsRetrying(true)
@@ -337,13 +448,54 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       const result = await simpleAuth.verifyToken()
       
       if (result.isAuthenticated) {
-        // Retry user profile fetch
+        console.log('[SimpleAuthContext] Token verification successful, refreshing user profile')
+        
+        // Invalidate cache and retry user profile fetch
+        await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
         await refetchUser()
+        
+        console.log('[SimpleAuthContext] Auth retry completed successfully')
+      } else {
+        console.warn('[SimpleAuthContext] Token verification failed during retry')
       }
     } catch (error: any) {
+      console.error('[SimpleAuthContext] Auth retry failed:', error)
       handleAuthError(error, 'auth_retry')
     } finally {
       setIsRetrying(false)
+    }
+  }
+
+  const handleOnboardingComplete = async (): Promise<void> => {
+    console.log('[SimpleAuthContext] Handling onboarding completion...')
+    
+    try {
+      // Force invalidate and refetch user profile to get updated onboarding fields
+      await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
+      const result = await refetchUser()
+      
+      console.log('[SimpleAuthContext] Onboarding complete - user profile updated:', {
+        success: Boolean(result.data),
+        userId: result.data?.id,
+        hasCompany: Boolean(result.data?.company),
+        hasIndustry: Boolean(result.data?.industry),
+        hasRole: Boolean(result.data?.role),
+        onboardingComplete: Boolean(
+          result.data?.company && result.data?.industry && result.data?.role
+        )
+      })
+      
+      // Track onboarding completion
+      analytics.track('onboarding_completed', {
+        company: result.data?.company || 'unknown',
+        industry: result.data?.industry || 'unknown',
+        role: result.data?.role || 'unknown'
+      })
+      
+      return Promise.resolve()
+    } catch (error) {
+      console.error('[SimpleAuthContext] Failed to handle onboarding completion:', error)
+      throw error
     }
   }
 
@@ -405,6 +557,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
       await updateProfileMutation.mutateAsync(data)
     },
     refreshUser,
+    handleOnboardingComplete,
 
     // Utility methods
     clearError,
@@ -441,6 +594,7 @@ export const useAuthActions = () => {
     updatePassword,
     updateProfile,
     refreshUser,
+    handleOnboardingComplete,
     clearError,
   } = useAuth()
   
@@ -451,6 +605,7 @@ export const useAuthActions = () => {
     updatePassword,
     updateProfile,
     refreshUser,
+    handleOnboardingComplete,
     clearError,
   }
 }

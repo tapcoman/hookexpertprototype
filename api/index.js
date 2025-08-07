@@ -239,27 +239,68 @@ export default async function handler(req, res) {
         // Get the onboarding data
         const onboardingData = req.body
         
+        console.log('Processing onboarding for userId:', decoded.userId)
+        console.log('Onboarding request body:', onboardingData)
+        
+        // Validate required onboarding fields
+        if (!onboardingData.company || !onboardingData.industry || !onboardingData.role) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Company, industry, and role are required for onboarding'
+          })
+        }
+        
         // Update user with onboarding data
         const { updateUserOnboarding } = await import('./lib/auth.js')
         const updatedUser = await updateUserOnboarding(decoded.userId, onboardingData)
         
         if (!updatedUser) {
+          console.error('updateUserOnboarding returned null for userId:', decoded.userId)
           return res.status(400).json({
             success: false,
             error: 'Onboarding failed',
-            message: 'Failed to update user profile'
+            message: 'Failed to update user profile - user not found or update failed'
           })
         }
+        
+        // Ensure all necessary fields are present for frontend
+        const responseData = {
+          ...updatedUser,
+          // Ensure these critical fields exist
+          company: updatedUser.company || onboardingData.company,
+          industry: updatedUser.industry || onboardingData.industry,
+          role: updatedUser.role || onboardingData.role,
+          voice: updatedUser.voice || onboardingData.voice,
+          audience: updatedUser.audience || onboardingData.audience,
+          safety: updatedUser.safety || 'standard',
+          bannedTerms: updatedUser.bannedTerms || [],
+          // Credit system defaults
+          freeCredits: updatedUser.freeCredits ?? 5,
+          usedCredits: updatedUser.usedCredits ?? 0,
+          subscriptionStatus: updatedUser.subscriptionStatus || 'free',
+          subscriptionPlan: updatedUser.subscriptionPlan || 'free',
+          isPremium: updatedUser.isPremium || false,
+          // Psychological defaults
+          preferredHookCategories: updatedUser.preferredHookCategories || [],
+          psychologicalRiskTolerance: updatedUser.psychologicalRiskTolerance || 'medium',
+          creativityPreference: updatedUser.creativityPreference || 'balanced',
+          urgencyPreference: updatedUser.urgencyPreference || 'moderate',
+          personalityInsights: updatedUser.personalityInsights || {}
+        }
+        
+        console.log('Onboarding completed successfully for user:', responseData.id)
+        console.log('Response data includes required fields:', {
+          hasCompany: !!responseData.company,
+          hasIndustry: !!responseData.industry,
+          hasRole: !!responseData.role,
+          hasVoice: !!responseData.voice
+        })
         
         return res.status(200).json({
           success: true,
           message: 'Onboarding completed successfully',
-          data: {
-            ...updatedUser,
-            freeCredits: updatedUser.freeCredits || 5,
-            usedCredits: updatedUser.usedCredits || 0,
-            subscriptionStatus: updatedUser.subscriptionStatus || 'free'
-          }
+          data: responseData
         })
       } catch (error) {
         console.error('Onboarding error:', error)

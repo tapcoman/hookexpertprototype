@@ -38,6 +38,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check onboarding requirement
   if (requireOnboarding && user && (!user.company || !user.industry || !user.role)) {
+    console.log('📋 ProtectedRoute: User needs onboarding, redirecting to /onboarding', {
+      userId: user.id,
+      email: user.email,
+      company: user.company,
+      industry: user.industry,
+      role: user.role
+    })
     return <Redirect to="/onboarding" />
   }
 
@@ -88,19 +95,35 @@ export const OnboardingRoute: React.FC<OnboardingRouteProps> = ({ children }) =>
 
   // Show loading state while initializing
   if (isInitializing || isLoading) {
+    console.log('🔄 OnboardingRoute: Loading user context...', { isInitializing, isLoading })
     return <LoadingSpinner className="flex items-center justify-center min-h-screen" />
   }
 
   // Redirect to auth if not authenticated
   if (!user) {
+    console.log('🚫 OnboardingRoute: No user found, redirecting to /auth')
     return <Redirect to="/auth" />
   }
 
+  // Check onboarding status
+  const hasOnboarding = user && user.company && user.industry && user.role
+  console.log('🎯 OnboardingRoute: Checking onboarding status', {
+    userId: user.id,
+    email: user.email,
+    company: user.company,
+    industry: user.industry,
+    role: user.role,
+    hasOnboarding,
+    userObject: user
+  })
+
   // Redirect to app if already onboarded
-  if (user && user.company && user.industry && user.role) {
+  if (hasOnboarding) {
+    console.log('✅ OnboardingRoute: User already onboarded, redirecting to /app')
     return <Redirect to="/app" />
   }
 
+  console.log('📝 OnboardingRoute: User needs onboarding, showing onboarding page')
   return <>{children}</>
 }
 
