@@ -5,11 +5,8 @@ import {
   Heart, 
   Eye,
   EyeOff,
-  TrendingUp,
   Brain,
   AlertTriangle,
-  Sparkles,
-  Zap,
   Target,
   CheckCircle2
 } from 'lucide-react'
@@ -17,7 +14,7 @@ import type { HookObject } from '@/types/shared'
 import { cn, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 import { useAnalytics } from '../../lib/analytics'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
@@ -39,7 +36,7 @@ const HookCard: React.FC<HookCardProps> = ({
   objective: _objective,
   showDetails = true,
   isFavorite = false,
-  isConnected = false,
+  isConnected: _isConnected = false,
   onFavoriteToggle,
   onCopy,
   className
@@ -99,12 +96,6 @@ const HookCard: React.FC<HookCardProps> = ({
     return 'text-red-600'
   }
 
-  const getScoreVariant = (score: number) => {
-    const percentage = (score / 5) * 100
-    if (percentage >= 85) return 'default'
-    if (percentage >= 70) return 'secondary'
-    return 'destructive'
-  }
 
   const scorePercentage = (hook.score / 5) * 100
 
@@ -129,61 +120,44 @@ const HookCard: React.FC<HookCardProps> = ({
 
         <CardHeader className="pb-4 pt-6">
           <div className="flex items-start justify-between">
-            {/* Platform Badge */}
-            {platform && (
-              <Badge variant="outline" className="mb-2">
-                <Target className="w-3 h-3 mr-1" />
-                {formatPlatformName(platform)}
-              </Badge>
-            )}
+            {/* Badges - Limited to 2 maximum */}
+            <div className="flex gap-2">
+              {platform && (
+                <Badge variant="outline" className="text-xs">
+                  <Target className="w-3 h-3 mr-1" />
+                  {formatPlatformName(platform)}
+                </Badge>
+              )}
+              {/* Show highest priority badge - prefer high risk, then psychology */}
+              {hook.riskFactor === 'high' ? (
+                <Badge variant={getRiskVariant(hook.riskFactor)} className="text-xs">
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  HIGH RISK
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs">
+                  <Brain className="w-3 h-3 mr-1" />
+                  {hook.psychologicalDriver.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </Badge>
+              )}
+            </div>
 
-            {/* Quality Score */}
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <div className={cn("text-2xl font-bold", getScoreColor(hook.score))}>
-                  {hook.score.toFixed(1)}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                  Quality
-                </div>
+            {/* Simplified Quality Score */}
+            <div className="text-right">
+              <div className={cn("text-lg font-semibold", getScoreColor(hook.score))}>
+                {hook.score.toFixed(1)}
               </div>
-              
-              {/* Circular Progress Indicator */}
-              <div className="w-12 h-12 relative">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 48 48">
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    fill="none"
-                    className="text-muted"
-                  />
-                  <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    strokeWidth="3"
-                    fill="none"
-                    strokeLinecap="round"
-                    className={getScoreColor(hook.score)}
-                    initial={{ strokeDasharray: `0 ${2 * Math.PI * 20}` }}
-                    animate={{ 
-                      strokeDasharray: `${(scorePercentage / 100) * 2 * Math.PI * 20} ${2 * Math.PI * 20}` 
-                    }}
-                    transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
-                  />
-                </svg>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                Quality
               </div>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Main Hook Content */}
-          <div className="space-y-2">
-            <p className="text-lg leading-relaxed">{hook.verbalHook}</p>
+          {/* Main Hook Content - Enhanced Prominence */}
+          <div className="space-y-3">
+            <p className="text-xl font-medium leading-relaxed text-foreground">{hook.verbalHook}</p>
             <p className="text-sm text-muted-foreground">{hook.wordCount} words</p>
           </div>
 
@@ -221,17 +195,15 @@ const HookCard: React.FC<HookCardProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Psychology Indicators */}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs">
-              <Brain className="w-3 h-3 mr-1" />
-              {hook.psychologicalDriver.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-            </Badge>
-            <Badge variant={getRiskVariant(hook.riskFactor)} className="text-xs">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              {hook.riskFactor.toUpperCase()} Risk
-            </Badge>
-          </div>
+          {/* Reduced Psychology Indicators - Only show if not already shown in header */}
+          {hook.riskFactor !== 'high' && (
+            <div className="flex justify-end">
+              <Badge variant={getRiskVariant(hook.riskFactor)} className="text-xs">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                {hook.riskFactor.toUpperCase()} Risk
+              </Badge>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-2">

@@ -19,7 +19,7 @@ import { Label } from '../ui/Label'
 import { Badge } from '../ui/Badge'
 import { Progress } from '../ui/Progress'
 import type { Platform, Objective, ModelType } from '@/types/shared'
-import { cn, formatPlatformName, getObjectiveLabel } from '../../lib/utils'
+import { cn, formatPlatformName, getObjectiveLabel, getPlatformGlow } from '../../lib/utils'
 
 const formSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
@@ -167,7 +167,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
             Generate Viral Hooks
           </CardTitle>
           {creditsRemaining !== undefined && (
-            <Badge variant={creditsRemaining > 0 ? "success" : "destructive"}>
+            <Badge variant={creditsRemaining > 0 ? "secondary" : "destructive"}>
               {creditsRemaining} credits remaining
             </Badge>
           )}
@@ -207,8 +207,9 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                     className={cn(
                       "p-4 border rounded-lg text-center transition-all hover:shadow-md",
                       watchedValues.platform === platform.value
-                        ? "border-primary bg-primary/5 shadow-md"
-                        : "border-border hover:border-primary/50"
+                        ? "border-[hsl(var(--viral-pink))] bg-[hsl(var(--viral-pink)/0.05)] shadow-md viral-gradient-primary text-white"
+                        : "border-border hover:border-[hsl(var(--viral-pink))/0.5] hover:bg-[hsl(var(--viral-pink)/0.02)]",
+                      watchedValues.platform === platform.value && getPlatformGlow(platform.value)
                     )}
                   >
                     <div className="text-2xl mb-2">{platform.icon}</div>
@@ -252,12 +253,12 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                       className={cn(
                         "w-full p-4 border rounded-lg text-left transition-all hover:shadow-md flex items-center gap-3",
                         watchedValues.objective === objective.value
-                          ? "border-primary bg-primary/5 shadow-md"
-                          : "border-border hover:border-primary/50"
+                          ? "border-[hsl(var(--viral-purple))] bg-[hsl(var(--viral-purple)/0.05)] shadow-md"
+                          : "border-border hover:border-[hsl(var(--viral-purple))/0.5] hover:bg-[hsl(var(--viral-purple)/0.02)]"
                       )}
                     >
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <IconComponent className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 bg-[hsl(var(--viral-purple)/0.15)] rounded-lg flex items-center justify-center">
+                        <IconComponent className="w-5 h-5 text-[hsl(var(--viral-purple))]" />
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{objective.label}</div>
@@ -326,8 +327,8 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                       className={cn(
                         "w-full p-3 border rounded-lg text-left transition-all hover:shadow-sm flex items-center justify-between",
                         watchedValues.modelType === model.value
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border hover:border-primary/50"
+                          ? "border-[hsl(var(--viral-gold))] bg-[hsl(var(--viral-gold)/0.05)] shadow-sm"
+                          : "border-border hover:border-[hsl(var(--viral-gold))/0.5] hover:bg-[hsl(var(--viral-gold)/0.02)]"
                       )}
                     >
                       <div>
@@ -384,7 +385,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
               <Button
                 type="submit"
                 disabled={!isValid || isLoading || !canGenerate}
-                className="min-w-[120px]"
+                className="min-w-[120px] viral-gradient-primary text-white hover:opacity-90 transition-opacity"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">

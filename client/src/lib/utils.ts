@@ -125,13 +125,111 @@ export function formatPlatformName(platform: string): string {
 export function getPlatformColor(platform: string): string {
   switch (platform) {
     case 'tiktok':
-      return 'bg-pink-500'
+      return 'bg-[hsl(var(--tiktok-brand))] text-white'
     case 'instagram':
-      return 'bg-purple-500'
+      return 'bg-[hsl(var(--instagram-brand))] text-white'
     case 'youtube':
-      return 'bg-red-500'
+      return 'bg-[hsl(var(--youtube-brand))] text-white'
     default:
-      return 'bg-gray-500'
+      return 'bg-gray-500 text-white'
+  }
+}
+
+export function getPlatformGradient(platform: string): string {
+  switch (platform) {
+    case 'tiktok':
+      return 'viral-gradient-tiktok'
+    case 'instagram':
+      return 'viral-gradient-instagram'
+    case 'youtube':
+      return 'viral-gradient-youtube'
+    default:
+      return 'viral-gradient-primary'
+  }
+}
+
+export function getPlatformGlow(platform: string): string {
+  switch (platform) {
+    case 'tiktok':
+      return 'platform-glow-tiktok'
+    case 'instagram':
+      return 'platform-glow-instagram'
+    case 'youtube':
+      return 'platform-glow-youtube'
+    default:
+      return ''
+  }
+}
+
+export function getViralScoreColor(score: number): { 
+  background: string; 
+  animation: string; 
+  textColor: string;
+  border: string;
+} {
+  if (score >= 4.5) {
+    return {
+      background: 'bg-[hsl(var(--score-high))]',
+      animation: 'viral-glow-high',
+      textColor: 'text-white',
+      border: 'border-[hsl(var(--score-high))]'
+    }
+  } else if (score >= 3.0) {
+    return {
+      background: 'bg-[hsl(var(--score-medium))]',
+      animation: 'viral-pulse-medium',
+      textColor: 'text-white',
+      border: 'border-[hsl(var(--score-medium))]'
+    }
+  } else {
+    return {
+      background: 'bg-[hsl(var(--score-low))]',
+      animation: '',
+      textColor: 'text-white',
+      border: 'border-[hsl(var(--score-low))]'
+    }
+  }
+}
+
+export function getEmotionalStateColor(emotion: string): string {
+  switch (emotion) {
+    case 'excitement':
+      return 'bg-[hsl(var(--excitement))] text-white'
+    case 'curiosity':
+      return 'bg-[hsl(var(--curiosity))] text-white'
+    case 'satisfaction':
+      return 'bg-[hsl(var(--satisfaction))] text-white'
+    case 'anticipation':
+      return 'bg-[hsl(var(--anticipation))] text-black'
+    default:
+      return 'bg-[hsl(var(--viral-purple))] text-white'
+  }
+}
+
+export function getPsychologyDriverColor(driver: string): string {
+  const colors = {
+    'curiosity-gap': 'bg-[hsl(var(--curiosity))] text-white',
+    'pain-point': 'bg-[hsl(var(--excitement))] text-white',
+    'value-hit': 'bg-[hsl(var(--satisfaction))] text-white',
+    'surprise-shock': 'bg-[hsl(var(--viral-orange))] text-white',
+    'social-proof': 'bg-[hsl(var(--viral-cyan))] text-white',
+    'urgency-fomo': 'bg-[hsl(var(--anticipation))] text-black',
+    'authority-credibility': 'bg-[hsl(var(--viral-purple))] text-white',
+    'emotional-connection': 'bg-[hsl(var(--viral-pink))] text-white',
+  }
+  return colors[driver as keyof typeof colors] || 'bg-[hsl(var(--viral-purple))] text-white'
+}
+
+export function getViralRiskColor(risk: string): string {
+  switch (risk) {
+    case 'low': 
+      return 'bg-[hsl(var(--satisfaction))] text-white'
+    case 'medium': 
+      return 'bg-[hsl(var(--anticipation))] text-black'
+    case 'high': 
+      return 'bg-[hsl(var(--excitement))] text-white'
+    default: 
+      return 'bg-gray-500 text-white'
   }
 }
 

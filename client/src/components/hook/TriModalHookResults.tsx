@@ -15,7 +15,7 @@ import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
 import { Progress } from '../ui/Progress'
 import type { HookObject } from '@/types/shared'
-import { cn, getPlatformColor, formatPlatformName } from '../../lib/utils'
+import { cn, getPlatformColor, getPlatformGlow, getViralScoreColor, getPsychologyDriverColor, getViralRiskColor, formatPlatformName } from '../../lib/utils'
 import { useToast } from '../../hooks/useToast'
 
 interface TriModalHookResultsProps {
@@ -56,34 +56,15 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
     }
   }
 
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getPsychologyColor = (driver: string) => {
-    const colors = {
-      'curiosity-gap': 'bg-purple-100 text-purple-800',
-      'pain-point': 'bg-red-100 text-red-800',
-      'value-hit': 'bg-green-100 text-green-800',
-      'surprise-shock': 'bg-orange-100 text-orange-800',
-      'social-proof': 'bg-blue-100 text-blue-800',
-      'urgency-fomo': 'bg-yellow-100 text-yellow-800',
-      'authority-credibility': 'bg-indigo-100 text-indigo-800',
-      'emotional-connection': 'bg-pink-100 text-pink-800',
-    }
-    return colors[driver as keyof typeof colors] || 'bg-gray-100 text-gray-800'
-  }
+  // Viral Energy color system - removed local functions, using imported utilities
 
   return (
     <div className={cn("space-y-8", className)}>
       {hooks.map((hook, index) => {
         const scorePercentage = (hook.score / 5) * 100
         const isFavorite = favoriteIds.has(`${index}`)
+        const viralScoreColors = getViralScoreColor(hook.score)
+        const platformGlow = platform ? getPlatformGlow(platform) : ''
 
         return (
           <motion.div
@@ -92,7 +73,7 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            <Card className="overflow-hidden">
+            <Card className={cn("overflow-hidden", platformGlow)}>
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="space-y-2">
@@ -102,20 +83,28 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                           {formatPlatformName(platform)}
                         </Badge>
                       )}
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs bg-[hsl(var(--viral-cyan)/0.2)] text-[hsl(var(--viral-cyan))] border-[hsl(var(--viral-cyan)/0.3)]">
                         {hook.hookCategory.replace('-', ' ').toUpperCase()}
                       </Badge>
-                      <Badge className={getPsychologyColor(hook.psychologicalDriver)}>
+                      <Badge className={getPsychologyDriverColor(hook.psychologicalDriver)}>
                         <Brain className="w-3 h-3 mr-1" />
                         {hook.psychologicalDriver.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Badge>
-                      <Badge className={getRiskColor(hook.riskFactor)}>
+                      <Badge className={getViralRiskColor(hook.riskFactor)}>
                         <AlertTriangle className="w-3 h-3 mr-1" />
                         {hook.riskFactor.toUpperCase()} Risk
                       </Badge>
                     </div>
-                    <CardTitle className="text-lg">
-                      Hook #{index + 1} - Score: {hook.score.toFixed(1)}/5.0
+                    <CardTitle className="text-lg flex items-center gap-3">
+                      Hook #{index + 1} 
+                      <div className={cn(
+                        "px-3 py-1 rounded-full text-sm font-bold",
+                        viralScoreColors.background,
+                        viralScoreColors.textColor,
+                        viralScoreColors.animation
+                      )}>
+                        {hook.score.toFixed(1)}/5.0
+                      </div>
                     </CardTitle>
                   </div>
                   
@@ -124,20 +113,28 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                       variant={isFavorite ? "default" : "outline"}
                       size="sm"
                       onClick={() => onFavoriteToggle?.(index)}
-                      className={isFavorite ? "bg-red-500 hover:bg-red-600" : ""}
+                      className={isFavorite ? "bg-[hsl(var(--viral-pink))] hover:bg-[hsl(var(--viral-pink))/0.9]" : ""}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
                     </Button>
                   </div>
                 </div>
                 
-                {/* Quality Score */}
+                {/* Quality Score Progress */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Quality Score</span>
-                    <span className="font-medium">{hook.score.toFixed(1)}/5.0</span>
+                    <span className="font-medium text-[hsl(var(--viral-gold))]">{hook.score.toFixed(1)}/5.0</span>
                   </div>
-                  <Progress value={scorePercentage} className="h-2" />
+                  <div className="relative">
+                    <Progress 
+                      value={scorePercentage} 
+                      className={cn(
+                        "h-3 rounded-full overflow-hidden",
+                        viralScoreColors.animation === 'viral-glow-high' && 'viral-shimmer'
+                      )}
+                    />
+                  </div>
                 </div>
               </CardHeader>
 
@@ -148,8 +145,8 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Mic className="w-4 h-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-[hsl(var(--viral-cyan)/0.2)] rounded-lg flex items-center justify-center">
+                          <Mic className="w-4 h-4 text-[hsl(var(--viral-cyan))]" />
                         </div>
                         <div>
                           <h4 className="font-medium text-foreground">Verbal Hook</h4>
@@ -160,11 +157,12 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                         variant="outline" 
                         size="sm"
                         onClick={() => handleCopy(hook.verbalHook, 'Verbal hook')}
+                        className="border-[hsl(var(--viral-cyan))] text-[hsl(var(--viral-cyan))] hover:bg-[hsl(var(--viral-cyan)/0.1)]"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
                     </div>
-                    <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="p-4 bg-[hsl(var(--viral-cyan)/0.05)] dark:bg-[hsl(var(--viral-cyan)/0.1)] rounded-lg border border-[hsl(var(--viral-cyan)/0.2)]">
                       <p className="text-sm leading-relaxed">{hook.verbalHook}</p>
                     </div>
                   </div>
@@ -173,8 +171,8 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                          <Eye className="w-4 h-4 text-green-600" />
+                        <div className="w-8 h-8 bg-[hsl(var(--satisfaction)/0.2)] rounded-lg flex items-center justify-center">
+                          <Eye className="w-4 h-4 text-[hsl(var(--satisfaction))]" />
                         </div>
                         <div>
                           <h4 className="font-medium text-foreground">Visual Hook</h4>
@@ -186,12 +184,13 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                           variant="outline" 
                           size="sm"
                           onClick={() => handleCopy(hook.visualHook!, 'Visual hook')}
+                          className="border-[hsl(var(--satisfaction))] text-[hsl(var(--satisfaction))] hover:bg-[hsl(var(--satisfaction)/0.1)]"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
-                    <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800 min-h-[80px] flex items-center">
+                    <div className="p-4 bg-[hsl(var(--satisfaction)/0.05)] dark:bg-[hsl(var(--satisfaction)/0.1)] rounded-lg border border-[hsl(var(--satisfaction)/0.2)] min-h-[80px] flex items-center">
                       {hook.visualHook ? (
                         <p className="text-sm leading-relaxed">{hook.visualHook}</p>
                       ) : (
@@ -206,8 +205,8 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <Type className="w-4 h-4 text-purple-600" />
+                        <div className="w-8 h-8 bg-[hsl(var(--viral-purple)/0.2)] rounded-lg flex items-center justify-center">
+                          <Type className="w-4 h-4 text-[hsl(var(--viral-purple))]" />
                         </div>
                         <div>
                           <h4 className="font-medium text-foreground">Text Overlay</h4>
@@ -219,12 +218,13 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                           variant="outline" 
                           size="sm"
                           onClick={() => handleCopy(hook.textualHook!, 'Text overlay')}
+                          className="border-[hsl(var(--viral-purple))] text-[hsl(var(--viral-purple))] hover:bg-[hsl(var(--viral-purple)/0.1)]"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
-                    <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800 min-h-[80px] flex items-center">
+                    <div className="p-4 bg-[hsl(var(--viral-purple)/0.05)] dark:bg-[hsl(var(--viral-purple)/0.1)] rounded-lg border border-[hsl(var(--viral-purple)/0.2)] min-h-[80px] flex items-center">
                       {hook.textualHook ? (
                         <p className="text-sm leading-relaxed">{hook.textualHook}</p>
                       ) : (
@@ -289,20 +289,20 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                     <h4 className="font-medium text-foreground mb-3">Platform-Specific Elements</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {hook.platformSpecific.tiktokColdOpen && (
-                        <div className="p-3 bg-pink-50 dark:bg-pink-950/20 rounded-lg border border-pink-200 dark:border-pink-800">
-                          <div className="text-sm font-medium text-foreground mb-1">TikTok Cold Open</div>
+                        <div className="p-3 bg-[hsl(var(--tiktok-brand)/0.05)] dark:bg-[hsl(var(--tiktok-brand)/0.1)] rounded-lg border border-[hsl(var(--tiktok-brand)/0.2)] platform-glow-tiktok">
+                          <div className="text-sm font-medium text-[hsl(var(--tiktok-brand))] mb-1">TikTok Cold Open</div>
                           <p className="text-sm">{hook.platformSpecific.tiktokColdOpen}</p>
                         </div>
                       )}
                       {hook.platformSpecific.instagramOverlay && (
-                        <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                          <div className="text-sm font-medium text-foreground mb-1">Instagram Overlay</div>
+                        <div className="p-3 bg-[hsl(var(--instagram-brand)/0.05)] dark:bg-[hsl(var(--instagram-brand)/0.1)] rounded-lg border border-[hsl(var(--instagram-brand)/0.2)] platform-glow-instagram">
+                          <div className="text-sm font-medium text-[hsl(var(--instagram-brand))] mb-1">Instagram Overlay</div>
                           <p className="text-sm">{hook.platformSpecific.instagramOverlay}</p>
                         </div>
                       )}
                       {hook.platformSpecific.youtubeProofCue && (
-                        <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                          <div className="text-sm font-medium text-foreground mb-1">YouTube Proof Cue</div>
+                        <div className="p-3 bg-[hsl(var(--youtube-brand)/0.05)] dark:bg-[hsl(var(--youtube-brand)/0.1)] rounded-lg border border-[hsl(var(--youtube-brand)/0.2)] platform-glow-youtube">
+                          <div className="text-sm font-medium text-[hsl(var(--youtube-brand))] mb-1">YouTube Proof Cue</div>
                           <p className="text-sm">{hook.platformSpecific.youtubeProofCue}</p>
                         </div>
                       )}
@@ -316,13 +316,14 @@ const TriModalHookResults: React.FC<TriModalHookResultsProps> = ({
                     <Button 
                       variant="outline" 
                       onClick={() => handleCopy(hook.verbalHook, 'Full hook package')}
+                      className="border-[hsl(var(--viral-gold))] text-[hsl(var(--viral-gold))] hover:bg-[hsl(var(--viral-gold)/0.1)]"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy All
                     </Button>
                     <Button 
-                      variant="outline"
                       onClick={() => onCopyHook?.(hook)}
+                      className="viral-gradient-primary text-white hover:opacity-90 transition-opacity"
                     >
                       <TrendingUp className="w-4 h-4 mr-2" />
                       Analyze
