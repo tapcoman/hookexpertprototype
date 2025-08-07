@@ -59,12 +59,23 @@
   }
 
   .dark {
-    --background: 280 40% 4.9%;
-    --foreground: 280 5% 98%;
-    --card: 280 40% 4.9%;
-    --card-foreground: 280 5% 98%;
-    --popover: 280 40% 4.9%;
-    --popover-foreground: 280 5% 98%;
+    /* ChatGPT-5 Inspired Dark Theme - Cosmic Gradient */
+    --background: 240 10% 8%;
+    --foreground: 0 0% 98%;
+    --card: rgba(255, 255, 255, 0.05);
+    --card-foreground: 0 0% 98%;
+    --popover: rgba(255, 255, 255, 0.08);
+    --popover-foreground: 0 0% 98%;
+    
+    /* Cosmic Theme Colors */
+    --cosmic-dark: 240 10% 8%;
+    --cosmic-purple: 270 60% 20%;
+    --cosmic-blue: 220 70% 15%;
+    --cosmic-accent: 280 100% 70%;
+    --cosmic-surface: rgba(255, 255, 255, 0.05);
+    --cosmic-border: rgba(255, 255, 255, 0.1);
+    --text-primary: 0 0% 98%;
+    --text-secondary: 240 5% 75%;
     
     /* Viral Energy Dark Mode - Maintaining vibrancy */
     --primary: 350 100% 70%;
@@ -86,18 +97,18 @@
     --instagram-brand: 315 85% 75%;
     --youtube-brand: 0 85% 65%;
     
-    /* Enhanced System Colors - Dark */
-    --secondary: 280 32.6% 17.5%;
-    --secondary-foreground: 280 5% 98%;
-    --muted: 280 32.6% 17.5%;
-    --muted-foreground: 280 5% 65.1%;
-    --accent: 280 32.6% 17.5%;
-    --accent-foreground: 280 5% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 280 5% 98%;
-    --border: 280 32.6% 17.5%;
-    --input: 280 32.6% 17.5%;
-    --ring: 350 100% 70%;
+    /* Enhanced System Colors - Cosmic Dark */
+    --secondary: rgba(255, 255, 255, 0.08);
+    --secondary-foreground: 0 0% 98%;
+    --muted: rgba(255, 255, 255, 0.06);
+    --muted-foreground: 240 5% 75%;
+    --accent: rgba(124, 58, 237, 0.2);
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.05);
+    --ring: 280 100% 70%;
     
     /* Quality Score Colors - Dark Mode */
     --score-high: 45 100% 65%;
@@ -119,6 +130,41 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Cosmic Background Gradient - ChatGPT-5 Style */
+  .dark body {
+    background: linear-gradient(135deg, 
+      hsl(240, 15%, 9%) 0%, 
+      hsl(270, 25%, 12%) 25%, 
+      hsl(220, 30%, 8%) 50%, 
+      hsl(280, 20%, 10%) 75%, 
+      hsl(240, 10%, 8%) 100%
+    );
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  
+  /* Animated particles background */
+  .dark body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, rgba(124, 58, 237, 0.3), transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.2), transparent),
+      radial-gradient(1px 1px at 90px 40px, rgba(168, 85, 247, 0.4), transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(196, 181, 253, 0.3), transparent),
+      radial-gradient(2px 2px at 160px 30px, rgba(124, 58, 237, 0.2), transparent);
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.3;
+    animation: cosmic-drift 20s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
@@ -152,6 +198,27 @@
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+@keyframes cosmic-drift {
+  0% { transform: translateX(0px) translateY(0px); }
+  33% { transform: translateX(-5px) translateY(-10px); }
+  66% { transform: translateX(5px) translateY(5px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
+
+@keyframes cosmic-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3), 0 0 40px rgba(124, 58, 237, 0.1);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.5), 0 0 60px rgba(124, 58, 237, 0.2);
+  }
+}
+
+@keyframes glass-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Viral Energy Utility Classes */
@@ -207,5 +274,90 @@
   
   .platform-glow-youtube {
     box-shadow: 0 0 20px hsl(var(--youtube-brand) / 0.3);
+  }
+  
+  /* ChatGPT-5 Inspired Cosmic Theme Classes */
+  .cosmic-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .cosmic-glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.4),
+      0 4px 16px rgba(124, 58, 237, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  
+  .cosmic-glow-purple {
+    animation: cosmic-glow 3s ease-in-out infinite;
+  }
+  
+  .cosmic-text-glow {
+    text-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(124, 58, 237, 0.3);
+  }
+  
+  .cosmic-button {
+    background: linear-gradient(135deg, 
+      rgba(124, 58, 237, 0.8) 0%, 
+      rgba(139, 92, 246, 0.8) 50%, 
+      rgba(168, 85, 247, 0.8) 100%
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 24px rgba(124, 58, 237, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .cosmic-button:hover {
+    background: linear-gradient(135deg, 
+      rgba(124, 58, 237, 0.9) 0%, 
+      rgba(139, 92, 246, 0.9) 50%, 
+      rgba(168, 85, 247, 0.9) 100%
+    );
+    box-shadow: 
+      0 12px 32px rgba(124, 58, 237, 0.4),
+      0 0 40px rgba(124, 58, 237, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .cosmic-input {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .cosmic-input:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(124, 58, 237, 0.5);
+    box-shadow: 
+      0 0 0 3px rgba(124, 58, 237, 0.2),
+      0 8px 24px rgba(124, 58, 237, 0.1);
+  }
+  
+  .glass-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: glass-shimmer 2s infinite linear;
   }
 }

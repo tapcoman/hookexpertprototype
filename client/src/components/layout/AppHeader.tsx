@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Heart, History, User, Sparkles, Menu } from 'lucide-react'
+import { Heart, History, User, Sparkles } from 'lucide-react'
 import { Link } from 'wouter'
 import { useAuth } from '../../contexts/SimpleAuthContext'
 import {
@@ -13,6 +13,7 @@ import {
 import { Button } from '../ui/Button'
 import { Avatar, AvatarFallback } from '../ui/Avatar'
 import { Badge } from '../ui/Badge'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 const AppHeader: React.FC = () => {
   const { user } = useAuth()
@@ -38,7 +39,7 @@ const AppHeader: React.FC = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background">
+    <header className="sticky top-0 z-50 border-b bg-background dark:cosmic-glass dark:border-white/10">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -48,14 +49,14 @@ const AppHeader: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary">
-                <Sparkles className="w-4 h-4 text-primary-foreground" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary dark:cosmic-button dark:cosmic-glow-purple">
+                <Sparkles className="w-4 h-4 text-primary-foreground dark:text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-semibold leading-none text-foreground">
+                <span className="text-lg font-semibold leading-none text-foreground dark:text-white dark:cosmic-text-glow">
                   Hook Line Studio
                 </span>
-                <span className="text-xs leading-none text-muted-foreground">
+                <span className="text-xs leading-none text-muted-foreground dark:text-purple-300">
                   AI Hook Generator
                 </span>
               </div>
@@ -79,8 +80,9 @@ const AppHeader: React.FC = () => {
               </div>
             </div>
 
-            {/* Navigation Icons */}
+            {/* Theme Toggle and Navigation Icons */}
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               <Link href="/favorites">
                 <Button 
                   variant="ghost" 
