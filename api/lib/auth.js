@@ -147,6 +147,51 @@ async function loginUser(email, password) {
   }
 }
 
+// Update user onboarding data
+async function updateUserOnboarding(userId, onboardingData) {
+  try {
+    if (!db.sql) {
+      console.error('Database not initialized')
+      return null
+    }
+    
+    // Extract data from onboarding
+    const {
+      company,
+      industry,
+      role,
+      audience,
+      voice,
+      bannedTerms,
+      safety,
+      primaryPlatforms,
+      contentGoals,
+      successfulHooks
+    } = onboardingData
+    
+    // Update user with onboarding data
+    const result = await db.sql`
+      UPDATE users 
+      SET 
+        company = ${company || null},
+        industry = ${industry || null},
+        role = ${role || null},
+        audience = ${audience || null},
+        voice = ${voice || null},
+        banned_terms = ${bannedTerms || []},
+        safety = ${safety || 'standard'},
+        updated_at = NOW()
+      WHERE id = ${userId}
+      RETURNING *
+    `
+    
+    return result[0] || null
+  } catch (error) {
+    console.error('Error updating user onboarding:', error)
+    throw error
+  }
+}
+
 export {
   hashPassword,
   verifyPassword,
@@ -155,5 +200,6 @@ export {
   findUserByEmail,
   findUserById,
   createUser,
-  loginUser
+  loginUser,
+  updateUserOnboarding
 }

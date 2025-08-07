@@ -205,6 +205,64 @@ export default async function handler(req, res) {
       }
     }
     
+    // Handle onboarding endpoint
+    if (req.url === '/api/users/onboarding' || req.url?.endsWith('/users/onboarding')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'No token provided',
+            message: 'Authorization required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        // Get the onboarding data
+        const onboardingData = req.body
+        
+        // Update user with onboarding data
+        const { updateUserOnboarding } = await import('./lib/auth.js')
+        const updatedUser = await updateUserOnboarding(decoded.userId, onboardingData)
+        
+        if (!updatedUser) {
+          return res.status(400).json({
+            success: false,
+            error: 'Onboarding failed',
+            message: 'Failed to update user profile'
+          })
+        }
+        
+        return res.status(200).json({
+          success: true,
+          message: 'Onboarding completed successfully',
+          data: updatedUser
+        })
+      } catch (error) {
+        console.error('Onboarding error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Onboarding failed',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
+    }
+    
     // Handle analytics endpoints (to prevent infinite loop)
     if (req.url?.includes('/analytics/track')) {
       // Just return success to stop the infinite loop - don't actually track for now
