@@ -410,10 +410,25 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
 
   const refreshUser = async (): Promise<void> => {
     console.log('[SimpleAuthContext] Refreshing user profile...')
+    console.log('[SimpleAuthContext] Current user before refresh:', {
+      userId: user?.id,
+      hasCompany: Boolean(user?.company),
+      hasIndustry: Boolean(user?.industry),
+      hasRole: Boolean(user?.role),
+      company: user?.company || 'not set',
+      industry: user?.industry || 'not set', 
+      role: user?.role || 'not set'
+    })
     
     try {
+      // Force clear cache first
+      queryClient.removeQueries({ queryKey: queryKeys.userProfile() })
+      console.log('[SimpleAuthContext] Cache cleared, invalidating queries...')
+      
       // Invalidate and refetch user profile
       await queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() })
+      console.log('[SimpleAuthContext] Queries invalidated, refetching...')
+      
       const result = await refetchUser()
       
       console.log('[SimpleAuthContext] User profile refreshed:', {
@@ -421,8 +436,26 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({ children
         userId: result.data?.id,
         hasCompany: Boolean(result.data?.company),
         hasIndustry: Boolean(result.data?.industry),
-        hasRole: Boolean(result.data?.role)
+        hasRole: Boolean(result.data?.role),
+        company: result.data?.company || 'not set',
+        industry: result.data?.industry || 'not set',
+        role: result.data?.role || 'not set',
+        onboardingComplete: Boolean(result.data?.company && result.data?.industry && result.data?.role)
       })
+      
+      // Additional verification - check if the data actually changed in context
+      setTimeout(() => {
+        console.log('[SimpleAuthContext] Final user context after refresh:', {
+          userId: user?.id,
+          hasCompany: Boolean(user?.company),
+          hasIndustry: Boolean(user?.industry),
+          hasRole: Boolean(user?.role),
+          company: user?.company || 'not set',
+          industry: user?.industry || 'not set',
+          role: user?.role || 'not set',
+          onboardingComplete: Boolean(user?.company && user?.industry && user?.role)
+        })
+      }, 100)
       
       return Promise.resolve()
     } catch (error) {

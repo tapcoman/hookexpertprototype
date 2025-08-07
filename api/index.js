@@ -66,9 +66,26 @@ export default async function handler(req, res) {
               firstName: user.firstName,
               lastName: user.lastName,
               emailVerified: user.emailVerified,
+              // Onboarding fields - CRITICAL for auth context (null for new users)
+              company: user.company || null,
+              industry: user.industry || null,
+              role: user.role || null,
+              audience: user.audience || null,
+              voice: user.voice || null,
+              bannedTerms: user.bannedTerms || [],
+              safety: user.safety || 'standard',
+              // Credit system
               freeCredits: user.freeCredits || 5,
               usedCredits: user.usedCredits || 0,
               subscriptionStatus: user.subscriptionStatus || 'free',
+              subscriptionPlan: user.subscriptionPlan || 'free',
+              isPremium: user.isPremium || false,
+              // Psychological preferences
+              preferredHookCategories: user.preferredHookCategories || [],
+              psychologicalRiskTolerance: user.psychologicalRiskTolerance || 'medium',
+              creativityPreference: user.creativityPreference || 'balanced',
+              urgencyPreference: user.urgencyPreference || 'moderate',
+              personalityInsights: user.personalityInsights || {},
               createdAt: user.createdAt
             },
             token,
@@ -134,9 +151,26 @@ export default async function handler(req, res) {
               firstName: user.firstName,
               lastName: user.lastName,
               emailVerified: user.emailVerified,
+              // Onboarding fields - CRITICAL for auth context
+              company: user.company,
+              industry: user.industry,
+              role: user.role,
+              audience: user.audience,
+              voice: user.voice,
+              bannedTerms: user.bannedTerms || [],
+              safety: user.safety || 'standard',
+              // Credit system
               freeCredits: user.freeCredits || 5,
               usedCredits: user.usedCredits || 0,
               subscriptionStatus: user.subscriptionStatus,
+              subscriptionPlan: user.subscriptionPlan || 'free',
+              isPremium: user.isPremium || false,
+              // Psychological preferences
+              preferredHookCategories: user.preferredHookCategories || [],
+              psychologicalRiskTolerance: user.psychologicalRiskTolerance || 'medium',
+              creativityPreference: user.creativityPreference || 'balanced',
+              urgencyPreference: user.urgencyPreference || 'moderate',
+              personalityInsights: user.personalityInsights || {},
               createdAt: user.createdAt
             },
             isAuthenticated: true
@@ -190,9 +224,26 @@ export default async function handler(req, res) {
               firstName: result.user.firstName,
               lastName: result.user.lastName,
               emailVerified: result.user.emailVerified,
+              // Onboarding fields - CRITICAL for auth context
+              company: result.user.company,
+              industry: result.user.industry,
+              role: result.user.role,
+              audience: result.user.audience,
+              voice: result.user.voice,
+              bannedTerms: result.user.bannedTerms || [],
+              safety: result.user.safety || 'standard',
+              // Credit system
               freeCredits: result.user.freeCredits || 5,
               usedCredits: result.user.usedCredits || 0,
               subscriptionStatus: result.user.subscriptionStatus,
+              subscriptionPlan: result.user.subscriptionPlan || 'free',
+              isPremium: result.user.isPremium || false,
+              // Psychological preferences
+              preferredHookCategories: result.user.preferredHookCategories || [],
+              psychologicalRiskTolerance: result.user.psychologicalRiskTolerance || 'medium',
+              creativityPreference: result.user.creativityPreference || 'balanced',
+              urgencyPreference: result.user.urgencyPreference || 'moderate',
+              personalityInsights: result.user.personalityInsights || {},
               createdAt: result.user.createdAt
             },
             token: result.token

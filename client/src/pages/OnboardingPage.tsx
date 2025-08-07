@@ -523,7 +523,20 @@ const OnboardingPageContent: React.FC = () => {
     },
     onSuccess: async (data) => {
       console.log('🎉 Onboarding completed successfully, refreshing user context...')
+      console.log('📋 Onboarding data saved:', {
+        hasCompany: Boolean(data.company),
+        hasIndustry: Boolean(data.industry),
+        hasRole: Boolean(data.role),
+        company: data.company,
+        industry: data.industry,
+        role: data.role
+      })
+      
       try {
+        // Add a small delay to ensure database transaction is committed
+        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('⏳ Database settle delay completed')
+        
         // Refresh user profile to get updated onboarding data
         await refreshUser()
         console.log('🔄 User context refreshed successfully')
@@ -534,7 +547,7 @@ const OnboardingPageContent: React.FC = () => {
         setTimeout(() => {
           console.log('🧭 Navigating to /app')
           setLocation('/app')
-        }, 100)
+        }, 200)
       } catch (refreshError) {
         console.error('❌ Failed to refresh user context:', refreshError)
         showErrorNotification('Setup Warning', 'Your profile was saved but there was an issue refreshing the page. Please refresh manually.')

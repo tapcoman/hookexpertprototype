@@ -110,11 +110,21 @@ export const OnboardingRoute: React.FC<OnboardingRouteProps> = ({ children }) =>
   console.log('🎯 OnboardingRoute: Checking onboarding status', {
     userId: user.id,
     email: user.email,
-    company: user.company,
-    industry: user.industry,
-    role: user.role,
+    company: user.company || 'NOT SET',
+    industry: user.industry || 'NOT SET',
+    role: user.role || 'NOT SET',
     hasOnboarding,
-    userObject: user
+    companyType: typeof user.company,
+    industryType: typeof user.industry,
+    roleType: typeof user.role,
+    fullUserKeys: Object.keys(user),
+    onboardingFields: {
+      company: user.company,
+      industry: user.industry, 
+      role: user.role,
+      audience: user.audience,
+      voice: user.voice
+    }
   })
 
   // Redirect to app if already onboarded
