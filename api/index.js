@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
         serverless: true,
-        message: 'Hook generation API ready'
+        message: 'Full hook API with favorites & history ready'
       })
     }
     
