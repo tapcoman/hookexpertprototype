@@ -2,6 +2,7 @@
 import OpenAI from 'openai'
 import { db } from './db.js'
 import { findUserById } from './auth.js'
+import { saveHookGeneration } from './hooksData.js'
 
 // Initialize OpenAI client lazily to avoid issues with missing env vars at module load
 let openaiClient = null
@@ -201,22 +202,32 @@ Format each hook as JSON:
 
     const generationId = `gen_${userId}_${Date.now()}`
 
-    // Store generation in database (simplified for serverless)
-    // Note: hook_generations table may not exist - we'll just log for now
+    // Store generation in database
     try {
-      // Try to store if table exists, but don't fail if it doesn't
-      console.log('Generation completed:', {
+      await saveHookGeneration(userId, {
         id: generationId,
-        userId,
         platform,
         objective,
-        hooksGenerated: hooks.length,
-        modelType
+        topic,
+        modelType,
+        hooks,
+        topThreeVariants,
+        psychologicalStrategy: {
+          selectedStrategy: 'Multi-framework approach with user personalization',
+          psychologicalReasoning: 'Diversified psychological triggers to maximize engagement potential',
+          platformOptimization: `Optimized for ${platform} with ${objective} objective`,
+          diversityApproach: 'Varied hook categories and psychological frameworks',
+          riskMitigation: `Safety level: ${userContext.safety}`,
+          adaptationLevel: userContext.company ? 80 : 50,
+          confidenceScore: Math.min(95, averageScore + 10)
+        },
+        adaptationLevel: userContext.company ? 80 : 50,
+        confidenceScore: Math.min(95, averageScore + 10)
       })
-      // TODO: Create hook_generations table in future if needed for analytics
+      console.log('Generation saved to database:', generationId)
     } catch (dbError) {
-      console.warn('Generation logging failed:', dbError)
-      // Don't fail the request if logging fails
+      console.warn('Failed to save generation to database:', dbError)
+      // Don't fail the request if database save fails
     }
 
     return {
