@@ -27,9 +27,6 @@ const criticalEnvSchema = z.object({
 })
 
 const optionalEnvSchema = z.object({
-  // Database (critical in production, optional in development)
-  DATABASE_URL: z.string().url().optional(),
-  
   // OpenAI (optional but limits functionality)
   OPENAI_API_KEY: z.string().optional(),
   
@@ -115,38 +112,26 @@ export class StartupValidator {
   }
 
   private static async validateDatabase(): Promise<void> {
-    const serviceName = 'PostgreSQL Database'
+    const serviceName = 'SQLite Database'
     
     try {
-      console.log('🔍 Testing database connection...')
+      console.log('🔍 Testing SQLite database...')
       
-      if (!process.env.DATABASE_URL) {
-        this.setServiceStatus(serviceName, {
-          status: process.env.NODE_ENV === 'production' ? 'unavailable' : 'not_configured',
-          message: process.env.NODE_ENV === 'production' 
-            ? 'Database URL is required in production' 
-            : 'Database URL not configured (development mode)',
-          critical: process.env.NODE_ENV === 'production',
-          details: { configured: false }
-        })
-        return
-      }
-
-      const isConnected = await checkDatabaseConnection()
+      const healthCheck = await checkDatabaseConnection()
       
-      if (isConnected) {
+      if (healthCheck && healthCheck.connected) {
         this.setServiceStatus(serviceName, {
           status: 'healthy',
-          message: 'Database connection successful',
-          critical: true,
-          details: { url: process.env.DATABASE_URL?.substring(0, 50) + '...' }
+          message: 'SQLite database ready',
+          critical: false, // SQLite is always available
+          details: healthCheck.details || { type: 'SQLite' }
         })
-        console.log('✅ Database connection validated')
+        console.log('✅ SQLite database validated')
       } else {
         this.setServiceStatus(serviceName, {
           status: 'unavailable',
-          message: 'Database connection failed',
-          critical: true,
+          message: 'SQLite database failed',
+          critical: false, // Non-critical for startup
           details: { error: 'Connection test failed' }
         })
         console.log('❌ Database connection failed')
