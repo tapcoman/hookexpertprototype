@@ -25,7 +25,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     // Handle auth endpoints
-    if (req.url?.includes('/auth/register')) {
+    if (req.url === '/api/auth/register' || req.url?.endsWith('/auth/register')) {
       if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' })
       }
