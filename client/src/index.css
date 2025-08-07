@@ -33,6 +33,17 @@
     --instagram-accent: 315 60% 70%;
     --youtube-accent: 0 60% 60%;
     
+    /* Viral Color Palette for Hook Generation */
+    --viral-primary: 240 85% 70%;
+    --viral-secondary: 140 85% 65%;
+    --viral-accent: 190 95% 70%;
+    --viral-warning: 25 95% 65%;
+    --viral-success: 140 85% 65%;
+    --viral-electric: 240 85% 70%;
+    --viral-glow: 240 85% 70%;
+    --viral-gradient-start: 240 85% 70%;
+    --viral-gradient-end: 140 85% 65%;
+    
     /* Enhanced System Colors */
     --secondary: 280 40% 96%;
     --secondary-foreground: 280 30% 15%;
@@ -102,6 +113,17 @@
     --tiktok-accent: 348 60% 60%;
     --instagram-accent: 315 60% 75%;
     --youtube-accent: 0 60% 65%;
+    
+    /* Viral Color Palette for Hook Generation - Dark Mode */
+    --viral-primary: 240 85% 70%;
+    --viral-secondary: 140 85% 65%;
+    --viral-accent: 190 95% 70%;
+    --viral-warning: 25 95% 65%;
+    --viral-success: 140 85% 65%;
+    --viral-electric: 240 85% 70%;
+    --viral-glow: 240 85% 70%;
+    --viral-gradient-start: 240 85% 70%;
+    --viral-gradient-end: 140 85% 65%;
     
     /* Enhanced System Colors - 2025 Modern */
     --secondary: 240 18% 12%;
@@ -492,5 +514,85 @@
     color: hsl(var(--premium-gold));
     width: 14px;
     height: 14px;
+  }
+  
+  /* AI-Native Interface Components */
+  .ai-native-container {
+    background: hsl(var(--surface-secondary) / 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border-subtle));
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .ai-native-container:hover {
+    background: hsl(var(--surface-secondary) / 0.8);
+    border-color: hsl(var(--border-strong));
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+  }
+  
+  .modern-pill-button {
+    background: hsl(var(--surface-secondary));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid hsl(var(--border-subtle));
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .modern-pill-button:hover {
+    background: hsl(var(--surface-tertiary));
+    border-color: hsl(var(--accent-electric) / 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px hsl(var(--accent-electric) / 0.1);
+  }
+  
+  .modern-pill-button.selected {
+    background: hsl(var(--accent-electric));
+    border-color: hsl(var(--accent-electric));
+    color: hsl(var(--surface-primary));
+    box-shadow: 0 8px 24px hsl(var(--accent-electric) / 0.25);
+    transform: translateY(-2px) scale(1.02);
+  }
+  
+  .ai-input-field {
+    background: hsl(var(--surface-secondary) / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid hsl(var(--border-subtle));
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .ai-input-field:focus {
+    background: hsl(var(--surface-tertiary));
+    border-color: hsl(var(--accent-electric));
+    box-shadow: 
+      0 0 0 3px hsl(var(--accent-electric) / 0.15),
+      0 8px 24px hsl(var(--accent-electric) / 0.1);
+  }
+  
+  .viral-gradient-text {
+    background: linear-gradient(135deg, hsl(var(--viral-gradient-start)), hsl(var(--viral-gradient-end)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .conversational-spacing {
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    gap: clamp(1.5rem, 3vw, 2rem);
+  }
+  
+  /* Smooth organic animations */
+  .organic-hover {
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  
+  .organic-hover:hover {
+    transform: translateY(-2px) scale(1.01);
+  }
+  
+  .breathing-glow {
+    animation: subtle-glow 4s ease-in-out infinite;
   }
 }

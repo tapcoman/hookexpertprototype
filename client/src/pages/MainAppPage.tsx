@@ -10,14 +10,9 @@ import { HookGenerationLoading } from '@/components/ui/LoadingSpinner'
 import HookCard from '@/components/hook/HookCard'
 import EmptyState from '@/components/ui/EmptyState'
 import AppHeader from '@/components/layout/AppHeader'
-import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Textarea } from '@/components/ui/Textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
 import { api } from '@/lib/api'
-import { Sparkles, Target, TrendingUp, PlayCircle, Users, ChevronDown, Settings } from 'lucide-react'
+import { Sparkles, Target, TrendingUp, PlayCircle, Users } from 'lucide-react'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
 // ==================== SHADCN UI HOOK GENERATION FORM ====================
@@ -40,7 +35,6 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [charCount, setCharCount] = useState(0)
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const [liveFeedback, setLiveFeedback] = useState('')
 
   // Set initial focus and tabindex for platform buttons
@@ -155,29 +149,34 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl">Generate Viral Hooks</CardTitle>
-          <CardDescription className="text-lg">
+      {/* AI-Native Floating Interface */}
+      <div className="professional-glass-card rounded-2xl p-8 space-y-8">
+        {/* Modern Header */}
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-bold text-text-primary professional-text-emphasis">
+            Generate Viral Hooks
+          </h1>
+          <p className="text-lg text-text-secondary">
             Create platform-optimized hooks that drive engagement
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Platform Selection - Accessible Radio Group */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium" id="platform-legend">
-                  Choose Platform
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Modern Platform Selection - Pill Style */}
+            <div className="space-y-5">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-text-primary mb-2" id="platform-legend">
+                  Choose Your Platform
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use arrow keys to navigate, Enter or Space to select
+                <p className="text-sm text-text-secondary">
+                  Select where you'll share your content
                 </p>
               </div>
+              
               <div 
                 role="radiogroup" 
                 aria-labelledby="platform-legend"
-                className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                className="flex justify-center gap-3 flex-wrap"
               >
                 {platforms.map((platform, index) => (
                   <motion.button
@@ -190,139 +189,101 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                     tabIndex={formData.platform === platform.value ? 0 : -1}
                     onClick={() => handlePlatformSelection(platform.value as Platform)}
                     onKeyDown={(e) => handlePlatformKeyDown(e, platform.value as Platform, index)}
-                    className={`p-4 rounded-lg border-2 text-left transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[88px] ${
+                    className={`group relative px-6 py-4 rounded-2xl backdrop-blur-sm transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent-electric focus:ring-offset-2 focus:ring-offset-surface-primary min-w-[140px] ${
                       formData.platform === platform.value
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border hover:border-primary/50'
+                        ? 'bg-accent-electric text-surface-primary shadow-lg shadow-accent-electric/25 scale-105'
+                        : 'bg-surface-secondary hover:bg-surface-tertiary border border-border-subtle hover:border-accent-electric/50 text-text-primary hover:shadow-lg hover:shadow-accent-electric/10'
                     }`}
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: formData.platform === platform.value ? 1.05 : 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className="flex items-center space-x-3 mb-2">
+                    {/* Selection indicator */}
+                    {formData.platform === platform.value && (
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-accent-electric/20 via-transparent to-accent-electric/20"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                    
+                    <div className="relative flex flex-col items-center space-y-2">
                       <span className="text-2xl" aria-hidden="true">{platform.icon}</span>
-                      <span className="font-medium">{platform.label}</span>
+                      <span className="font-semibold text-sm">{platform.label}</span>
+                      <span 
+                        className="text-xs opacity-75 text-center leading-tight" 
+                        id={`platform-${platform.value}-desc`}
+                      >
+                        {platform.description}
+                      </span>
                       {formData.platform === platform.value && (
                         <span className="sr-only">selected</span>
                       )}
                     </div>
-                    <p 
-                      className="text-sm text-muted-foreground" 
-                      id={`platform-${platform.value}-desc`}
-                    >
-                      {platform.description}
-                    </p>
                   </motion.button>
                 ))}
               </div>
             </div>
 
-            {/* Advanced Options - Collapsible */}
-            <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center justify-between w-full p-3 hover:bg-muted/50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  type="button"
-                  aria-expanded={showAdvanced}
-                  aria-controls="advanced-options"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm font-medium">Advanced Options</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {formData.platform === 'tiktok' ? 'Watch Time' : 
-                       formData.platform === 'instagram' ? 'Shares' : 'Click Rate'}
-                    </Badge>
-                  </div>
-                  <ChevronDown 
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      showAdvanced ? 'rotate-180' : ''
-                    }`} 
-                  />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent 
-                id="advanced-options"
-                className="space-y-4 pt-4 border-t border-border/50 mt-4"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="objective-select" className="text-sm font-medium">
-                      Optimization Goal
-                    </label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Choose what metric to optimize for (auto-selected based on platform)
-                    </p>
-                  </div>
-                  <Select
-                    value={formData.objective}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, objective: value as Objective }))}
-                  >
-                    <SelectTrigger 
-                      className="w-full"
-                      id="objective-select"
-                      aria-describedby="objective-description"
-                    >
-                      <SelectValue placeholder="Select optimization goal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {objectives.map((objective) => {
-                        const Icon = objective.icon
-                        return (
-                          <SelectItem key={objective.value} value={objective.value}>
-                            <div className="flex items-center space-x-2">
-                              <Icon className="w-4 h-4" />
-                              <span>{objective.label}</span>
-                            </div>
-                          </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <p id="objective-description" className="text-xs text-muted-foreground">
-                    {formData.objective === 'watch_time' && 'Optimizes for longer viewing duration'}
-                    {formData.objective === 'shares' && 'Optimizes for social sharing and virality'}  
-                    {formData.objective === 'saves' && 'Optimizes for bookmark saves'}
-                    {formData.objective === 'ctr' && 'Optimizes for click-through rates'}
-                    {formData.objective === 'follows' && 'Optimizes for new followers'}
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            {/* Smart Goal - Auto-optimized based on platform */}
+            <div className="text-center p-6 bg-surface-secondary/50 rounded-xl border border-border-subtle">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <Target className="w-5 h-5 text-accent-electric" />
+                <span className="font-semibold text-text-primary">Smart Optimization</span>
+              </div>
+              <p className="text-sm text-text-secondary">
+                Automatically optimizing for{' '}
+                <span className="font-medium text-accent-electric">
+                  {formData.platform === 'tiktok' ? 'Watch Time' : 
+                   formData.platform === 'instagram' ? 'Shares & Engagement' : 'Click-Through Rate'}
+                </span>
+                {' '}based on your platform selection
+              </p>
+            </div>
 
-            {/* Topic Input - Enhanced Accessibility */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="topic" className="text-sm font-medium">
-                  Video Topic
+            {/* AI-Native Topic Input */}
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <label htmlFor="topic" className="text-lg font-semibold text-text-primary block text-center">
+                  Describe Your Content Idea
                 </label>
-                <p className="text-xs text-muted-foreground" id="topic-description">
-                  Be specific and descriptive for best results. Include your angle, the outcome, or what makes it interesting.
+                <p className="text-sm text-text-secondary text-center max-w-lg mx-auto leading-relaxed" id="topic-description">
+                  Share your topic, angle, or story. The more specific you are, the better your hooks will be.
                 </p>
-                <div className="relative">
-                  <Textarea
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-accent-electric/20 via-transparent to-accent-electric/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                  <textarea
                     id="topic"
                     value={formData.topic}
                     onChange={handleTopicChange}
-                    placeholder="Example: 'I tried eating only white foods for 30 days - here's what happened to my energy levels and skin'"
-                    className={`min-h-[120px] resize-none pr-12 ${
+                    placeholder="Example: I tried eating only white foods for 30 days and documented every single change to my energy levels, skin, and mood - the results completely shocked me..."
+                    className={`professional-input w-full min-h-[140px] resize-none rounded-2xl px-6 py-5 text-text-primary placeholder-text-secondary/70 leading-relaxed focus:outline-none transition-all duration-300 ${
                       errors.topic 
                         ? 'border-destructive focus:ring-destructive' 
                         : charCount < 10 
-                        ? 'border-yellow-300 focus:ring-yellow-500' 
-                        : 'focus:ring-primary'
+                        ? 'border-yellow-400/50 focus:border-yellow-400' 
+                        : 'focus:border-accent-electric'
                     }`}
                     aria-describedby="topic-description topic-feedback topic-counter"
                     aria-invalid={!!errors.topic}
                   />
-                  <div className="absolute bottom-3 right-3 text-xs text-muted-foreground pointer-events-none">
-                    {charCount}
+                  <div className="absolute bottom-4 right-5 flex items-center space-x-2">
+                    <span className={`text-xs font-mono transition-colors ${
+                      charCount < 10 ? 'text-yellow-400' : 
+                      charCount > 800 ? 'text-yellow-400' : 
+                      charCount > 30 ? 'text-accent-electric' :
+                      'text-text-secondary'
+                    }`}>
+                      {charCount}
+                    </span>
+                    <div className="w-1 h-4 bg-border-subtle rounded-full" />
+                    <span className="text-xs text-text-secondary font-mono">1000</span>
                   </div>
                 </div>
                 
-                {/* Live Feedback and Counter */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start">
+                {/* Smart Feedback */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
                     <div 
                       className="flex-1"
                       role="status" 
@@ -330,48 +291,46 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                       id="topic-feedback"
                     >
                       {liveFeedback && (
-                        <motion.p 
-                          className={`text-sm ${
-                            liveFeedback.includes('Great') ? 'text-green-600' :
-                            liveFeedback.includes('Good') ? 'text-blue-600' :
-                            liveFeedback.includes('Consider') ? 'text-yellow-600' :
-                            'text-muted-foreground'
-                          }`}
+                        <motion.div
+                          className="flex items-center space-x-2"
                           initial={{ opacity: 0, y: -5 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3 }}
                         >
-                          {liveFeedback}
-                        </motion.p>
+                          <div className={`w-2 h-2 rounded-full ${
+                            liveFeedback.includes('Great') ? 'bg-success-green' :
+                            liveFeedback.includes('Good') ? 'bg-accent-electric' :
+                            liveFeedback.includes('Consider') ? 'bg-warning-amber' :
+                            'bg-text-secondary'
+                          }`} />
+                          <p className={`text-sm font-medium ${
+                            liveFeedback.includes('Great') ? 'text-success-green' :
+                            liveFeedback.includes('Good') ? 'text-accent-electric' :
+                            liveFeedback.includes('Consider') ? 'text-warning-amber' :
+                            'text-text-secondary'
+                          }`}>
+                            {liveFeedback}
+                          </p>
+                        </motion.div>
                       )}
                     </div>
-                    <span 
-                      className={`text-sm font-mono ${
-                        charCount < 10 ? 'text-destructive' : 
-                        charCount > 800 ? 'text-yellow-600' : 
-                        charCount > 30 ? 'text-green-600' :
-                        'text-muted-foreground'
-                      }`}
-                      id="topic-counter"
-                      aria-label={`${charCount} of 1000 characters used`}
-                    >
-                      {charCount}/1000
-                    </span>
                   </div>
                   
-                  {/* Character count progress indicator */}
-                  <div className="w-full bg-muted rounded-full h-1">
-                    <motion.div 
-                      className={`h-1 rounded-full transition-colors duration-300 ${
-                        charCount < 10 ? 'bg-destructive' :
-                        charCount > 800 ? 'bg-yellow-500' :
-                        charCount > 30 ? 'bg-green-500' :
-                        'bg-primary'
-                      }`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((charCount / 1000) * 100, 100)}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
+                  {/* Elegant Progress Bar */}
+                  <div className="relative">
+                    <div className="w-full h-1 bg-surface-tertiary rounded-full overflow-hidden">
+                      <motion.div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          charCount < 10 ? 'bg-gradient-to-r from-warning-amber/70 to-warning-amber' :
+                          charCount > 800 ? 'bg-gradient-to-r from-warning-amber/70 to-warning-amber' :
+                          charCount > 30 ? 'bg-gradient-to-r from-accent-electric/70 to-success-green' :
+                          'bg-gradient-to-r from-accent-electric/50 to-accent-electric'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((charCount / 1000) * 100, 100)}%` }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -393,44 +352,80 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
               </div>
             </div>
 
-            {/* Submit Button - Enhanced Accessibility */}
-            <Button
+            {/* AI-Native Generate Button */}
+            <motion.button
               type="submit"
               disabled={isLoading || !canGenerate}
-              className="w-full min-h-[48px] focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              size="lg"
+              className={`relative w-full min-h-[56px] rounded-2xl font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-electric focus:ring-offset-4 focus:ring-offset-surface-primary overflow-hidden ${
+                isLoading || !canGenerate
+                  ? 'bg-surface-tertiary text-text-secondary cursor-not-allowed'
+                  : 'professional-button text-surface-primary hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+              whileHover={!isLoading && canGenerate ? { scale: 1.02 } : {}}
+              whileTap={!isLoading && canGenerate ? { scale: 0.98 } : {}}
               aria-describedby={!canGenerate ? "no-credits-message" : undefined}
               aria-live="polite"
             >
-              <AnimatePresence mode="wait">
-                {isLoading ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <div 
-                      className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" 
-                      aria-hidden="true"
-                    />
-                    <span>Generating...</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="generate"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <Sparkles className="w-4 h-4" aria-hidden="true" />
-                    <span>Generate 10 Hooks</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Button>
+              {/* Animated background */}
+              {!isLoading && canGenerate && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-accent-electric via-accent-teal to-success-green opacity-90"
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{
+                    duration: 3,
+                    ease: 'linear',
+                    repeat: Infinity,
+                  }}
+                  style={{ backgroundSize: '200% 200%' }}
+                />
+              )}
+              
+              <div className="relative z-10">
+                <AnimatePresence mode="wait">
+                  {isLoading ? (
+                    <motion.div
+                      key="loading"
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="flex items-center justify-center space-x-3"
+                    >
+                      <div className="flex space-x-1">
+                        <motion.div
+                          className="w-2 h-2 bg-text-secondary rounded-full"
+                          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.div
+                          className="w-2 h-2 bg-text-secondary rounded-full"
+                          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                        />
+                        <motion.div
+                          className="w-2 h-2 bg-text-secondary rounded-full"
+                          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                        />
+                      </div>
+                      <span>Creating magic...</span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="generate"
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="flex items-center justify-center space-x-3"
+                    >
+                      <Sparkles className="w-5 h-5" aria-hidden="true" />
+                      <span>Generate 10 Viral Hooks</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.button>
 
             {!canGenerate && (
               <motion.div 
@@ -456,8 +451,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
               </motion.div>
             )}
           </form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
