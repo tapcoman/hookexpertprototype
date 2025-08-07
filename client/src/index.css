@@ -4,11 +4,11 @@
 
 @layer base {
   :root {
-    /* Premium SaaS Color System */
-    /* Primary Blues - Stripe-inspired */
-    --primary: 207 90% 54%;  /* #0570de */
+    /* Swiss-inspired Premium Color System */
+    /* Swiss Red - Primary Accent */
+    --primary: 0 75% 55%;  /* #e52323 - Swiss red accent */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 207 90% 48%;
+    --primary-hover: 0 75% 48%; /* Darker Swiss red */
     
     /* Electric Blue */
     --electric-blue: 214 100% 59%; /* #007BFF */
@@ -20,7 +20,7 @@
     
     /* Accent Colors */
     --coral-red: 352 83% 61%; /* #ff4757 */
-    --golden-yellow: 39 100% 69%; /* #ffcc66 */
+    --golden-yellow: 39 100% 69%; /* #ffcc66 */\n    \n    /* Swiss Design System Colors */\n    --swiss-red: 0 75% 55%; /* #e52323 - Primary Swiss red */\n    --swiss-gray: 0 0% 34%; /* #555555 - Swiss text gray */\n    --swiss-charcoal: 0 0% 13%; /* #212121 - Swiss charcoal */\n    --swiss-light-gray: 0 0% 96%; /* #f5f5f5 - Swiss light gray */
     
     /* Dark Bases */
     --dark-gray: 0 0% 13%; /* #212121 */
@@ -71,7 +71,7 @@
     --card-foreground: 0 0% 96%;
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 96%;
-    --primary: 207 90% 54%; /* Keep primary blue */
+    --primary: 0 75% 55%; /* Swiss red accent */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 15%; /* Darker secondary */
     --secondary-foreground: 0 0% 96%;
@@ -608,3 +608,179 @@
     backface-visibility: hidden;
   }
 }
+
+/* Swiss Design System Utilities */
+.swiss-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.swiss-shadow-lg {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.swiss-text {
+  color: #555555;
+}
+
+.swiss-heading {
+  color: #212121;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.swiss-accent {
+  color: #e52323;
+}
+
+.swiss-bg-accent {
+  background-color: #e52323;
+}
+
+.swiss-border {
+  border: 1px solid #e6e6e6;
+}
+
+.swiss-transition {
+  transition: all 0.2s ease;
+}
+
+.swiss-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Swiss-inspired Micro-interactions */
+.swiss-pulse {
+  animation: swiss-pulse 4.5s ease-in-out infinite;
+}
+
+.swiss-breathe {
+  animation: swiss-breathe 6s ease-in-out infinite;
+}
+
+.swiss-lift:hover {
+  transform: translateY(-2px) scale(1.01);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swiss-lift:active {
+  transform: translateY(0) scale(0.99);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.swiss-glow:hover {
+  box-shadow: 0 0 20px rgba(229, 35, 35, 0.2), 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Swiss Keyframes */
+@keyframes swiss-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes swiss-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Premium button micro-interactions */
+.btn-swiss {
+  @apply inline-flex items-center justify-center px-6 py-3 bg-gray-900 text-white rounded-2xl font-semibold;
+  @apply transition-all duration-300 hover:bg-black hover:scale-[1.02] hover:-translate-y-1;
+  @apply active:scale-[0.98] active:translate-y-0;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2;
+}
+
+
+/* Swiss Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Swiss mobile typography */
+  .swiss-heading {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    letter-spacing: -0.025em;
+  }
+  
+  /* Mobile Swiss buttons */
+  .btn-swiss {
+    @apply px-4 py-3 text-base;
+  }
+  
+  /* Swiss mobile cards */
+  .swiss-shadow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .swiss-shadow-lg {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  /* Reduce hover effects on mobile */
+  .swiss-hover:hover,
+  .swiss-lift:hover {
+    transform: none;
+  }
+  
+  /* Mobile-friendly touch targets */
+  .touch-target-swiss {
+    min-height: 48px;
+    min-width: 48px;
+    touch-action: manipulation;
+  }
+}
+
+/* Swiss Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .swiss-text {
+    color: #d1d5db;
+  }
+  
+  .swiss-heading {
+    color: #f9fafb;
+  }
+  
+  .swiss-border {
+    border-color: #374151;
+  }
+  
+  .swiss-shadow {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Swiss Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .swiss-pulse,
+  .swiss-breathe,
+  .swiss-lift {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Swiss High Contrast */
+@media (prefers-contrast: high) {
+  .swiss-border {
+    border-width: 2px;
+    border-color: #000000;
+  }
+  
+  .swiss-text {
+    color: #000000;
+  }
+  
+  .swiss-heading {
+    color: #000000;
+    font-weight: 700;
+  }
+}
+
