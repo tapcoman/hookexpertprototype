@@ -31,12 +31,22 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       try {
-        // For now, return a mock successful registration
+        // For now, return a mock successful registration in the expected APIResponse format
         return res.status(200).json({
           success: true,
-          message: 'Registration endpoint working',
-          user: { email: 'test@example.com', id: '123' },
-          token: 'mock-jwt-token'
+          message: 'User registered successfully',
+          data: {
+            user: {
+              id: '123',
+              email: 'test@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              emailVerified: false,
+              createdAt: new Date().toISOString()
+            },
+            token: 'mock-jwt-token-12345',
+            isNewUser: true
+          }
         })
       } catch (error) {
         return res.status(500).json({
