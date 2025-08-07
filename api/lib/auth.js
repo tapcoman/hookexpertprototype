@@ -43,41 +43,7 @@ async function findUserByEmail(email) {
       return null
     }
     const result = await db.sql`
-      SELECT 
-        id,
-        email,
-        password,
-        firebase_uid as "firebaseUid",
-        first_name as "firstName",
-        last_name as "lastName",
-        email_verified as "emailVerified",
-        company,
-        industry,
-        role,
-        audience,
-        voice,
-        banned_terms as "bannedTerms",
-        safety,
-        preferred_hook_categories as "preferredHookCategories",
-        psychological_risk_tolerance as "psychologicalRiskTolerance",
-        creativity_preference as "creativityPreference",
-        urgency_preference as "urgencyPreference",
-        personality_insights as "personalityInsights",
-        pro_generations_used as "proGenerationsUsed",
-        draft_generations_used as "draftGenerationsUsed",
-        weekly_draft_reset as "weeklyDraftReset",
-        free_credits as "freeCredits",
-        used_credits as "usedCredits",
-        is_premium as "isPremium",
-        stripe_customer_id as "stripeCustomerId",
-        stripe_subscription_id as "stripeSubscriptionId",
-        subscription_status as "subscriptionStatus",
-        subscription_plan as "subscriptionPlan",
-        current_period_end as "currentPeriodEnd",
-        cancel_at_period_end as "cancelAtPeriodEnd",
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM users 
+      SELECT * FROM users 
       WHERE email = ${email} 
       LIMIT 1
     `
@@ -96,41 +62,7 @@ async function findUserById(id) {
       return null
     }
     const result = await db.sql`
-      SELECT 
-        id,
-        email,
-        password,
-        firebase_uid as "firebaseUid",
-        first_name as "firstName",
-        last_name as "lastName",
-        email_verified as "emailVerified",
-        company,
-        industry,
-        role,
-        audience,
-        voice,
-        banned_terms as "bannedTerms",
-        safety,
-        preferred_hook_categories as "preferredHookCategories",
-        psychological_risk_tolerance as "psychologicalRiskTolerance",
-        creativity_preference as "creativityPreference",
-        urgency_preference as "urgencyPreference",
-        personality_insights as "personalityInsights",
-        pro_generations_used as "proGenerationsUsed",
-        draft_generations_used as "draftGenerationsUsed",
-        weekly_draft_reset as "weeklyDraftReset",
-        free_credits as "freeCredits",
-        used_credits as "usedCredits",
-        is_premium as "isPremium",
-        stripe_customer_id as "stripeCustomerId",
-        stripe_subscription_id as "stripeSubscriptionId",
-        subscription_status as "subscriptionStatus",
-        subscription_plan as "subscriptionPlan",
-        current_period_end as "currentPeriodEnd",
-        cancel_at_period_end as "cancelAtPeriodEnd",
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM users 
+      SELECT * FROM users 
       WHERE id = ${id} 
       LIMIT 1
     `
@@ -253,38 +185,7 @@ async function updateUserOnboarding(userId, onboardingData) {
         safety = ${safety || 'standard'},
         updated_at = NOW()
       WHERE id = ${userId}
-      RETURNING 
-        id,
-        email,
-        first_name as "firstName",
-        last_name as "lastName",
-        email_verified as "emailVerified",
-        company,
-        industry,
-        role,
-        audience,
-        voice,
-        banned_terms as "bannedTerms",
-        safety,
-        preferred_hook_categories as "preferredHookCategories",
-        psychological_risk_tolerance as "psychologicalRiskTolerance",
-        creativity_preference as "creativityPreference",
-        urgency_preference as "urgencyPreference",
-        personality_insights as "personalityInsights",
-        pro_generations_used as "proGenerationsUsed",
-        draft_generations_used as "draftGenerationsUsed",
-        weekly_draft_reset as "weeklyDraftReset",
-        free_credits as "freeCredits",
-        used_credits as "usedCredits",
-        is_premium as "isPremium",
-        stripe_customer_id as "stripeCustomerId",
-        stripe_subscription_id as "stripeSubscriptionId",
-        subscription_status as "subscriptionStatus",
-        subscription_plan as "subscriptionPlan",
-        current_period_end as "currentPeriodEnd",
-        cancel_at_period_end as "cancelAtPeriodEnd",
-        created_at as "createdAt",
-        updated_at as "updatedAt"
+      RETURNING *
     `
     
     const updatedUser = result[0]
