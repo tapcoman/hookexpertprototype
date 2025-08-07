@@ -1,33 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1754252659625,
-      "tag": "0000_lovely_havok",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1754255041309,
-      "tag": "0001_luxuriant_silverclaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1754263619990,
-      "tag": "0002_abandoned_steel_serpent",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1754515653288,
-      "tag": "0003_unusual_gertrude_yorkes",
+      "version": "6",
+      "when": 1754555591875,
+      "tag": "0000_brave_boom_boom",
       "breakpoints": true
     }
   ]

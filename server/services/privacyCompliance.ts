@@ -1,5 +1,5 @@
 import { db } from '../db/index.js'
-import { userConsent } from '../db/schema.js'
+import { userConsent } from '../db/sqlite-schema.js'
 import { eq, and, desc } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '../middleware/logging.js'
@@ -365,4 +365,4 @@ import {
   errorTracking,
   paymentHistory,
   usageTracking
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'

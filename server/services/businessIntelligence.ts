@@ -6,7 +6,7 @@ import {
   paymentHistory,
   usageTracking,
   NewBusinessIntelligence
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'
 import { eq, desc, and, gte, lte, count, sql, avg, sum } from 'drizzle-orm'
 import { logger } from '../middleware/logging.js'
 import { v4 as uuidv4 } from 'uuid'

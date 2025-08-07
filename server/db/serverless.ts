@@ -1,7 +1,7 @@
 // Serverless Database Connection Pool for Vercel
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import * as schema from './schema.js'
+import * as schema from './sqlite-schema.js'
 
 interface ServerlessConnectionConfig {
   connectionString: string

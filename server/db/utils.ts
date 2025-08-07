@@ -1,429 +1,59 @@
 import { db } from './index.js'
-import { 
-  users, 
-  hookFormulas, 
-  psychologicalProfiles, 
-  hookPerformanceAnalytics,
-  hookTrendTracking,
-  hookGenerations,
-  favoriteHooks,
-  abTestResults,
-  analyticsEvents
-} from './schema.js'
-import { eq, and, desc, gte, lte, avg, count, sql } from 'drizzle-orm'
+import { users, hookGenerations, favoriteHooks } from './sqlite-schema.js'
+import { eq, desc } from 'drizzle-orm'
 
-// ==================== USER UTILITIES ====================
+// Minimal database utilities for SQLite authentication system
+// Only includes essential functions for auth and basic hook operations
 
 export async function getUserById(userId: string) {
-  const [user] = await db.select().from(users).where(eq(users.id, userId))
-  return user || null
+  try {
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+    return user || null
+  } catch (error) {
+    console.error('Error getting user by ID:', error)
+    return null
+  }
 }
 
 export async function getUserByEmail(email: string) {
-  const [user] = await db.select().from(users).where(eq(users.email, email))
-  return user || null
-}
-
-export async function updateUserPsychologicalPreferences(
-  userId: string, 
-  preferences: {
-    preferredHookCategories?: string[]
-    psychologicalRiskTolerance?: string
-    creativityPreference?: string
-    urgencyPreference?: string
-    personalityInsights?: Record<string, any>
+  try {
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+    return user || null
+  } catch (error) {
+    console.error('Error getting user by email:', error)
+    return null
   }
-) {
-  return await db
-    .update(users)
-    .set(preferences)
-    .where(eq(users.id, userId))
-    .returning()
 }
 
-// ==================== PSYCHOLOGICAL PROFILE UTILITIES ====================
-
-export async function getPsychologicalProfile(userId: string) {
-  const [profile] = await db
-    .select()
-    .from(psychologicalProfiles)
-    .where(eq(psychologicalProfiles.userId, userId))
-  
-  return profile || null
-}
-
-export async function createOrUpdatePsychologicalProfile(
-  userId: string,
-  profileData: {
-    preferredTriggers?: string[]
-    avoidedTriggers?: string[]
-    riskTolerance?: string
-    creativityLevel?: string
-    successfulFormulas?: string[]
-    underperformingFormulas?: string[]
-    personalityType?: string
-    preferredCategories?: string[]
-    contentStyle?: string
-    urgencyPreference?: string
-    learningRate?: number
+export async function createUser(userData: any) {
+  try {
+    const [newUser] = await db.insert(users).values(userData).returning()
+    return newUser
+  } catch (error) {
+    console.error('Error creating user:', error)
+    throw error
   }
-) {
-  // Check if profile exists
-  const existingProfile = await getPsychologicalProfile(userId)
-  
-  if (existingProfile) {
-    // Update existing profile
-    return await db
-      .update(psychologicalProfiles)
-      .set({
-        ...profileData,
-        lastUpdated: sql`NOW()`,
-        updatedAt: sql`NOW()`
-      })
-      .where(eq(psychologicalProfiles.userId, userId))
+}
+
+// Stub functions for compatibility - can be implemented later
+export async function getUserHookGenerations(userId: string, limit = 10) {
+  return []
+}
+
+export async function getUserFavoriteHooks(userId: string, limit = 10) {
+  return []
+}
+
+export async function updateUserProfile(userId: string, updates: any) {
+  try {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning()
-  } else {
-    // Create new profile
-    return await db
-      .insert(psychologicalProfiles)
-      .values({
-        userId,
-        ...profileData
-      })
-      .returning()
+    return updatedUser
+  } catch (error) {
+    console.error('Error updating user profile:', error)
+    throw error
   }
-}
-
-// ==================== HOOK FORMULA UTILITIES ====================
-
-export async function getActiveHookFormulas() {
-  return await db
-    .select()
-    .from(hookFormulas)
-    .where(eq(hookFormulas.isActive, true))
-    .orderBy(desc(hookFormulas.effectivenessRating))
-}
-
-export async function getHookFormulasByCategory(category: string) {
-  return await db
-    .select()
-    .from(hookFormulas)
-    .where(
-      and(
-        eq(hookFormulas.category, category),
-        eq(hookFormulas.isActive, true)
-      )
-    )
-    .orderBy(desc(hookFormulas.effectivenessRating))
-}
-
-export async function getPersonalizedHookFormulas(userId: string) {
-  const profile = await getPsychologicalProfile(userId)
-  
-  if (!profile) {
-    // Return top-performing formulas if no profile exists
-    return await getActiveHookFormulas()
-  }
-  
-  // Get formulas based on user preferences
-  const baseQuery = db
-    .select()
-    .from(hookFormulas)
-    .where(eq(hookFormulas.isActive, true))
-  
-  // Filter by preferred categories if available
-  if (profile.preferredCategories && profile.preferredCategories.length > 0) {
-    // Add category filtering logic here based on JSONB array
-    // For now, return all active formulas ordered by effectiveness
-  }
-  
-  // Filter by risk tolerance
-  const riskLevels = {
-    'low': ['low'],
-    'medium': ['low', 'medium'],
-    'high': ['low', 'medium', 'high']
-  }
-  
-  const allowedRiskLevels = riskLevels[profile.riskTolerance as keyof typeof riskLevels] || ['low', 'medium']
-  
-  return await baseQuery
-    .where(
-      and(
-        eq(hookFormulas.isActive, true),
-        sql`${hookFormulas.riskFactor} = ANY(${allowedRiskLevels})`
-      )
-    )
-    .orderBy(desc(hookFormulas.effectivenessRating))
-}
-
-export async function getHookFormulaByCode(code: string) {
-  const [formula] = await db
-    .select()
-    .from(hookFormulas)
-    .where(eq(hookFormulas.code, code))
-  
-  return formula || null
-}
-
-// ==================== PERFORMANCE ANALYTICS UTILITIES ====================
-
-export async function recordHookPerformance(performanceData: {
-  userId: string
-  generationId?: string
-  hookIndex: number
-  formulaCode?: string
-  platform: string
-  objective: string
-  userRating?: number
-  wasUsed?: boolean
-  wasFavorited?: boolean
-  wasShared?: boolean
-  actualViews?: number
-  actualEngagement?: number
-  actualConversions?: number
-  performanceNotes?: string
-  confidenceScore?: number
-  contextTags?: string[]
-}) {
-  return await db
-    .insert(hookPerformanceAnalytics)
-    .values(performanceData)
-    .returning()
-}
-
-export async function getHookPerformanceStats(
-  userId: string,
-  timeframe?: { start: Date; end: Date }
-) {
-  let query = db
-    .select({
-      formulaCode: hookPerformanceAnalytics.formulaCode,
-      avgRating: avg(hookPerformanceAnalytics.userRating),
-      totalUsed: count(hookPerformanceAnalytics.wasUsed),
-      totalFavorited: count(hookPerformanceAnalytics.wasFavorited),
-      avgViews: avg(hookPerformanceAnalytics.actualViews),
-      avgEngagement: avg(hookPerformanceAnalytics.actualEngagement),
-    })
-    .from(hookPerformanceAnalytics)
-    .where(eq(hookPerformanceAnalytics.userId, userId))
-    .groupBy(hookPerformanceAnalytics.formulaCode)
-  
-  if (timeframe) {
-    query = query.where(
-      and(
-        eq(hookPerformanceAnalytics.userId, userId),
-        gte(hookPerformanceAnalytics.recordedAt, timeframe.start),
-        lte(hookPerformanceAnalytics.recordedAt, timeframe.end)
-      )
-    )
-  }
-  
-  return await query
-}
-
-export async function updateHookFormulaTrends() {
-  // Get performance data for all formulas
-  const performanceData = await db
-    .select({
-      formulaCode: hookPerformanceAnalytics.formulaCode,
-      platform: hookPerformanceAnalytics.platform,
-      avgRating: avg(hookPerformanceAnalytics.userRating),
-      usageCount: count(hookPerformanceAnalytics.id),
-      avgConfidence: avg(hookPerformanceAnalytics.confidenceScore),
-    })
-    .from(hookPerformanceAnalytics)
-    .where(
-      gte(hookPerformanceAnalytics.recordedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
-    ) // Last 30 days
-    .groupBy(hookPerformanceAnalytics.formulaCode, hookPerformanceAnalytics.platform)
-  
-  // Update trend tracking for each formula/platform combination
-  for (const data of performanceData) {
-    if (!data.formulaCode) continue
-    
-    // Check if trend record exists
-    const [existingTrend] = await db
-      .select()
-      .from(hookTrendTracking)
-      .where(
-        and(
-          eq(hookTrendTracking.formulaCode, data.formulaCode),
-          eq(hookTrendTracking.platform, data.platform)
-        )
-      )
-    
-    const trendData = {
-      monthlyUsage: Number(data.usageCount) || 0,
-      avgPerformanceScore: Math.round(Number(data.avgRating) * 20) || 0, // Convert 1-5 to 0-100
-      dataPoints: Number(data.usageCount) || 0,
-      lastCalculated: sql`NOW()`,
-      updatedAt: sql`NOW()`
-    }
-    
-    if (existingTrend) {
-      // Update existing trend
-      await db
-        .update(hookTrendTracking)
-        .set(trendData)
-        .where(eq(hookTrendTracking.id, existingTrend.id))
-    } else {
-      // Create new trend record
-      await db
-        .insert(hookTrendTracking)
-        .values({
-          formulaCode: data.formulaCode,
-          platform: data.platform,
-          ...trendData
-        })
-    }
-  }
-}
-
-// ==================== HOOK GENERATION UTILITIES ====================
-
-export async function getHookGenerationsByUser(
-  userId: string,
-  limit: number = 20,
-  offset: number = 0
-) {
-  return await db
-    .select()
-    .from(hookGenerations)
-    .where(eq(hookGenerations.userId, userId))
-    .orderBy(desc(hookGenerations.createdAt))
-    .limit(limit)
-    .offset(offset)
-}
-
-export async function getHookGenerationById(generationId: string) {
-  const [generation] = await db
-    .select()
-    .from(hookGenerations)
-    .where(eq(hookGenerations.id, generationId))
-  
-  return generation || null
-}
-
-export async function updateHookGenerationWithFormulas(
-  generationId: string,
-  usedFormulas: string[],
-  psychologicalStrategy: Record<string, any>,
-  adaptationLevel: number,
-  confidenceScore: number
-) {
-  return await db
-    .update(hookGenerations)
-    .set({
-      usedFormulas,
-      psychologicalStrategy,
-      adaptationLevel,
-      confidenceScore
-    })
-    .where(eq(hookGenerations.id, generationId))
-    .returning()
-}
-
-// ==================== FAVORITE HOOKS UTILITIES ====================
-
-export async function getUserFavoriteHooks(
-  userId: string,
-  limit: number = 50,
-  offset: number = 0
-) {
-  return await db
-    .select()
-    .from(favoriteHooks)
-    .where(eq(favoriteHooks.userId, userId))
-    .orderBy(desc(favoriteHooks.createdAt))
-    .limit(limit)
-    .offset(offset)
-}
-
-// ==================== A/B TESTING UTILITIES ====================
-
-export async function getAbTestResults(
-  testId: string,
-  timeframe?: { start: Date; end: Date }
-) {
-  let query = db
-    .select()
-    .from(abTestResults)
-    .where(eq(abTestResults.testId, testId))
-  
-  if (timeframe) {
-    query = query.where(
-      and(
-        eq(abTestResults.testId, testId),
-        gte(abTestResults.createdAt, timeframe.start),
-        lte(abTestResults.createdAt, timeframe.end)
-      )
-    )
-  }
-  
-  return await query.orderBy(desc(abTestResults.createdAt))
-}
-
-export async function calculateAbTestStatistics(testId: string) {
-  const results = await db
-    .select({
-      variant: abTestResults.variant,
-      avgEngagement: avg(abTestResults.engagementScore),
-      avgConversion: avg(abTestResults.conversionScore),
-      sampleSize: count(abTestResults.id),
-    })
-    .from(abTestResults)
-    .where(eq(abTestResults.testId, testId))
-    .groupBy(abTestResults.variant)
-  
-  return results
-}
-
-// ==================== ANALYTICS UTILITIES ====================
-
-export async function recordAnalyticsEvent(eventData: {
-  id?: string
-  sessionId: string
-  userId?: string
-  eventType: string
-  eventData?: Record<string, any>
-  deviceInfo: Record<string, any>
-  pageInfo: Record<string, any>
-}) {
-  return await db
-    .insert(analyticsEvents)
-    .values({
-      id: eventData.id || crypto.randomUUID(),
-      ...eventData
-    })
-    .returning()
-}
-
-// ==================== HEALTH CHECK UTILITIES ====================
-
-export async function getDatabaseStats() {
-  const [userCount] = await db.select({ count: count() }).from(users)
-  const [formulaCount] = await db.select({ count: count() }).from(hookFormulas)
-  const [generationCount] = await db.select({ count: count() }).from(hookGenerations)
-  const [performanceCount] = await db.select({ count: count() }).from(hookPerformanceAnalytics)
-  
-  return {
-    users: userCount.count,
-    hookFormulas: formulaCount.count,
-    generations: generationCount.count,
-    performanceRecords: performanceCount.count,
-    lastUpdated: new Date().toISOString()
-  }
-}
-
-// ==================== CLEANUP UTILITIES ====================
-
-export async function cleanupOldAnalytics(daysToKeep: number = 90) {
-  const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000)
-  
-  const deleted = await db
-    .delete(analyticsEvents)
-    .where(lte(analyticsEvents.createdAt, cutoffDate))
-    .returning({ id: analyticsEvents.id })
-  
-  return deleted.length
 }

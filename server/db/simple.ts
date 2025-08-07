@@ -7,7 +7,7 @@ import { db, checkDatabaseConnection, closeDatabaseConnection } from './sqlite.j
 export { db, checkDatabaseConnection, closeDatabaseConnection }
 
 // Export schema for external use
-export * from './schema.js'
+export * from './sqlite-schema.js'
 export * from './utils.js'
 
 // Simple health check that always works

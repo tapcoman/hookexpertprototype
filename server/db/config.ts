@@ -9,7 +9,7 @@ config({ path: join(projectRoot, '.env') })
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import * as schema from './schema.js'
+import * as schema from './sqlite-schema.js'
 
 export interface DatabaseConfig {
   host?: string

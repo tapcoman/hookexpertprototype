@@ -1,6 +1,6 @@
 // Production Database Service - Optimized for Serverless
 import { getServerlessDB } from '../db/serverless.js'
-import { users, hookGenerations } from '../db/schema.js'
+import { users, hookGenerations } from '../db/sqlite-schema.js'
 import { eq, desc } from 'drizzle-orm'
 
 class ProductionDatabaseService {

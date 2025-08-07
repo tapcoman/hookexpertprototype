@@ -8,7 +8,7 @@ import { logger } from '../middleware/logging.js'
 import { requireDatabase, requireStripe } from '../middleware/serviceAvailability.js'
 import { eq, desc, sql } from 'drizzle-orm'
 import { db } from '../db/index.js'
-import { paymentHistory, subscriptionPlans } from '../db/schema.js'
+import { paymentHistory, subscriptionPlans } from '../db/sqlite-schema.js'
 import type { Request, Response } from 'express'
 
 const router = Router()

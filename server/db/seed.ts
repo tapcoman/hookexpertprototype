@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 config() // Load environment variables
 
 import { db } from './index.js'
-import { hookFormulas, subscriptionPlans } from './schema.js'
+import { hookFormulas, subscriptionPlans } from './sqlite-schema.js'
 
 // 24+ Psychological Hook Formulas from Research
 export const hookFormulasData = [

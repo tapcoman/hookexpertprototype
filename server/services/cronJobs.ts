@@ -12,7 +12,7 @@ import {
   apiUsageTracking,
   webVitals,
   errorTracking
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'
 import { eq, gte, lte, sql, avg, count } from 'drizzle-orm'
 import { logger, logBusinessEvent } from '../middleware/logging.js'
 import { BusinessIntelligenceService } from './businessIntelligence.js'

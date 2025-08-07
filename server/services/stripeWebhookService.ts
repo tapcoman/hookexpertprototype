@@ -8,7 +8,7 @@ import {
   webhookEvents,
   subscriptionPlans,
   type User
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'
 import { stripe, StripeConfig } from '../config/stripe.js'
 import { logger } from '../middleware/logging.js'
 import type { SubscriptionStatus, SubscriptionPlan as SubscriptionPlanName } from '../../shared/types.js'

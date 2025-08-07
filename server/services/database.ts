@@ -27,7 +27,7 @@ import {
   NewBusinessIntelligence,
   NewUserJourneyTracking,
   NewApiUsageTracking
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'
 import { eq, desc, and, or, gte, lte, count, sql, avg, sum } from 'drizzle-orm'
 import { NotFoundError, ValidationError } from '../middleware/errorHandler.js'
 import { PaginatedResponse, GenerationStatus } from '../../shared/types.js'

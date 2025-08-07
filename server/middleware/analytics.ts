@@ -10,7 +10,7 @@ import {
   NewSystemMetric,
   NewApiUsageTracking,
   NewErrorTracking
-} from '../db/schema.js'
+} from '../db/sqlite-schema.js'
 import { logger } from './logging.js'
 
 // Performance tracking middleware
