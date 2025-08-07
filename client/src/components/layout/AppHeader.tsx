@@ -39,24 +39,24 @@ const AppHeader: React.FC = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background dark:cosmic-glass dark:border-white/10">
+    <header className="sticky top-0 z-50 border-b backdrop-blur-md bg-background/80 dark:bg-surface-primary/80 dark:border-border-subtle">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/app">
             <motion.div 
-              className="flex items-center space-x-3 cursor-pointer hover:bg-accent rounded-lg p-2 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center space-x-3 cursor-pointer hover:bg-accent/50 dark:hover:bg-surface-tertiary rounded-lg p-2 transition-colors"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary dark:cosmic-button dark:cosmic-glow-purple">
-                <Sparkles className="w-4 h-4 text-primary-foreground dark:text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-electric/20 dark:bg-accent-electric/15 border border-accent-electric/30">
+                <Sparkles className="w-4 h-4 text-accent-electric dark:text-accent-electric" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-semibold leading-none text-foreground dark:text-white dark:cosmic-text-glow">
+                <span className="text-lg font-semibold leading-none text-text-primary dark:text-text-primary">
                   Hook Line Studio
                 </span>
-                <span className="text-xs leading-none text-muted-foreground dark:text-purple-300">
+                <span className="text-xs leading-none text-text-secondary dark:text-text-secondary">
                   AI Hook Generator
                 </span>
               </div>
@@ -68,13 +68,13 @@ const AppHeader: React.FC = () => {
             {/* Credits Display */}
             <div className="hidden sm:flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-medium text-text-primary dark:text-text-primary">
                   {displayName}
                 </span>
                 
-                <div className="w-px h-4 bg-border" />
+                <div className="w-px h-4 bg-border-subtle dark:bg-border-subtle" />
                 
-                <Badge variant={getCreditVariant()} className="text-xs">
+                <Badge variant={getCreditVariant()} className="text-xs bg-surface-secondary/50 text-text-secondary border-border-subtle hover:bg-surface-tertiary/50">
                   {creditsRemaining} credits
                 </Badge>
               </div>
@@ -87,12 +87,12 @@ const AppHeader: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="relative"
+                  className="relative hover:bg-surface-secondary dark:hover:bg-surface-tertiary text-text-secondary hover:text-text-primary"
                   asChild
                 >
                   <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <Heart className="w-4 h-4" />
                   </motion.button>
@@ -103,12 +103,12 @@ const AppHeader: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="relative"
+                  className="relative hover:bg-surface-secondary dark:hover:bg-surface-tertiary text-text-secondary hover:text-text-primary"
                   asChild
                 >
                   <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <History className="w-4 h-4" />
                   </motion.button>
@@ -118,35 +118,35 @@ const AppHeader: React.FC = () => {
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full hover:bg-surface-secondary dark:hover:bg-surface-tertiary">
                     <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                      <AvatarFallback className="bg-accent-electric/20 text-accent-electric text-sm font-semibold border border-accent-electric/30">
                         {userInitials}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-surface-secondary/95 backdrop-blur-md border-border-subtle">
                   <div className="flex flex-col space-y-1 p-2">
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium text-text-primary">
                       {displayName}
                     </p>
-                    <Badge variant={getCreditVariant()} className="self-start text-xs">
+                    <Badge variant={getCreditVariant()} className="self-start text-xs bg-surface-tertiary text-text-secondary border-border-subtle">
                       {creditsRemaining} credits
                     </Badge>
                   </div>
                   
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-border-subtle" />
                   
                   <Link href="/profile">
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer text-text-secondary hover:text-text-primary hover:bg-surface-tertiary">
                       <User className="w-4 h-4 mr-2" />
                       Profile
                     </DropdownMenuItem>
                   </Link>
                   
                   <Link href="/billing">
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem className="cursor-pointer text-text-secondary hover:text-text-primary hover:bg-surface-tertiary">
                       <div className="w-4 h-4 mr-2 flex items-center justify-center">
                         <span className="text-xs font-bold">$</span>
                       </div>

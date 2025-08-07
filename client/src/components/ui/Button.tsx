@@ -10,19 +10,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90 dark:cosmic-button dark:text-white dark:border-0",
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90 dark:professional-button dark:text-white dark:border-0",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground dark:cosmic-glass dark:border-white/10 dark:text-white dark:hover:bg-white/5",
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground dark:professional-glass dark:border-border-subtle dark:text-text-primary dark:hover:bg-surface-tertiary",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 dark:cosmic-glass dark:text-white dark:border-white/10",
-        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:cosmic-glass dark:text-white/80 dark:hover:text-white",
-        link: "text-primary underline-offset-4 hover:underline dark:text-purple-300",
-        cosmic: "cosmic-button text-white border-0 font-medium",
-        flow: "bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300",
-        premium: "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg hover:shadow-xl",
-        glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 dark:professional-glass dark:text-text-primary dark:border-border-subtle",
+        ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-surface-tertiary dark:text-text-secondary dark:hover:text-text-primary",
+        link: "text-primary underline-offset-4 hover:underline dark:text-accent-electric",
+        professional: "professional-button text-white border-0 font-medium",
+        electric: "bg-gradient-to-r from-accent-electric to-success-green text-white shadow-lg hover:shadow-xl transition-all duration-300",
+        premium: "bg-gradient-to-r from-accent-electric to-accent-teal text-white shadow-lg hover:shadow-xl",
+        glass: "professional-glass text-text-primary hover:bg-surface-tertiary",
       },
       size: {
         default: "h-9 px-4 py-2",
