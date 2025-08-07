@@ -3,9 +3,18 @@ import OpenAI from 'openai'
 import { db } from './db.js'
 import { findUserById } from './auth.js'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+// Initialize OpenAI client lazily to avoid issues with missing env vars at module load
+let openaiClient = null
+function getOpenAIClient() {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required')
+    }
+    openaiClient = new OpenAI({ apiKey })
+  }
+  return openaiClient
+}
 
 // Hook generation with full psychological framework
 export async function generateEnhancedHooks({
@@ -124,6 +133,7 @@ Format each hook as JSON:
 
     console.log('Calling OpenAI for hook generation...')
     
+    const openai = getOpenAIClient()
     const completion = await openai.chat.completions.create({
       model: modelType,
       messages: [
