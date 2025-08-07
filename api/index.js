@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
         serverless: true,
-        message: 'Basic function working'
+        message: 'Hook generation API ready'
       })
     }
     
