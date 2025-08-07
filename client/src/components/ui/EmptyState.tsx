@@ -19,23 +19,29 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Swiss-minimal icon */}
+        {/* Material Design Icon */}
         <motion.div 
-          className="w-20 h-20 mx-auto mb-8 relative"
+          className="w-24 h-24 mx-auto mb-8 relative"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="w-full h-full bg-gray-900 rounded-3xl flex items-center justify-center relative overflow-hidden">
-            <Sparkles className="w-10 h-10 text-white z-10" />
+          <div 
+            className="w-full h-full rounded-2xl flex items-center justify-center relative overflow-hidden"
+            style={{ backgroundColor: 'rgb(var(--md-sys-color-primary-container))' }}
+          >
+            <Sparkles 
+              className="w-12 h-12 z-10" 
+              style={{ color: 'rgb(var(--md-sys-color-on-primary-container))' }}
+            />
             
-            {/* Subtle Swiss pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+            {/* Subtle gradient overlay */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"
+              className="absolute inset-0 opacity-20"
+              style={{ backgroundColor: 'rgb(var(--md-sys-color-primary))' }}
               animate={{ 
                 opacity: [0.1, 0.3, 0.1],
-                scale: [1, 1.1, 1]
+                scale: [1, 1.05, 1]
               }}
               transition={{
                 duration: 4,
@@ -46,9 +52,9 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           </div>
         </motion.div>
 
-        {/* Swiss typography hierarchy */}
+        {/* Material Design Typography */}
         <motion.h2 
-          className="text-3xl lg:text-4xl font-display font-bold text-gray-900 mb-4 tracking-tight leading-tight"
+          className="md-headline-large mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
@@ -56,9 +62,9 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           Ready to Create?
         </motion.h2>
         
-        {/* Swiss-inspired subtitle */}
         <motion.p 
-          className="text-lg text-gray-600 mb-4 leading-relaxed"
+          className="md-body-large mb-4"
+          style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
@@ -67,7 +73,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </motion.p>
         
         <motion.p 
-          className="text-sm text-gray-500 mb-12 font-medium tracking-wide"
+          className="md-body-medium mb-12"
+          style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
@@ -75,7 +82,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           Choose your platform • Describe your content • Get 10 optimized hooks in seconds
         </motion.p>
 
-        {/* Swiss-minimal action buttons */}
+        {/* Material Design Action Buttons */}
         <motion.div 
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           initial={{ opacity: 0, y: 20 }}
@@ -84,19 +91,19 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         >
           <motion.button 
             onClick={onGenerateSample}
-            className="group flex items-center space-x-3 px-8 py-4 bg-gray-900 text-white rounded-2xl font-semibold transition-all duration-300 hover:bg-black hover:scale-[1.02] hover:-translate-y-1 shadow-lg hover:shadow-xl"
-            whileHover={{ scale: 1.02, y: -4 }}
+            className="md-filled-button flex items-center space-x-3 px-8 py-4"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <Sparkles className="w-5 h-5" />
             <span>Try Sample Hook</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+            <ArrowRight className="w-4 h-4" />
           </motion.button>
           
           <motion.button 
             onClick={onWatchTutorial}
-            className="group flex items-center space-x-3 px-8 py-4 bg-gray-100 text-gray-700 rounded-2xl font-semibold transition-all duration-300 hover:bg-gray-200 hover:scale-[1.02] hover:-translate-y-1 border border-gray-200"
-            whileHover={{ scale: 1.02, y: -4 }}
+            className="md-outlined-button flex items-center space-x-3 px-8 py-4"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <Play className="w-5 h-5" />
@@ -104,45 +111,82 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           </motion.button>
         </motion.div>
         
-        {/* Swiss-minimal feature highlights */}
+        {/* Feature highlights with Material Design */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 pt-16 border-t border-gray-200"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 pt-16"
+          style={{ borderTop: '1px solid rgb(var(--md-sys-color-outline-variant))' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.6 }}
         >
           <div className="text-center">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <div className="w-6 h-6 bg-blue-500 rounded-lg" />
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
+            >
+              <div 
+                className="w-6 h-6 rounded-lg" 
+                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
+              />
             </div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1 tracking-wide uppercase">
+            <h4 
+              className="md-title-small mb-1"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
+            >
               Platform Optimized
             </h4>
-            <p className="text-sm text-gray-600">
+            <p 
+              className="md-body-small"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+            >
               TikTok, Instagram, YouTube
             </p>
           </div>
           
           <div className="text-center">
-            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <div className="w-6 h-6 bg-emerald-500 rounded-lg" />
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
+            >
+              <div 
+                className="w-6 h-6 rounded-lg" 
+                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
+              />
             </div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1 tracking-wide uppercase">
+            <h4 
+              className="md-title-small mb-1"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
+            >
               Psychology Based
             </h4>
-            <p className="text-sm text-gray-600">
+            <p 
+              className="md-body-small"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+            >
               Scientifically proven frameworks
             </p>
           </div>
           
           <div className="text-center">
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <div className="w-6 h-6 bg-amber-500 rounded-lg" />
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ backgroundColor: 'rgb(var(--md-sys-color-secondary-container))' }}
+            >
+              <div 
+                className="w-6 h-6 rounded-lg" 
+                style={{ backgroundColor: 'rgb(var(--md-sys-color-on-secondary-container))' }}
+              />
             </div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1 tracking-wide uppercase">
+            <h4 
+              className="md-title-small mb-1"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface))' }}
+            >
               30 Second Results
             </h4>
-            <p className="text-sm text-gray-600">
+            <p 
+              className="md-body-small"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+            >
               Lightning fast generation
             </p>
           </div>

@@ -11,10 +11,10 @@ import HookCard from '@/components/hook/HookCard'
 import EmptyState from '@/components/ui/EmptyState'
 import AppHeader from '@/components/layout/AppHeader'
 import { api } from '@/lib/api'
-import { Sparkles, Zap, Target, Brain, Play } from 'lucide-react'
+import { Sparkles, Target, TrendingUp, PlayCircle, Users } from 'lucide-react'
 import type { GenerateHooksRequest, Platform, Objective } from '@/types/shared'
 
-// ==================== SWISS-INSPIRED HOOK GENERATION FORM ====================
+// ==================== MATERIAL DESIGN HOOK GENERATION FORM ====================
 
 interface HookGenerationFormProps {
   onGenerate: (data: GenerateHooksRequest) => void
@@ -62,17 +62,17 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   }
 
   const platforms = [
-    { value: 'tiktok', label: 'TikTok', icon: '🎵', color: 'from-pink-500 to-red-500' },
-    { value: 'instagram', label: 'Instagram', icon: '📸', color: 'from-purple-500 to-pink-500' },
-    { value: 'youtube', label: 'YouTube', icon: '🎥', color: 'from-red-500 to-red-600' },
+    { value: 'tiktok', label: 'TikTok', icon: '🎵', description: 'Short-form viral videos' },
+    { value: 'instagram', label: 'Instagram', icon: '📸', description: 'Stories & Reels' },
+    { value: 'youtube', label: 'YouTube', icon: '🎥', description: 'Long-form content' },
   ]
 
   const objectives = [
-    { value: 'watch_time', label: 'Watch Time', icon: Target },
-    { value: 'shares', label: 'Shares', icon: Zap },
-    { value: 'saves', label: 'Saves', icon: Brain },
-    { value: 'ctr', label: 'Click Rate', icon: Play },
-    { value: 'follows', label: 'Followers', icon: Sparkles },
+    { value: 'watch_time', label: 'Watch Time', icon: PlayCircle, description: 'Keep viewers watching' },
+    { value: 'shares', label: 'Shares', icon: TrendingUp, description: 'Drive viral sharing' },
+    { value: 'saves', label: 'Saves', icon: Target, description: 'High save rates' },
+    { value: 'ctr', label: 'Click Rate', icon: Sparkles, description: 'Increase clicks' },
+    { value: 'follows', label: 'Followers', icon: Users, description: 'Grow audience' },
   ]
 
   const canGenerate = user && (
@@ -82,138 +82,116 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   )
 
   return (
-    <motion.div 
-      className="w-full max-w-2xl mx-auto"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 lg:p-10">
+    <div className="max-w-2xl mx-auto">
+      <div className="md-elevated-card">
         {/* Header */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <h1 className="text-3xl lg:text-4xl font-display font-bold text-gray-900 mb-3 tracking-tight">
+        <div className="text-center mb-8">
+          <h1 className="md-headline-large mb-4">
             Generate Viral Hooks
           </h1>
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <p className="md-body-large" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
             Create platform-optimized hooks that drive engagement
           </p>
-        </motion.div>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Platform Selection */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-          >
-            <label className="text-sm font-medium text-gray-700 tracking-wide uppercase letter-spacing-wide">
-              Platform
+          <div className="space-y-4">
+            <label className="md-title-small block">
+              Choose Platform
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {platforms.map((platform, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {platforms.map((platform) => (
                 <motion.button
                   key={platform.value}
                   type="button"
                   onClick={() => setFormData((prev: any) => ({ ...prev, platform: platform.value as Platform }))}
-                  className={`relative group px-4 py-4 rounded-2xl text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-0.5 ${
+                  className={`md-state-layer p-4 rounded-xl border-2 text-left transition-all duration-200 ${
                     formData.platform === platform.value
-                      ? 'bg-gray-900 text-white shadow-lg'
-                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      ? 'border-current'
+                      : 'border-transparent'
                   }`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
+                  style={{
+                    backgroundColor: formData.platform === platform.value 
+                      ? 'rgb(var(--md-sys-color-secondary-container))'
+                      : 'rgb(var(--md-sys-color-surface-variant))',
+                    color: formData.platform === platform.value
+                      ? 'rgb(var(--md-sys-color-on-secondary-container))'
+                      : 'rgb(var(--md-sys-color-on-surface-variant))',
+                    borderColor: formData.platform === platform.value
+                      ? 'rgb(var(--md-sys-color-primary))'
+                      : 'rgb(var(--md-sys-color-outline-variant))'
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex flex-col items-center space-y-2">
-                    <span className="text-xl">{platform.icon}</span>
-                    <span>{platform.label}</span>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="text-2xl">{platform.icon}</span>
+                    <span className="md-title-medium font-medium">{platform.label}</span>
                   </div>
-                  {formData.platform === platform.value && (
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-20"
-                      style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.2 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
+                  <p className="md-body-small opacity-80">{platform.description}</p>
                 </motion.button>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Objective Selection */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            <label className="text-sm font-medium text-gray-700 tracking-wide uppercase letter-spacing-wide">
-              Objective
+          <div className="space-y-4">
+            <label className="md-title-small block">
+              Optimization Goal
             </label>
-            <div className="relative">
-              <select
-                value={formData.objective}
-                onChange={(e) => setFormData((prev: any) => ({ ...prev, objective: e.target.value as Objective }))}
-                className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent hover:bg-gray-100 appearance-none cursor-pointer"
-              >
-                {objectives.map((objective) => (
-                  <option key={objective.value} value={objective.value}>
-                    {objective.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {objectives.map((objective) => {
+                const Icon = objective.icon
+                return (
+                  <motion.button
+                    key={objective.value}
+                    type="button"
+                    onClick={() => setFormData((prev: any) => ({ ...prev, objective: objective.value as Objective }))}
+                    className={`md-filter-chip p-3 text-center ${
+                      formData.objective === objective.value ? 'selected' : ''
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Icon className="w-5 h-5 mx-auto mb-1" />
+                    <div className="md-label-medium">{objective.label}</div>
+                  </motion.button>
+                )
+              })}
             </div>
-          </motion.div>
+          </div>
 
           {/* Topic Input */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-          >
-            <label className="text-sm font-medium text-gray-700 tracking-wide uppercase letter-spacing-wide">
-              Video Topic
-            </label>
-            <div className="relative">
+          <div className="space-y-4">
+            <div className="md-outlined-text-field">
               <textarea
                 value={formData.topic}
                 onChange={handleTopicChange}
-                placeholder="Describe your video concept in detail... e.g., 'I tried eating only white foods for 30 days and the results shocked me'"
-                rows={5}
-                className={`w-full px-4 py-4 bg-gray-50 border rounded-2xl text-gray-900 leading-relaxed transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white resize-none placeholder:text-gray-400 ${
-                  errors.topic ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 hover:bg-gray-100 focus:hover:bg-white'
-                }`}
+                placeholder=" "
+                rows={4}
+                className={errors.topic ? '!border-red-500' : ''}
                 style={{ minHeight: '120px' }}
               />
-              <div className="absolute bottom-3 right-3 flex items-center space-x-2">
-                <span className={`text-xs font-medium ${
-                  charCount < 10 ? 'text-red-500' : 
-                  charCount > 800 ? 'text-amber-500' : 
-                  'text-gray-400'
-                }`}>
-                  {charCount}/1000
-                </span>
-              </div>
+              <label>Video Topic</label>
             </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="md-body-small" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
+                Be specific and descriptive for best results
+              </p>
+              <span className={`md-body-small ${
+                charCount < 10 ? 'text-red-500' : 
+                charCount > 800 ? 'text-amber-500' : 
+                'opacity-60'
+              }`}>
+                {charCount}/1000
+              </span>
+            </div>
+            
             {errors.topic && (
               <motion.p 
-                className="text-sm text-red-600 font-medium"
+                className="md-body-small text-red-500"
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -221,84 +199,77 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                 {errors.topic}
               </motion.p>
             )}
-            <p className="text-sm text-gray-500">
-              Be specific and descriptive for best results
-            </p>
-          </motion.div>
+          </div>
 
           {/* Submit Button */}
-          <motion.div 
-            className="pt-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
+          <motion.button
+            type="submit"
+            disabled={isLoading || !canGenerate}
+            className={`w-full md-filled-button h-12 ${
+              !canGenerate ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            whileHover={canGenerate ? { scale: 1.02 } : {}}
+            whileTap={canGenerate ? { scale: 0.98 } : {}}
           >
-            <motion.button
-              type="submit"
-              disabled={isLoading || !canGenerate}
-              className={`relative w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all duration-300 transform ${
-                canGenerate 
-                  ? 'bg-gray-900 text-white hover:bg-black hover:scale-[1.02] hover:-translate-y-0.5 shadow-lg hover:shadow-xl' 
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center`}
-              whileHover={canGenerate ? { scale: 1.02, y: -2 } : {}}
-              whileTap={canGenerate ? { scale: 0.98 } : {}}
-            >
-              <AnimatePresence mode="wait">
-                {isLoading ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Generating...</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="generate"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center space-x-2"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    <span>Generate 10 Hooks</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center space-x-2"
+                >
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Generating...</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="generate"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center space-x-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>Generate 10 Hooks</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
 
-            {!canGenerate && (
-              <motion.p 
-                className="text-sm text-gray-500 text-center mt-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.3 }}
+          {!canGenerate && (
+            <motion.p 
+              className="text-center md-body-small"
+              style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.3 }}
+            >
+              No credits remaining.{' '}
+              <a 
+                href="/pricing" 
+                className="font-medium hover:underline transition-colors duration-200"
+                style={{ color: 'rgb(var(--md-sys-color-primary))' }}
               >
-                No credits remaining.{' '}
-                <a href="/pricing" className="text-gray-900 font-medium hover:underline transition-colors duration-200">
-                  Upgrade your plan
-                </a>{' '}
-                to continue.
-              </motion.p>
-            )}
-          </motion.div>
+                Upgrade your plan
+              </a>{' '}
+              to continue.
+            </motion.p>
+          )}
         </form>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-// ==================== SWISS-INSPIRED HOOK RESULTS ====================
+// ==================== MATERIAL DESIGN HOOK RESULTS ====================
 
 interface HookResultsProps {
   generation: any
   onFavorite: (hookIndex: number) => void
   onCopy: (hook: string) => void
-  favoriteHooks?: Set<string> // Set of "generationId-hookIndex" strings
+  favoriteHooks?: Set<string>
 }
 
 const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCopy, favoriteHooks }) => {
@@ -311,25 +282,20 @@ const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCop
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-8"
     >
-      {/* Swiss-minimal header */}
-      <motion.div 
-        className="text-center space-y-3 pb-8 border-b border-gray-200"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <h2 className="text-2xl lg:text-3xl font-display font-bold text-gray-900 tracking-tight">
+      {/* Header */}
+      <div className="text-center space-y-3 pb-6 border-b border-gray-200">
+        <h2 className="md-headline-medium">
           Your Viral Hooks
         </h2>
-        <p className="text-gray-600">
-          <span className="font-semibold text-gray-900">{generation.hooks.length}</span> hooks generated for{' '}
-          <span className="font-medium text-gray-900 capitalize">{generation.platform}</span>
+        <p className="md-body-medium" style={{ color: 'rgb(var(--md-sys-color-on-surface-variant))' }}>
+          <span className="font-semibold">{generation.hooks.length}</span> hooks generated for{' '}
+          <span className="font-medium capitalize">{generation.platform}</span>
         </p>
-      </motion.div>
+      </div>
 
-      {/* Premium hook grid */}
+      {/* Hook Grid */}
       <motion.div 
-        className="grid gap-6 lg:gap-8"
+        className="grid gap-6"
         variants={{
           hidden: { opacity: 0 },
           show: {
@@ -392,7 +358,6 @@ const MainAppPageContent: React.FC = () => {
       addRecentGeneration(data)
       showSuccessNotification('Hooks Generated!', `Created ${data?.hooks?.length || 0} viral hooks for you.`)
       
-      // Track successful generation
       track('hook_generation_completed', {
         hooksGenerated: data?.hooks?.length || 0,
         platform: data?.platform,
@@ -403,7 +368,6 @@ const MainAppPageContent: React.FC = () => {
     onError: (error: any) => {
       showErrorNotification('Generation Failed', error.message)
       
-      // Track generation failure
       track('hook_generation_failed', {
         error: error.message,
         errorCode: error.status
@@ -433,7 +397,6 @@ const MainAppPageContent: React.FC = () => {
       await api.hooks.addToFavorites(apiData)
     },
     onSuccess: (_, variables) => {
-      // Add to local state for immediate UI update
       const favoriteKey = `${variables.generationId || 'manual'}-${variables.hookData?.id || Date.now()}`
       setFavoriteHooks(prev => new Set([...prev, favoriteKey]))
       
@@ -445,7 +408,6 @@ const MainAppPageContent: React.FC = () => {
   })
 
   const handleGenerate = (data: GenerateHooksRequest) => {
-    // Track hook generation event
     track('hook_generation_started', {
       platform: data.platform,
       objective: data.objective,
@@ -458,7 +420,6 @@ const MainAppPageContent: React.FC = () => {
 
   const handleFavorite = (hookIndex: number) => {
     if (currentGeneration) {
-      // Track favorite action
       track('hook_favorited', {
         generationId: currentGeneration.id,
         hookIndex,
@@ -479,9 +440,8 @@ const MainAppPageContent: React.FC = () => {
 
   const handleCopy = (hook: string) => {
     navigator.clipboard.writeText(hook).then(() => {
-      // Track copy action
       track('hook_copied', {
-        hookText: hook.substring(0, 50), // First 50 chars for privacy
+        hookText: hook.substring(0, 50),
         hookLength: hook.length
       })
       
@@ -500,102 +460,68 @@ const MainAppPageContent: React.FC = () => {
   }
 
   const handleWatchTutorial = () => {
-    // Open tutorial video or modal
     window.open('https://youtube.com/watch?v=tutorial', '_blank')
   }
 
-  // Mock recent topics for demo
-  const recentTopics = [
-    {
-      id: '1',
-      topic: '5 morning habits that changed my productivity',
-      platform: 'tiktok' as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
-    },
-    {
-      id: '2', 
-      topic: 'Why I quit my 6-figure job to become a creator',
-      platform: 'instagram' as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
-    },
-    {
-      id: '3',
-      topic: 'The truth about passive income (reality check)',
-      platform: 'youtube' as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
-    }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50/30 to-blue-50/10">
+    <div style={{ backgroundColor: 'rgb(var(--md-sys-color-background))' }}>
       <AppHeader />
       
-      {/* Premium Swiss-inspired single column layout */}
-      <main className="container mx-auto px-4 py-8 lg:py-12 max-w-7xl">
-        <AnimatePresence mode="wait">
-          {/* Swiss-minimal centered layout */}
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] space-y-12">
-            
-            {/* Generation Form - Always visible */}
-            <div className="w-full">
-              <HookGenerationForm
-                onGenerate={handleGenerate}
-                isLoading={generateHooksMutation.isPending}
+      {/* Material Design Layout */}
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="space-y-8">
+          
+          {/* Generation Form */}
+          <HookGenerationForm
+            onGenerate={handleGenerate}
+            isLoading={generateHooksMutation.isPending}
+          />
+
+          {/* Loading State */}
+          {generateHooksMutation.isPending && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <HookGenerationLoading />
+            </motion.div>
+          )}
+
+          {/* Results */}
+          {currentGeneration && !generateHooksMutation.isPending && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -40 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <HookResults
+                generation={currentGeneration}
+                onFavorite={handleFavorite}
+                onCopy={handleCopy}
+                favoriteHooks={favoriteHooks}
               />
-            </div>
+            </motion.div>
+          )}
 
-            {/* Loading State */}
-            {generateHooksMutation.isPending && (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-4xl"
-              >
-                <HookGenerationLoading />
-              </motion.div>
-            )}
-
-            {/* Results */}
-            {currentGeneration && !generateHooksMutation.isPending && (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -40 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-4xl"
-              >
-                <HookResults
-                  generation={currentGeneration}
-                  onFavorite={handleFavorite}
-                  onCopy={handleCopy}
-                  favoriteHooks={favoriteHooks}
-                />
-              </motion.div>
-            )}
-
-            {/* Empty State - Swiss minimal design */}
-            {!currentGeneration && !generateHooksMutation.isPending && (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-2xl"
-              >
-                <EmptyState 
-                  onGenerateSample={handleGenerateSample}
-                  onWatchTutorial={handleWatchTutorial}
-                />
-              </motion.div>
-            )}
-            
-          </div>
-        </AnimatePresence>
+          {/* Empty State */}
+          {!currentGeneration && !generateHooksMutation.isPending && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <EmptyState 
+                onGenerateSample={handleGenerateSample}
+                onWatchTutorial={handleWatchTutorial}
+              />
+            </motion.div>
+          )}
+          
+        </div>
       </main>
     </div>
   )
