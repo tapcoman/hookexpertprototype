@@ -173,8 +173,8 @@ if (process.env.NODE_ENV === 'development' || process.env.ENABLE_DEBUG_ROUTES ==
 app.use(notFoundHandler)
 app.use(globalErrorHandler)
 
-// Start server
-if (process.env.NODE_ENV !== 'production') {
+// Start server (skip for Vercel serverless)
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`)
     console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
