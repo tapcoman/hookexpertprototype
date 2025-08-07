@@ -140,9 +140,17 @@
       hsl(220, 30%, 8%) 50%, 
       hsl(280, 20%, 10%) 75%, 
       hsl(240, 10%, 8%) 100%
-    );
+    ) !important;
     background-attachment: fixed;
     min-height: 100vh;
+  }
+  
+  /* Ensure cosmic gradient is visible on root element too */
+  .dark #root {
+    background: transparent !important;
+    min-height: 100vh;
+    position: relative;
+    z-index: 10;
   }
   
   /* Animated particles background */
@@ -154,17 +162,30 @@
     width: 100%;
     height: 100%;
     background-image: 
-      radial-gradient(2px 2px at 20px 30px, rgba(124, 58, 237, 0.3), transparent),
-      radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.2), transparent),
-      radial-gradient(1px 1px at 90px 40px, rgba(168, 85, 247, 0.4), transparent),
-      radial-gradient(1px 1px at 130px 80px, rgba(196, 181, 253, 0.3), transparent),
-      radial-gradient(2px 2px at 160px 30px, rgba(124, 58, 237, 0.2), transparent);
+      radial-gradient(2px 2px at 20px 30px, rgba(124, 58, 237, 0.4), transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.3), transparent),
+      radial-gradient(1px 1px at 90px 40px, rgba(168, 85, 247, 0.5), transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(196, 181, 253, 0.4), transparent),
+      radial-gradient(2px 2px at 160px 30px, rgba(124, 58, 237, 0.3), transparent);
     background-repeat: repeat;
-    background-size: 200px 200px;
-    opacity: 0.3;
-    animation: cosmic-drift 20s ease-in-out infinite alternate;
+    background-size: 300px 300px;
+    opacity: 0.4;
+    animation: cosmic-drift 25s ease-in-out infinite alternate;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
+  }
+  
+  /* Additional cosmic overlay for more depth */
+  .dark body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(240, 10, 8, 0.02) 70%, rgba(240, 10, 8, 0.05) 100%);
+    pointer-events: none;
+    z-index: 1;
   }
 }
 
