@@ -57,6 +57,15 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
     
+    // Handle analytics endpoints (to prevent infinite loop)
+    if (req.url?.includes('/analytics/track')) {
+      // Just return success to stop the infinite loop - don't actually track for now
+      return res.status(200).json({
+        success: true,
+        message: 'Event tracked (mock)'
+      })
+    }
+    
     if (req.url?.includes('/auth/')) {
       return res.status(503).json({
         error: 'Other auth endpoints temporarily unavailable',
