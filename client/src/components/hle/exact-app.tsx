@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Download, Rocket, User, HistoryIcon, Star } from 'lucide-react'
+import { useLocation } from 'wouter'
 import { AppSidebar } from '@/components/hle/app-sidebar'
 import { ResultsList } from '@/components/hle/results-list'
 import { OnboardingDialog } from '@/components/hle/onboarding-dialog'
@@ -33,6 +34,7 @@ import type { HookItem, GenerateRequestBody, GenerateResponseBody, Platform, Out
 import type { Project } from '@/components/hle/project-types'
 
 export default function ExactApp() {
+  const [, setLocation] = useLocation()
   const [hooks, setHooks] = useState<HookItem[]>([])
   const [loading, setLoading] = useState(false)
   const [streaming, setStreaming] = useState(false)
@@ -277,11 +279,9 @@ export default function ExactApp() {
                   Saved hooks
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <a href="/profile" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </a>
+                <DropdownMenuItem onClick={() => setLocation('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
