@@ -12,7 +12,8 @@ import {
   HookGenerationService, 
   FavoriteHookService,
   HookFormulaService,
-  PsychologicalProfileService
+  PsychologicalProfileService,
+  AnalyticsService
 } from '../services/database.js'
 import { StripeService } from '../services/stripeService.js'
 import { generateHooksWithAI } from '../services/aiService.js'

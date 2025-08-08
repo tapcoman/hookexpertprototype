@@ -166,7 +166,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/hooks', hookRoutes)  
 app.use('/api/users', userRoutes)
 app.use('/api/projects', projectRoutes)
-app.use('/api', v0CompatRoutes) // v0.dev compatibility routes
+app.use('/api', v0CompatRoutes) // v0.dev compatibility routes (temporary for migration)
 
 // Debug routes (only in development or when explicitly enabled)
 if (process.env.NODE_ENV === 'development' || process.env.ENABLE_DEBUG_ROUTES === 'true') {

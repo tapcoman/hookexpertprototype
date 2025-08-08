@@ -189,7 +189,9 @@ export const UserProfileSchema = z.object({
   role: UserRoleSchema.optional(),
   audience: z.string().optional(),
   voice: VoiceSchema.optional(),
+  brandVoice: z.string().optional(),
   bannedTerms: z.array(z.string()).default([]),
+  tones: z.array(z.string()).default([]),
   safety: SafetyModeSchema.default('standard'),
   
   // Credit System

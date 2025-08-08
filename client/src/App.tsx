@@ -17,7 +17,6 @@ import { RootRedirect } from '@/components/routing/RootRedirect'
 // Pages
 import SimpleAuthPage from '@/pages/SimpleAuthPage'
 import OnboardingPage from '@/pages/OnboardingPage'
-import MainAppPage from '@/pages/MainAppPage'
 import ProjectsPage from '@/pages/ProjectsPage'
 import FavoritesPage from '@/pages/FavoritesPage'
 import HistoryPage from '@/pages/HistoryPage'

@@ -14,6 +14,7 @@ type Props = {
   hooks: HookItem[]
   platform: Platform
   streaming?: boolean
+  isGenerating?: boolean
   onToggleFavorite: (id?: string) => void
   onCopySpoken: (id?: string) => void
   onCopyOverlay: (id?: string) => void

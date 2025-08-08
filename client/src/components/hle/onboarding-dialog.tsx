@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { useAuth } from '@/contexts/SimpleAuthContext'
 import type { Tone } from './types'
 
 type Props = {
@@ -44,6 +45,9 @@ export function OnboardingDialog({
   const [aud, setAud] = React.useState(audience)
   const [banned, setBanned] = React.useState(bannedTerms.join(', '))
   const [toneSelections, setToneSelections] = React.useState<Tone[]>(tones)
+  const [saving, setSaving] = React.useState(false)
+  
+  const { user, updateProfile } = useAuth()
 
   React.useEffect(() => {
     setVoice(brandVoice)
@@ -58,18 +62,43 @@ export function OnboardingDialog({
     )
   }
 
-  function save() {
-    const terms = banned
-      .split(',')
-      .map((x) => x.trim())
-      .filter(Boolean)
-    localStorage.setItem('hle:onboarded', '1')
-    localStorage.setItem('hle:brandVoice', voice)
-    localStorage.setItem('hle:audience', aud)
-    localStorage.setItem('hle:bannedTerms', JSON.stringify(terms))
-    localStorage.setItem('hle:tones', JSON.stringify(toneSelections))
-    onSave({ brandVoice: voice, audience: aud, bannedTerms: terms, tones: toneSelections })
-    onOpenChange(false)
+  async function save() {
+    if (saving) return
+    
+    setSaving(true)
+    try {
+      const terms = banned
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+      
+      // Save to localStorage first for immediate use
+      localStorage.setItem('hle:onboarded', '1')
+      localStorage.setItem('hle:brandVoice', voice)
+      localStorage.setItem('hle:audience', aud)
+      localStorage.setItem('hle:bannedTerms', JSON.stringify(terms))
+      localStorage.setItem('hle:tones', JSON.stringify(toneSelections))
+      
+      // Sync with backend if user is authenticated
+      if (user) {
+        try {
+          await updateProfile({
+            brandVoice: voice,
+            audience: aud,
+            bannedTerms: terms,
+            tones: toneSelections
+          })
+        } catch (error) {
+          console.error('Failed to sync profile to backend:', error)
+          // Continue anyway since localStorage is saved
+        }
+      }
+      
+      onSave({ brandVoice: voice, audience: aud, bannedTerms: terms, tones: toneSelections })
+      onOpenChange(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -155,7 +184,9 @@ export function OnboardingDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={save}>Save</Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

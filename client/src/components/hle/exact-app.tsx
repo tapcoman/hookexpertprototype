@@ -1,12 +1,11 @@
 'use client'
 
-import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/Button'
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Download, Rocket, User, HistoryIcon, Star } from 'lucide-react'
 import { AppSidebar } from '@/components/hle/app-sidebar'
 import { ResultsList } from '@/components/hle/results-list'
@@ -25,10 +24,8 @@ import { HistoryList } from '@/components/hle/history-list'
 import { SavedList } from '@/components/hle/saved-list'
 import {
   persistRun,
-  toggleSavedHook,
   getSavedHooks,
   removeSavedHook,
-  type RunRecord,
 } from '@/components/hle/utils/store'
 import { getSampleHooks } from '@/components/hle/utils/sample-data'
 import { postProcessAndRank } from '@/lib/scoring'
@@ -218,7 +215,6 @@ export default function ExactApp() {
   }
 
   function exportCsv() {
-    const { downloadCsv } = require('@/components/hle/utils/csv') // defer import to avoid ssr edge issues
     downloadCsv(hooks, `hooks-${platform}-${Date.now()}.csv`)
   }
 
