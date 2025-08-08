@@ -25,7 +25,7 @@ const formSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07']).optional().default('gpt-5-mini-2025-08-07'),
+  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07'),
 })
 
 type FormData = z.infer<typeof formSchema>
