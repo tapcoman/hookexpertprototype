@@ -160,14 +160,64 @@
     @apply bg-background text-foreground;
   }
   
-  /* Clean Professional Dark Background */
-  .dark body {
-    background: hsl(var(--surface-primary)) !important;
+  /* Stunning gradient background inspired by the provided design */
+  body {
+    background: linear-gradient(135deg, 
+      #e8f4ff 0%,    /* Light blue */
+      #f3e8ff 25%,   /* Light purple */
+      #fdf2f8 50%,   /* Light pink */
+      #f0f9ff 75%,   /* Light blue */
+      #faf5ff 100%   /* Light purple */
+    );
     min-height: 100vh;
+    background-attachment: fixed;
   }
   
-  /* Ensure consistent background throughout */
-  .dark #root {
+  /* Enhanced gradient for dark mode with the same dreamy feel */
+  .dark body {
+    background: linear-gradient(135deg, 
+      #0f172a 0%,    /* Dark blue base */
+      #1e1b4b 20%,   /* Deep purple */
+      #312e81 40%,   /* Rich purple */
+      #1e40af 60%,   /* Deep blue */
+      #7c3aed 80%,   /* Vibrant purple */
+      #3730a3 100%   /* Deep indigo */
+    );
+    min-height: 100vh;
+    background-attachment: fixed;
+  }
+  
+  /* Add subtle animated overlay for extra depth */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      ellipse 80% 60% at 30% 20%,
+      rgba(139, 92, 246, 0.15) 0%,
+      rgba(59, 130, 246, 0.1) 40%,
+      rgba(236, 72, 153, 0.08) 70%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .dark body::before {
+    background: radial-gradient(
+      ellipse 80% 60% at 30% 20%,
+      rgba(139, 92, 246, 0.3) 0%,
+      rgba(59, 130, 246, 0.2) 40%,
+      rgba(236, 72, 153, 0.15) 70%,
+      transparent 100%
+    );
+  }
+  
+  /* Ensure transparent background for content containers */
+  #root {
     background: transparent !important;
     min-height: 100vh;
   }
@@ -367,19 +417,39 @@
   }
   
   .professional-glass {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border-subtle));
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+  
+  .dark .professional-glass {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   }
   
   .professional-glass-card {
-    background: hsl(var(--surface-secondary) / 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border-subtle));
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+  
+  .dark .professional-glass-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   }
   
   .professional-glow {
@@ -430,6 +500,39 @@
     );
     background-size: 200% 100%;
     animation: glass-shimmer 2s infinite linear;
+  }
+  
+  /* Gradient-enhanced card for the beautiful background */
+  .gradient-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 
+      0 12px 40px rgba(139, 92, 246, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .dark .gradient-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    box-shadow: 
+      0 12px 40px rgba(139, 92, 246, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  }
+  
+  .gradient-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 16px 50px rgba(139, 92, 246, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  }
+  
+  .dark .gradient-card:hover {
+    box-shadow: 
+      0 16px 50px rgba(139, 92, 246, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset;
   }
   
   /* Premium Highest-Scoring Hook Styles */
