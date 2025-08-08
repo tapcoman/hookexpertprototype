@@ -160,39 +160,22 @@
     @apply bg-background text-foreground;
   }
   
-  /* Exact gradient from the provided design - soft with prominent blue blob */
+  /* Reference-Match Duotone Blur Background - Based on Canvas Code */
   body {
-    background: 
-      radial-gradient(ellipse 50% 40% at 25% 70%, rgba(99, 102, 241, 0.4) 0%, transparent 50%),
-      linear-gradient(135deg, 
-        #f8fafc 0%,    /* Very light gray-blue */
-        #e0e7ff 20%,   /* Light blue */
-        #fce7f3 40%,   /* Light pink */
-        #f3e8ff 60%,   /* Light purple */
-        #fdf2f8 80%,   /* Soft pink */
-        #f1f5f9 100%   /* Light blue-gray */
-      );
+    /* Base background: very light vertical wash */
+    background: linear-gradient(180deg, #ffffff 0%, #eef1f9 100%);
     min-height: 100vh;
     background-attachment: fixed;
   }
   
   /* Enhanced version for dark mode */
   .dark body {
-    background: 
-      radial-gradient(ellipse 50% 40% at 25% 70%, rgba(99, 102, 241, 0.6) 0%, transparent 50%),
-      linear-gradient(135deg, 
-        #0f172a 0%,    /* Dark blue base */
-        #1e1b4b 20%,   /* Deep purple */
-        #312e81 40%,   /* Rich purple */
-        #1e40af 60%,   /* Deep blue */
-        #7c3aed 80%,   /* Vibrant purple */
-        #3730a3 100%   /* Deep indigo */
-      );
+    background: linear-gradient(180deg, #0f172a 0%, #1a1b3a 100%);
     min-height: 100vh;
     background-attachment: fixed;
   }
   
-  /* Add the prominent blue blob effect */
+  /* Multi-layered blob system matching the Canvas implementation */
   body::before {
     content: '';
     position: fixed;
@@ -201,17 +184,54 @@
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(ellipse 35% 25% at 20% 65%, rgba(59, 130, 246, 0.6) 0%, rgba(99, 102, 241, 0.3) 30%, transparent 70%),
-      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(236, 72, 153, 0.2) 0%, rgba(168, 85, 247, 0.15) 40%, transparent 70%);
+      /* Blue-violet swoop bottom-left (primary blob) */
+      radial-gradient(ellipse 44% 28% at 22% 74%, rgba(58, 66, 255, 0.95) 0%, rgba(58, 66, 255, 0.95) 55%, rgba(58, 66, 255, 0) 100%),
+      /* Secondary blue layer to shape the curve */
+      radial-gradient(ellipse 34% 20% at 28% 78%, rgba(89, 99, 255, 0.55) 0%, rgba(89, 99, 255, 0.55) 55%, rgba(89, 99, 255, 0) 100%),
+      /* Pink cloud top-right */
+      radial-gradient(ellipse 38% 30% at 80% 28%, rgba(255, 156, 216, 0.92) 0%, rgba(255, 156, 216, 0.92) 55%, rgba(255, 156, 216, 0) 100%),
+      /* Lilac bridge in the middle */
+      radial-gradient(ellipse 25% 23% at 54% 50%, rgba(215, 199, 255, 0.40) 0%, rgba(215, 199, 255, 0.40) 55%, rgba(215, 199, 255, 0) 100%);
+    filter: blur(26px);
     pointer-events: none;
     z-index: -1;
-    animation: gentle-float 8s ease-in-out infinite;
+    animation: gentle-morphing 12s ease-in-out infinite;
+  }
+  
+  /* Additional layer for accent amber morph */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      /* Accent amber morph (slow fade in/out) */
+      radial-gradient(ellipse 22% 16% at 68% 62%, rgba(255, 205, 160, 0.18) 0%, rgba(255, 205, 160, 0.18) 55%, rgba(255, 205, 160, 0) 100%),
+      /* Subtle inner vignette */
+      radial-gradient(ellipse 75% 75% at 50% 55%, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.10) 100%);
+    filter: blur(24px);
+    pointer-events: none;
+    z-index: -1;
+    animation: gentle-fade 8s ease-in-out infinite;
   }
   
   .dark body::before {
     background: 
-      radial-gradient(ellipse 35% 25% at 20% 65%, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.5) 30%, transparent 70%),
-      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(236, 72, 153, 0.4) 0%, rgba(168, 85, 247, 0.3) 40%, transparent 70%);
+      /* Enhanced blue-violet for dark mode */
+      radial-gradient(ellipse 44% 28% at 22% 74%, rgba(89, 99, 255, 0.8) 0%, rgba(89, 99, 255, 0.8) 55%, rgba(89, 99, 255, 0) 100%),
+      radial-gradient(ellipse 34% 20% at 28% 78%, rgba(58, 66, 255, 0.6) 0%, rgba(58, 66, 255, 0.6) 55%, rgba(58, 66, 255, 0) 100%),
+      /* Enhanced pink for dark mode */
+      radial-gradient(ellipse 38% 30% at 80% 28%, rgba(255, 140, 200, 0.7) 0%, rgba(255, 140, 200, 0.7) 55%, rgba(255, 140, 200, 0) 100%),
+      /* Enhanced lilac for dark mode */
+      radial-gradient(ellipse 25% 23% at 54% 50%, rgba(215, 199, 255, 0.6) 0%, rgba(215, 199, 255, 0.6) 55%, rgba(215, 199, 255, 0) 100%);
+  }
+  
+  .dark body::after {
+    background: 
+      radial-gradient(ellipse 22% 16% at 68% 62%, rgba(255, 205, 160, 0.25) 0%, rgba(255, 205, 160, 0.25) 55%, rgba(255, 205, 160, 0) 100%),
+      radial-gradient(ellipse 75% 75% at 50% 55%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.15) 100%);
   }
   
   /* Ensure transparent background for content containers */
@@ -247,18 +267,33 @@
   }
 }
 
-@keyframes gentle-float {
+@keyframes gentle-morphing {
   0%, 100% { 
-    transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1, 1) rotate(0deg);
+    filter: blur(26px);
   }
   25% { 
-    transform: translate(-10px, -15px) scale(1.05);
+    transform: translate(-0.8vw, -1.2vh) scale(1.12, 0.90) rotate(-1deg);
+    filter: blur(28px);
   }
   50% { 
-    transform: translate(10px, -20px) scale(0.95);
+    transform: translate(0.8vw, -1.5vh) scale(0.95, 1.10) rotate(0.5deg);
+    filter: blur(30px);
   }
   75% { 
-    transform: translate(-5px, 10px) scale(1.02);
+    transform: translate(-0.4vw, 0.8vh) scale(1.02, 0.95) rotate(-0.5deg);
+    filter: blur(24px);
+  }
+}
+
+@keyframes gentle-fade {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1.0;
+    transform: scale(1.05);
   }
 }
 
