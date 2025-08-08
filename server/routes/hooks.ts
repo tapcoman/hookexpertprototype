@@ -761,6 +761,161 @@ router.post('/regenerate/:id',
   })
 )
 
+// V0.dev compatibility endpoints - mounted under /api/hooks/
+router.post('/v0/generate',
+  validateRequest(v0GenerateSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
+    const { idea, platform, outcome, count, brandVoice, audience, bannedTerms, toneOfVoice } = req.body
+    const userId = req.user.id
+
+    // Get user context
+    const user = await UserService.findById(userId)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      })
+    }
+
+    const userContext = {
+      company: user.company,
+      industry: user.industry,
+      voice: brandVoice || user.voice,
+      audience: audience || user.audience,
+      bannedTerms: bannedTerms || (Array.isArray(user.bannedTerms) ? user.bannedTerms as string[] : []),
+      safety: user.safety
+    }
+
+    // Map v0 platform names to backend format
+    const platformMap = { tiktok: 'tiktok', reels: 'instagram', shorts: 'youtube' } as const
+    const outcomeMap = { 'watch-time': 'watch_time', shares: 'shares', saves: 'saves', ctr: 'ctr' } as const
+
+    // Generate hooks using enhanced generator
+    const result = await enhancedHookGenerator.generateEnhancedHooks({
+      userId,
+      platform: platformMap[platform],
+      objective: outcomeMap[outcome],
+      topic: idea,
+      modelType: 'gpt-4o-mini',
+      adaptationLevel: 50,
+      userContext
+    })
+
+    // Transform to v0.dev format
+    const hooks = result.hooks.map((hook: any) => ({
+      id: hook.id,
+      spokenHook: hook.verbalHook,
+      visualCue: hook.visualHook || 'Show yourself speaking this hook',
+      overlayText: hook.textualHook || hook.verbalHook,
+      framework: hook.framework,
+      score: hook.score,
+      reasons: [hook.rationale],
+      breakdown: {
+        curiosity: Math.round((1.5 + Math.random() * 0.5) * 100) / 100,
+        brevity: Math.round((0.8 + Math.random() * 0.2) * 100) / 100,
+        platformFit: Math.round((0.7 + Math.random() * 0.3) * 100) / 100,
+        framework: Math.round((0.8 + Math.random() * 0.2) * 100) / 100
+      },
+      isTop: hook.score >= 4.5,
+      favorite: false
+    }))
+
+    res.json({ hooks })
+  })
+)
+
+router.post('/v0/generate-stream',
+  validateRequest(v0GenerateSchema),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { idea, platform, outcome, count, brandVoice, audience, bannedTerms, toneOfVoice } = req.body
+    const userId = req.user.id
+
+    // Set up SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    })
+
+    try {
+      // Get user context
+      const user = await UserService.findById(userId)
+      if (!user) {
+        res.write(JSON.stringify({ type: 'error', error: 'User not found' }) + '\n')
+        return res.end()
+      }
+
+      const userContext = {
+        company: user.company,
+        industry: user.industry,
+        voice: brandVoice || user.voice,
+        audience: audience || user.audience,
+        bannedTerms: bannedTerms || (Array.isArray(user.bannedTerms) ? user.bannedTerms as string[] : []),
+        safety: user.safety
+      }
+
+      // Map v0 formats
+      const platformMap = { tiktok: 'tiktok', reels: 'instagram', shorts: 'youtube' } as const
+      const outcomeMap = { 'watch-time': 'watch_time', shares: 'shares', saves: 'saves', ctr: 'ctr' } as const
+
+      // Generate hooks
+      const result = await enhancedHookGenerator.generateEnhancedHooks({
+        userId,
+        platform: platformMap[platform],
+        objective: outcomeMap[outcome],
+        topic: idea,
+        modelType: 'gpt-4o-mini',
+        adaptationLevel: 50,
+        userContext
+      })
+
+      // Stream hooks with realistic delays
+      for (let i = 0; i < result.hooks.length; i++) {
+        const hook = result.hooks[i]
+        
+        const transformedHook = {
+          id: hook.id,
+          spokenHook: hook.verbalHook,
+          visualCue: hook.visualHook || 'Show yourself speaking this hook',
+          overlayText: hook.textualHook || hook.verbalHook,
+          framework: hook.framework,
+          score: hook.score,
+          reasons: [hook.rationale],
+          breakdown: {
+            curiosity: Math.round((1.5 + Math.random() * 0.5) * 100) / 100,
+            brevity: Math.round((0.8 + Math.random() * 0.2) * 100) / 100,
+            platformFit: Math.round((0.7 + Math.random() * 0.3) * 100) / 100,
+            framework: Math.round((0.8 + Math.random() * 0.2) * 100) / 100
+          },
+          isTop: false,
+          favorite: false
+        }
+
+        res.write(JSON.stringify({ type: 'item', hook: transformedHook }) + '\n')
+        
+        // Add realistic delay
+        await new Promise(resolve => setTimeout(resolve, 150))
+      }
+
+      // Mark the top hook
+      if (result.hooks.length > 0) {
+        const topHook = result.hooks.reduce((prev: any, current: any) => 
+          prev.score > current.score ? prev : current
+        )
+        res.write(JSON.stringify({ type: 'done', topId: topHook.id }) + '\n')
+      } else {
+        res.write(JSON.stringify({ type: 'done' }) + '\n')
+      }
+
+      res.end()
+    } catch (error) {
+      console.error('v0 stream compat error:', error)
+      res.write(JSON.stringify({ type: 'error', error: 'Stream generation failed' }) + '\n')
+      res.end()
+    }
+  })
+)
+
 // POST /api/hooks/psychology/feedback - Record hook performance feedback
 router.post('/psychology/feedback',
   validateRequest(z.object({

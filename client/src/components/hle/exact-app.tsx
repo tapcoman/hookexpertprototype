@@ -105,7 +105,7 @@ export default function ExactApp() {
         toneOfVoice: tones,
       }
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
-      const res = await fetch('/api/generate', {
+      const res = await fetch('/api/hooks/v0/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -152,7 +152,7 @@ export default function ExactApp() {
         toneOfVoice: tones,
       }
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
-      const res = await fetch('/api/generate-stream', {
+      const res = await fetch('/api/hooks/v0/generate-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
