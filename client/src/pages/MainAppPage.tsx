@@ -30,7 +30,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
     platform: (defaultPlatform as Platform) || 'tiktok',
     objective: (defaultObjective as Objective) || 'watch_time',
     topic: '',
-    modelType: 'gpt-4o-mini',
+    modelType: 'gpt-5-mini-2025-08-07',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})

@@ -25,7 +25,7 @@ const formSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini']).optional().default('gpt-4o-mini'),
+  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07']).optional().default('gpt-5-mini-2025-08-07'),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -56,7 +56,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
     defaultValues: {
-      modelType: 'gpt-4o-mini'
+      modelType: 'gpt-5-mini-2025-08-07'
     }
   })
 
@@ -123,7 +123,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
     {
       value: 'gpt-4o-mini' as ModelType,
       label: 'GPT-4o Mini',
-      description: 'Fast and efficient (Recommended)',
+      description: 'Fast and efficient',
       credits: 1
     },
     {
@@ -131,6 +131,26 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
       label: 'GPT-4o',
       description: 'Premium quality',
       credits: 3
+    },
+    {
+      value: 'gpt-4-turbo' as ModelType,
+      label: 'GPT-4 Turbo',
+      description: 'Enhanced performance',
+      credits: 2
+    },
+    {
+      value: 'gpt-5-mini-2025-08-07' as ModelType,
+      label: 'ChatGPT-5 Mini',
+      description: 'Latest AI - Fast & efficient (Recommended)',
+      credits: 2,
+      isNew: true
+    },
+    {
+      value: 'gpt-5-2025-08-07' as ModelType,
+      label: 'ChatGPT-5',
+      description: 'Latest AI - Superior quality & reasoning',
+      credits: 5,
+      isNew: true
     }
   ]
 
@@ -332,7 +352,19 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                       )}
                     >
                       <div>
-                        <div className="font-medium">{model.label}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{model.label}</span>
+                          {(model as any).isPreview && (
+                            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
+                              Preview
+                            </Badge>
+                          )}
+                          {(model as any).isNew && (
+                            <Badge variant="default" className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0">
+                              New
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {model.description}
                         </div>
