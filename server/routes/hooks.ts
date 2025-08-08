@@ -32,7 +32,7 @@ const generateHooksSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini']).optional().default('gpt-4o-mini')
+  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07')
 })
 
 // Enhanced hook generation schema
@@ -40,7 +40,7 @@ const enhancedGenerateHooksSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini']).optional().default('gpt-4o-mini'),
+  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07'),
   adaptationLevel: z.number().min(0).max(100).optional(),
   forceCategories: z.array(z.enum(['question-based', 'statement-based', 'narrative', 'urgency-exclusivity', 'efficiency'])).optional(),
   psychologicalPreferences: z.object({

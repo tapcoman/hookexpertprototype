@@ -10,12 +10,57 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-// OpenAI pricing (in cents per 1K tokens) - updated as of 2024
+// OpenAI pricing (in cents per 1K tokens) - updated for 2025
 const OPENAI_PRICING = {
+  // Current models (2024-2025)
   'gpt-4o-mini': { input: 0.015, output: 0.06 }, // per 1K tokens
   'gpt-4o': { input: 0.3, output: 1.2 },
+  'gpt-4-turbo': { input: 1.0, output: 3.0 },
+  'gpt-4-turbo-preview': { input: 1.0, output: 3.0 },
   'gpt-4': { input: 3.0, output: 6.0 },
-  'gpt-3.5-turbo': { input: 0.05, output: 0.15 }
+  'gpt-3.5-turbo': { input: 0.05, output: 0.15 },
+  
+  // ChatGPT-5 models (released)
+  'gpt-5-2025-08-07': { input: 0.5, output: 1.5 }, // Will be updated with actual pricing
+  'gpt-5-mini-2025-08-07': { input: 0.02, output: 0.08 }, // Will be updated with actual pricing
+  
+  // Legacy names for compatibility
+  'gpt-5': { input: 0.5, output: 1.5 }, // Maps to gpt-5-2025-08-07
+  'gpt-5-mini': { input: 0.02, output: 0.08 } // Maps to gpt-5-mini-2025-08-07
+}
+
+// Map model names to actual OpenAI API model identifiers
+function mapToOpenAIModel(modelType: string): string {
+  const modelMapping: Record<string, string> = {
+    // Current models
+    'gpt-4o': 'gpt-4o',
+    'gpt-4o-mini': 'gpt-4o-mini',
+    'gpt-4-turbo': 'gpt-4-turbo',
+    'gpt-4-turbo-preview': 'gpt-4-turbo-preview',
+    'gpt-4': 'gpt-4',
+    'gpt-3.5-turbo': 'gpt-3.5-turbo',
+    
+    // ChatGPT-5 models (released)
+    'gpt-5-2025-08-07': 'gpt-5-2025-08-07',
+    'gpt-5-mini-2025-08-07': 'gpt-5-mini-2025-08-07',
+    
+    // Legacy names mapping to actual models
+    'gpt-5': 'gpt-5-2025-08-07',
+    'gpt-5-mini': 'gpt-5-mini-2025-08-07'
+  }
+  
+  const mappedModel = modelMapping[modelType]
+  if (!mappedModel) {
+    console.warn(`Unknown model type: ${modelType}, falling back to gpt-4o-mini`)
+    return 'gpt-4o-mini'
+  }
+  
+  // Log model usage for monitoring
+  if (modelType.includes('5')) {
+    console.log(`ChatGPT-5 model requested: ${modelType} -> using: ${mappedModel}`)
+  }
+  
+  return mappedModel
 }
 
 // Calculate estimated cost for OpenAI API call
@@ -319,9 +364,12 @@ export async function generateHooksWithAI(params: {
       promptLength: prompt.length
     }, params.userId)
     
+    // Map requested model to actual OpenAI model identifier
+    const actualModel = mapToOpenAIModel(params.modelType)
+    
     // Call OpenAI API with HookBot Master Prompt System
     const completion = await openai.chat.completions.create({
-      model: params.modelType,
+      model: actualModel,
       messages: [
         { role: 'system', content: HOOKBOT_MASTER_PROMPT },
         { role: 'user', content: prompt }
