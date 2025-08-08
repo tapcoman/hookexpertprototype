@@ -25,7 +25,7 @@ import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
 import TrendRadarPage from '@/pages/TrendRadarPage'
-import HLEApp from '@/components/hle/app'
+import ExactApp from '@/components/hle/exact-app'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 // Marketing pages (kept for reference, not used in routing)
@@ -68,7 +68,7 @@ function App() {
                   {/* Protected App Routes */}
                   <Route path="/app">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
-                      <HLEApp />
+                      <ExactApp />
                     </ProtectedRoute>
                   </Route>
                   
