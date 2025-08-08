@@ -12,7 +12,6 @@ import { AppSidebar } from '@/components/hle/app-sidebar'
 import { ResultsList } from '@/components/hle/results-list'
 import { OnboardingDialog } from '@/components/hle/onboarding-dialog'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
 
 // Import the HLE types and our existing types
 import type { 
@@ -54,17 +53,17 @@ const mapToHLEHooks = (response: GenerateHooksResponse, platform: HLEPlatform): 
   
   return response.hooks.map((hook, index) => ({
     id: `hook-${index}`,
-    spokenHook: hook.verbalHook || hook.text || '',
-    visualCue: hook.visualCue || `Show yourself ${hook.verbalHook ? 'speaking' : 'demonstrating'} this hook`,
-    overlayText: hook.overlayText || hook.text || hook.verbalHook || '',
+    spokenHook: hook.verbalHook || '',
+    visualCue: hook.visualHook || `Show yourself speaking this hook`,
+    overlayText: hook.textualHook || hook.verbalHook || '',
     framework: hook.framework || 'Custom',
     platformNotes: {
       idealWordCount: platform === 'tiktok' ? 9 : platform === 'reels' ? 8 : 8,
-      proofCue: hook.proofCue || 'Show evidence or results here'
+      proofCue: hook.platformSpecific?.youtubeProofCue || 'Show evidence or results here'
     },
     score: hook.score || 3.5,
-    reasons: hook.reasons || [`Uses ${hook.framework || 'proven'} framework`, 'Optimized for engagement'],
-    breakdown: hook.breakdown || {
+    reasons: [hook.rationale || `Uses ${hook.framework || 'proven'} framework`, 'Optimized for engagement'],
+    breakdown: {
       curiosity: hook.score ? hook.score * 0.4 : 1.4,
       brevity: 0.8,
       platformFit: 0.9,

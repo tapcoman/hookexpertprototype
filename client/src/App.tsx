@@ -68,7 +68,7 @@ function App() {
                   {/* Protected App Routes */}
                   <Route path="/app">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
-                      <MainAppPage />
+                      <HLEExpertPage />
                     </ProtectedRoute>
                   </Route>
                   
@@ -105,12 +105,6 @@ function App() {
                   <Route path="/trends">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <TrendRadarPage />
-                    </ProtectedRoute>
-                  </Route>
-                  
-                  <Route path="/app/expert">
-                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
-                      <HLEExpertPage />
                     </ProtectedRoute>
                   </Route>
                   

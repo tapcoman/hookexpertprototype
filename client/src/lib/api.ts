@@ -428,11 +428,62 @@ export const healthApi = {
   check: () => apiFetch<{ status: string; timestamp: string }>('/health'),
 }
 
+// ==================== PROJECTS API ====================
+
+export const projectsApi = {
+  // Get all projects
+  getProjects: (params?: { page?: number; limit?: number }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.page) searchParams.set('page', params.page.toString())
+    if (params?.limit) searchParams.set('limit', params.limit.toString())
+    
+    const queryString = searchParams.toString()
+    return apiFetch<PaginatedResponse<any>>(
+      `/projects${queryString ? `?${queryString}` : ''}`
+    )
+  },
+
+  // Get specific project
+  getProject: (id: string) =>
+    apiFetch<any>(`/projects/${id}`),
+
+  // Create project
+  createProject: (data: {
+    name: string
+    description?: string
+    color?: string
+    emoji?: string
+  }) =>
+    apiFetch<any>('/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Update project
+  updateProject: (id: string, data: {
+    name?: string
+    description?: string
+    color?: string
+    emoji?: string
+  }) =>
+    apiFetch<any>(`/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  // Delete project
+  deleteProject: (id: string) =>
+    apiFetch<void>(`/projects/${id}`, {
+      method: 'DELETE',
+    }),
+}
+
 // Export all APIs
 export const api = {
   auth: authApi,
   user: userApi,
   hooks: hooksApi,
+  projects: projectsApi,
   payments: paymentsApi,
   analytics: analyticsApi,
   health: healthApi,

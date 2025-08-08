@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Home,
-  BarChart3
+  BarChart3,
+  Zap
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../contexts/SimpleAuthContext'
