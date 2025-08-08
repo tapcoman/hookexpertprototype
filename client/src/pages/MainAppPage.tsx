@@ -657,7 +657,7 @@ const MainAppPageContent: React.FC = () => {
   return (
     <AppShell>
       {/* Page Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-20">
+      <div className="border-b border-white/10 bg-white/10 backdrop-blur-md sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>

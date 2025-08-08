@@ -143,7 +143,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className }) => {
 
   return (
     <aside className={cn(
-      "w-[260px] h-screen bg-background border-r border-border flex flex-col overflow-hidden",
+      "w-[260px] h-screen bg-white/10 backdrop-blur-md border-r border-white/10 flex flex-col overflow-hidden",
       className
     )}>
       {/* Header */}

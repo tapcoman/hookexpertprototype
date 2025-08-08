@@ -18,7 +18,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
   }
 
   return (
-    <div className={cn("flex h-screen bg-background overflow-hidden", className)}>
+    <div className={cn("flex h-screen overflow-hidden", className)}>
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex">
         <AppSidebar />
@@ -55,7 +55,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30">
+        <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/10 bg-white/10 backdrop-blur-md sticky top-0 z-30">
           <Button
             variant="ghost"
             size="sm"
