@@ -16,6 +16,7 @@ import authRoutes from './routes/simpleAuth.js'
 import hookRoutes from './routes/hooks.js'
 import userRoutes from './routes/users.js'
 import debugRoutes from './routes/simpleDebug.js'
+import projectRoutes from './routes/projects.js'
 
 // Load environment variables from parent directory
 dotenv.config({ path: '../.env' })
@@ -163,6 +164,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/hooks', hookRoutes)  
 app.use('/api/users', userRoutes)
+app.use('/api/projects', projectRoutes)
 
 // Debug routes (only in development or when explicitly enabled)
 if (process.env.NODE_ENV === 'development' || process.env.ENABLE_DEBUG_ROUTES === 'true') {

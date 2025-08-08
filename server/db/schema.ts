@@ -63,6 +63,31 @@ export const users = pgTable('users', {
   }
 })
 
+// ==================== PROJECTS TABLE ====================
+
+export const projects = pgTable('projects', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Project Details
+  name: varchar('name').notNull(),
+  description: text('description'),
+  color: varchar('color').default('#6366f1'),
+  emoji: varchar('emoji').default('📁'),
+  
+  // Statistics
+  hookCount: integer('hook_count').default(0),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').default(sql`NOW()`),
+  updatedAt: timestamp('updated_at').default(sql`NOW()`),
+}, (table) => {
+  return {
+    userIdIdx: index('projects_user_id_idx').on(table.userId),
+    updatedAtIdx: index('projects_updated_at_idx').on(table.updatedAt),
+  }
+})
+
 // ==================== HOOK GENERATIONS TABLE ====================
 
 export const hookGenerations = pgTable('hook_generations', {
