@@ -160,34 +160,39 @@
     @apply bg-background text-foreground;
   }
   
-  /* Stunning gradient background inspired by the provided design */
+  /* Exact gradient from the provided design - soft with prominent blue blob */
   body {
-    background: linear-gradient(135deg, 
-      #e8f4ff 0%,    /* Light blue */
-      #f3e8ff 25%,   /* Light purple */
-      #fdf2f8 50%,   /* Light pink */
-      #f0f9ff 75%,   /* Light blue */
-      #faf5ff 100%   /* Light purple */
-    );
+    background: 
+      radial-gradient(ellipse 50% 40% at 25% 70%, rgba(99, 102, 241, 0.4) 0%, transparent 50%),
+      linear-gradient(135deg, 
+        #f8fafc 0%,    /* Very light gray-blue */
+        #e0e7ff 20%,   /* Light blue */
+        #fce7f3 40%,   /* Light pink */
+        #f3e8ff 60%,   /* Light purple */
+        #fdf2f8 80%,   /* Soft pink */
+        #f1f5f9 100%   /* Light blue-gray */
+      );
     min-height: 100vh;
     background-attachment: fixed;
   }
   
-  /* Enhanced gradient for dark mode with the same dreamy feel */
+  /* Enhanced version for dark mode */
   .dark body {
-    background: linear-gradient(135deg, 
-      #0f172a 0%,    /* Dark blue base */
-      #1e1b4b 20%,   /* Deep purple */
-      #312e81 40%,   /* Rich purple */
-      #1e40af 60%,   /* Deep blue */
-      #7c3aed 80%,   /* Vibrant purple */
-      #3730a3 100%   /* Deep indigo */
-    );
+    background: 
+      radial-gradient(ellipse 50% 40% at 25% 70%, rgba(99, 102, 241, 0.6) 0%, transparent 50%),
+      linear-gradient(135deg, 
+        #0f172a 0%,    /* Dark blue base */
+        #1e1b4b 20%,   /* Deep purple */
+        #312e81 40%,   /* Rich purple */
+        #1e40af 60%,   /* Deep blue */
+        #7c3aed 80%,   /* Vibrant purple */
+        #3730a3 100%   /* Deep indigo */
+      );
     min-height: 100vh;
     background-attachment: fixed;
   }
   
-  /* Add subtle animated overlay for extra depth */
+  /* Add the prominent blue blob effect */
   body::before {
     content: '';
     position: fixed;
@@ -195,25 +200,18 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(
-      ellipse 80% 60% at 30% 20%,
-      rgba(139, 92, 246, 0.15) 0%,
-      rgba(59, 130, 246, 0.1) 40%,
-      rgba(236, 72, 153, 0.08) 70%,
-      transparent 100%
-    );
+    background: 
+      radial-gradient(ellipse 35% 25% at 20% 65%, rgba(59, 130, 246, 0.6) 0%, rgba(99, 102, 241, 0.3) 30%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(236, 72, 153, 0.2) 0%, rgba(168, 85, 247, 0.15) 40%, transparent 70%);
     pointer-events: none;
     z-index: -1;
+    animation: gentle-float 8s ease-in-out infinite;
   }
   
   .dark body::before {
-    background: radial-gradient(
-      ellipse 80% 60% at 30% 20%,
-      rgba(139, 92, 246, 0.3) 0%,
-      rgba(59, 130, 246, 0.2) 40%,
-      rgba(236, 72, 153, 0.15) 70%,
-      transparent 100%
-    );
+    background: 
+      radial-gradient(ellipse 35% 25% at 20% 65%, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.5) 30%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(236, 72, 153, 0.4) 0%, rgba(168, 85, 247, 0.3) 40%, transparent 70%);
   }
   
   /* Ensure transparent background for content containers */
@@ -246,6 +244,21 @@
   50% { 
     opacity: 1;
     transform: scale(1.02);
+  }
+}
+
+@keyframes gentle-float {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1);
+  }
+  25% { 
+    transform: translate(-10px, -15px) scale(1.05);
+  }
+  50% { 
+    transform: translate(10px, -20px) scale(0.95);
+  }
+  75% { 
+    transform: translate(-5px, 10px) scale(1.02);
   }
 }
 
