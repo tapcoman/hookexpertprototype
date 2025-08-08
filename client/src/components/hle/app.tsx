@@ -120,7 +120,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="light min-h-screen bg-white font-sans">
       <SidebarProvider>
         <AppSidebar
           idea={idea}

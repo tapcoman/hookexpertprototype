@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Enable dark theme by default for the premium cosmic experience
-if (typeof window !== 'undefined' && !localStorage.getItem('theme')) {
-  document.documentElement.classList.add('dark')
-  localStorage.setItem('theme', 'dark')
+// Force light theme for v0.dev design
+if (typeof window !== 'undefined') {
+  document.documentElement.classList.remove('dark')
+  document.documentElement.classList.add('light')
+  localStorage.setItem('theme', 'light')
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
