@@ -1,0 +1,111 @@
+import type { HookItem, Platform } from '../types'
+
+export function getSampleHooks(idea: string, platform: Platform): HookItem[] {
+  // 10 tri-modal samples for quick preview
+  const items: HookItem[] = [
+    {
+      id: 's1',
+      spokenHook: 'Day 3 with zero sugar — guess what changed?',
+      visualCue: 'Cold‑open: slam fridge door, show calendar “Day 3”',
+      overlayText: '72 hours. Big shift.',
+      framework: 'Open Loop',
+      platformNotes: { idealWordCount: 8, proofCue: 'screenshot results' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's2',
+      spokenHook: 'Before you scroll: this ended my 3PM crash.',
+      visualCue: 'Energy graph jumps from low→high in 1s',
+      overlayText: 'No sugar. Real results.',
+      framework: "4U's",
+      platformNotes: { idealWordCount: 9, proofCue: 'timer overlay' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's3',
+      spokenHook: 'What happens after 72 hours with no sugar?',
+      visualCue: 'Step on scale, quick close‑up → face reaction',
+      overlayText: '3 days in: it works?',
+      framework: 'Question Lead',
+      platformNotes: { idealWordCount: 9, proofCue: 'scale reading' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's4',
+      spokenHook: 'I tried 3 sugar‑free days — here’s the twist.',
+      visualCue: 'Split‑screen: Day‑1 vs Day‑3 under same light',
+      overlayText: 'Day 3: unexpected win',
+      framework: 'PAS',
+      platformNotes: { idealWordCount: 8, proofCue: 'before/after cut' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's5',
+      spokenHook: 'The one tweak that crushed my cravings fast.',
+      visualCue: 'Spoon drops into black coffee; timer overlay',
+      overlayText: 'Cravings gone fast',
+      framework: "4U's",
+      platformNotes: { idealWordCount: 8, proofCue: 'comment proof' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's6',
+      spokenHook: '72 hours, zero sugar—here’s the honest chart.',
+      visualCue: 'Phone screen: “Screen Time ↓ • Sleep ↑”',
+      overlayText: 'No sugar: honest chart',
+      framework: 'Data Tease',
+      platformNotes: { idealWordCount: 9, proofCue: 'screenshot results' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's7',
+      spokenHook: 'Before/after energy in just 3 days—watch.',
+      visualCue: 'Rapid cut: slumped desk → brisk walk',
+      overlayText: 'Energy up in 3 days',
+      framework: 'Open Loop',
+      platformNotes: { idealWordCount: 8, proofCue: 'timer overlay' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's8',
+      spokenHook: 'Cutting sugar for 72 hours did this to sleep.',
+      visualCue: 'Lock screen shows earlier bedtime streak',
+      overlayText: 'Sleep changed. Fast.',
+      framework: 'AIDA',
+      platformNotes: { idealWordCount: 9, proofCue: 'screenshot results' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's9',
+      spokenHook: 'Stop scrolling—this fixed my 3PM crash.',
+      visualCue: 'Pour water, quick face to camera, smile',
+      overlayText: 'Bye, 3PM crash',
+      framework: 'PAS',
+      platformNotes: { idealWordCount: 8, proofCue: 'comment proof' },
+      score: 0,
+      reasons: [],
+    },
+    {
+      id: 's10',
+      spokenHook: 'Three sugar‑free days—and a weird benefit.',
+      visualCue: 'Close‑up: clearer skin under same lighting',
+      overlayText: '3 days. Clearer skin?',
+      framework: 'Open Loop',
+      platformNotes: { idealWordCount: 8, proofCue: 'before/after cut' },
+      score: 0,
+      reasons: [],
+    },
+  ]
+  // Keep platform param for future variants (currently not used to mutate content)
+  void platform
+  void idea
+  return items
+}

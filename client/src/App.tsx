@@ -25,6 +25,7 @@ import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
 import TrendRadarPage from '@/pages/TrendRadarPage'
+import HLEExpertPage from '@/pages/HLEExpertPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 // Marketing pages (kept for reference, not used in routing)
@@ -104,6 +105,12 @@ function App() {
                   <Route path="/trends">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <TrendRadarPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/app/expert">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <HLEExpertPage />
                     </ProtectedRoute>
                   </Route>
                   

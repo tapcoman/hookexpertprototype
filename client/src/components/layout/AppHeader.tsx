@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Heart, History, User, Sparkles, Radar } from 'lucide-react'
+import { Heart, History, User, Sparkles, Radar, Zap } from 'lucide-react'
 import { Link } from 'wouter'
 import { useAuth } from '../../contexts/SimpleAuthContext'
 import {
@@ -83,6 +83,22 @@ const AppHeader: React.FC = () => {
             {/* Theme Toggle and Navigation Icons */}
             <div className="flex items-center space-x-2">
               <ThemeToggle />
+              <Link href="/app/expert">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="relative hover:bg-gradient-to-br hover:from-accent-electric/10 hover:to-success-green/10 text-text-secondary hover:text-accent-electric transition-all duration-200"
+                  asChild
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Expert Interface"
+                  >
+                    <Zap className="w-4 h-4" />
+                  </motion.button>
+                </Button>
+              </Link>
               <Link href="/trends">
                 <Button 
                   variant="ghost" 

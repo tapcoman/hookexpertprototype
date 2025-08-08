@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { 
   FolderPlus,
   Sparkles, 
+  Zap,
   Radar, 
   Heart, 
   User 
@@ -28,8 +29,15 @@ const SimplifiedMobileNav: React.FC<SimplifiedMobileNavProps> = ({ className }) 
       href: '/app',
       icon: Sparkles,
       label: 'Generate',
-      isActive: location === '/app',
+      isActive: location === '/app' || location === '/app/expert',
       isPrimary: true
+    },
+    {
+      href: '/app/expert',
+      icon: Zap,
+      label: 'Expert',
+      isActive: location === '/app/expert',
+      isExpert: true
     },
     {
       href: '/trends',
@@ -68,7 +76,8 @@ const SimplifiedMobileNav: React.FC<SimplifiedMobileNavProps> = ({ className }) 
                     item.isActive 
                       ? "text-primary" 
                       : "text-muted-foreground hover:text-foreground",
-                    item.isPrimary && "bg-primary/10 text-primary"
+                    item.isPrimary && "bg-primary/10 text-primary",
+                    item.isExpert && item.isActive && "bg-gradient-to-br from-accent-electric/10 to-success-green/10 text-accent-electric"
                   )}
                   whileTap={{ scale: 0.95 }}
                 >
