@@ -17,6 +17,7 @@ import hookRoutes from './routes/hooks.js'
 import userRoutes from './routes/users.js'
 import debugRoutes from './routes/simpleDebug.js'
 import projectRoutes from './routes/projects.js'
+import v0CompatRoutes from './routes/v0-compat.js'
 
 // Load environment variables from parent directory
 dotenv.config({ path: '../.env' })
@@ -165,6 +166,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/hooks', hookRoutes)  
 app.use('/api/users', userRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api', v0CompatRoutes) // v0.dev compatibility routes
 
 // Debug routes (only in development or when explicitly enabled)
 if (process.env.NODE_ENV === 'development' || process.env.ENABLE_DEBUG_ROUTES === 'true') {
