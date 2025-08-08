@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import AppSidebar from './AppSidebar'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'

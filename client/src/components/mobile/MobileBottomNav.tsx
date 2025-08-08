@@ -2,7 +2,6 @@ import React from 'react'
 import { Link, useLocation } from 'wouter'
 import { motion } from 'framer-motion'
 import { 
-  Zap, 
   History, 
   Heart, 
   User,
@@ -88,7 +87,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 </Button>
 
                 {/* Credits Badge */}
-                {item.showBadge && creditsRemaining !== undefined && (
+                {item.isPrimary && creditsRemaining !== undefined && (
                   <Badge 
                     variant={creditsRemaining > 0 ? "default" : "destructive"}
                     className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs"

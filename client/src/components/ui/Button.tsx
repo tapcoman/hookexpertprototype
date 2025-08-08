@@ -23,6 +23,7 @@ const buttonVariants = cva(
         electric: "bg-gradient-to-r from-accent-electric to-success-green text-white shadow-lg hover:shadow-xl transition-all duration-300",
         premium: "bg-gradient-to-r from-accent-electric to-accent-teal text-white shadow-lg hover:shadow-xl",
         glass: "professional-glass text-text-primary hover:bg-surface-tertiary",
+        flow: "bg-gradient-to-r from-accent-electric to-accent-teal text-white shadow-lg hover:shadow-xl animate-gradient-shift",
       },
       size: {
         default: "h-9 px-4 py-2",
