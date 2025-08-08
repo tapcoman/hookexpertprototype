@@ -18,38 +18,18 @@ interface SimplifiedMobileNavProps {
 const SimplifiedMobileNav: React.FC<SimplifiedMobileNavProps> = ({ className }) => {
   const [location] = useLocation()
 
+  // Only show mobile nav when NOT in the v0.dev app interface
+  if (location === '/app') {
+    return null // Hide mobile nav when in v0.dev interface
+  }
+
   const navItems = [
-    {
-      href: '/projects',
-      icon: FolderPlus,
-      label: 'Projects',
-      isActive: location === '/projects'
-    },
     {
       href: '/app',
       icon: Sparkles,
       label: 'Generate',
-      isActive: location === '/app' || location === '/app/expert',
+      isActive: location === '/app',
       isPrimary: true
-    },
-    {
-      href: '/app/expert',
-      icon: Zap,
-      label: 'Expert',
-      isActive: location === '/app/expert',
-      isExpert: true
-    },
-    {
-      href: '/trends',
-      icon: Radar,
-      label: 'Trends',
-      isActive: location === '/trends'
-    },
-    {
-      href: '/favorites',
-      icon: Heart,
-      label: 'Favorites',
-      isActive: location === '/favorites'
     },
     {
       href: '/profile',

@@ -861,6 +861,11 @@ const v0GenerateSchema = z.object({
 // Mount v0.dev compatibility routes directly in hooks router
 const v0Router = Router()
 
+// All v0 routes require authentication and database
+v0Router.use(verifyJWTToken)
+v0Router.use(requireDatabase)
+v0Router.use(degradedOpenAI)
+
 // V0.dev generate endpoint
 v0Router.post('/generate',
   validateRequest(v0GenerateSchema),

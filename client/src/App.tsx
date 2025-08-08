@@ -71,6 +71,7 @@ function App() {
                     </ProtectedRoute>
                   </Route>
                   
+                  {/* Old routes - now integrated in v0.dev interface
                   <Route path="/projects">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <ProjectsPage />
@@ -88,6 +89,7 @@ function App() {
                       <HistoryPage />
                     </ProtectedRoute>
                   </Route>
+                  */}
                   
                   <Route path="/profile">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
@@ -101,11 +103,13 @@ function App() {
                     </ProtectedRoute>
                   </Route>
 
+                  {/* Trends route - not part of v0.dev interface
                   <Route path="/trends">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <TrendRadarPage />
                     </ProtectedRoute>
                   </Route>
+                  */}
                   
                   {/* Redirect old marketing URLs to auth */}
                   <Route path="/features" component={RootRedirect} />
