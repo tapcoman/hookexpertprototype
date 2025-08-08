@@ -1,0 +1,5 @@
+export { default as TrendCard } from './TrendCard'
+export { default as TrendDashboard } from './TrendDashboard'
+export { default as TrendDetail } from './TrendDetail'
+export { default as TrendFilters } from './TrendFilters'
+export { default as VelocityIndicator, VelocityBadge } from './VelocityIndicator'

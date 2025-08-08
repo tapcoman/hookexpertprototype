@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Heart, History, User, Sparkles } from 'lucide-react'
+import { Heart, History, User, Sparkles, Radar } from 'lucide-react'
 import { Link } from 'wouter'
 import { useAuth } from '../../contexts/SimpleAuthContext'
 import {
@@ -83,6 +83,21 @@ const AppHeader: React.FC = () => {
             {/* Theme Toggle and Navigation Icons */}
             <div className="flex items-center space-x-2">
               <ThemeToggle />
+              <Link href="/trends">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="relative hover:bg-surface-secondary dark:hover:bg-surface-tertiary text-text-secondary hover:text-text-primary"
+                  asChild
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Radar className="w-4 h-4" />
+                  </motion.button>
+                </Button>
+              </Link>
               <Link href="/favorites">
                 <Button 
                   variant="ghost" 

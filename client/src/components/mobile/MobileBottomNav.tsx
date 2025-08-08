@@ -6,7 +6,8 @@ import {
   History, 
   Heart, 
   User,
-  Plus
+  Plus,
+  Radar
 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
@@ -25,10 +26,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   const navItems = [
     {
-      href: '/history',
-      icon: History,
-      label: 'History',
-      isActive: location === '/history'
+      href: '/trends',
+      icon: Radar,
+      label: 'Trends',
+      isActive: location === '/trends'
     },
     {
       href: '/favorites',
@@ -44,17 +45,16 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       isPrimary: true
     },
     {
+      href: '/history',
+      icon: History,
+      label: 'History',
+      isActive: location === '/history'
+    },
+    {
       href: '/profile',
       icon: User,
       label: 'Profile',
       isActive: location === '/profile'
-    },
-    {
-      href: '/billing',
-      icon: Zap,
-      label: 'Credits',
-      isActive: location === '/billing',
-      showBadge: true
     }
   ]
 

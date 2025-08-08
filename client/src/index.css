@@ -595,4 +595,400 @@
   .breathing-glow {
     animation: subtle-glow 4s ease-in-out infinite;
   }
+  
+  /* ===== TREND RADAR VISUAL DESIGN SYSTEM ===== */
+  
+  /* Trend State Colors */
+  .trend-viral {
+    --trend-color: 240 100% 75%;
+    --trend-glow: 240 100% 85%;
+    --trend-bg: 240 100% 75% / 0.1;
+  }
+  
+  .trend-rising {
+    --trend-color: 140 85% 70%;
+    --trend-glow: 140 85% 80%;
+    --trend-bg: 140 85% 70% / 0.1;
+  }
+  
+  .trend-hot {
+    --trend-color: 15 100% 70%;
+    --trend-glow: 15 100% 80%;
+    --trend-bg: 15 100% 70% / 0.1;
+  }
+  
+  .trend-stable {
+    --trend-color: 240 85% 70%;
+    --trend-glow: 240 85% 80%;
+    --trend-bg: 240 85% 70% / 0.08;
+  }
+  
+  .trend-declining {
+    --trend-color: 220 50% 60%;
+    --trend-glow: 220 50% 70%;
+    --trend-bg: 220 50% 60% / 0.06;
+  }
+  
+  /* Trend Card Base */
+  .trend-card {
+    position: relative;
+    background: hsl(var(--surface-secondary));
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    overflow: hidden;
+  }
+  
+  .trend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, hsl(var(--trend-color)), transparent);
+    opacity: 0.8;
+  }
+  
+  .trend-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: hsl(var(--trend-bg));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .trend-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    border-color: hsl(var(--trend-color) / 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.15),
+      0 0 24px hsl(var(--trend-color) / 0.2);
+  }
+  
+  .trend-card:hover::after {
+    opacity: 1;
+  }
+  
+  /* Trend Animations */
+  @keyframes viral-pulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--trend-color) / 0.7);
+    }
+    50% { 
+      transform: scale(1.02);
+      box-shadow: 0 0 0 12px hsl(var(--trend-color) / 0);
+    }
+  }
+  
+  @keyframes growth-rings {
+    0% { 
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    100% { 
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes fire-particles {
+    0% { 
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    100% { 
+      transform: translateY(-24px) scale(0.6);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes wave-flow {
+    0% { transform: translateX(-200%) skewX(-15deg); }
+    100% { transform: translateX(200%) skewX(-15deg); }
+  }
+  
+  @keyframes decline-fade {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  @keyframes trend-sparkle {
+    0%, 100% { 
+      transform: rotate(0deg) scale(1);
+      opacity: 0.6;
+    }
+    50% { 
+      transform: rotate(180deg) scale(1.2);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes momentum-indicator {
+    0% { 
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% { 
+      opacity: 1;
+    }
+    100% { 
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  /* Trend State Specific Animations */
+  .trend-viral {
+    animation: viral-pulse 2s ease-in-out infinite;
+  }
+  
+  .trend-rising::before {
+    animation: growth-rings 3s ease-out infinite;
+  }
+  
+  .trend-hot .trend-particles::after {
+    animation: fire-particles 2s ease-out infinite;
+  }
+  
+  .trend-stable::before {
+    animation: wave-flow 4s linear infinite;
+  }
+  
+  .trend-declining {
+    animation: decline-fade 4s ease-in-out infinite;
+  }
+  
+  /* Momentum Indicators */
+  .momentum-indicator {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--trend-glow)),
+      transparent
+    );
+    transform: translateY(-50%);
+    animation: momentum-indicator 3s ease-in-out infinite;
+    opacity: 0;
+  }
+  
+  .trend-card:hover .momentum-indicator {
+    opacity: 1;
+  }
+  
+  /* Particle Systems */
+  .trend-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  
+  .trend-particles::before,
+  .trend-particles::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: hsl(var(--trend-glow));
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  
+  .trend-particles::before {
+    top: 20%;
+    right: 25%;
+    animation: trend-sparkle 3s ease-in-out infinite;
+  }
+  
+  .trend-particles::after {
+    bottom: 30%;
+    left: 20%;
+    animation: trend-sparkle 3s ease-in-out infinite 1.5s;
+  }
+  
+  /* Trend Strength Indicators */
+  .trend-strength-low { --strength-opacity: 0.4; }
+  .trend-strength-medium { --strength-opacity: 0.7; }
+  .trend-strength-high { --strength-opacity: 1; }
+  
+  .trend-strength-indicator {
+    opacity: var(--strength-opacity);
+  }
+  
+  /* Platform-Specific Glows */
+  .platform-tiktok {
+    --trend-color: 348 100% 65%;
+    --trend-glow: 348 100% 75%;
+  }
+  
+  .platform-instagram {
+    --trend-color: 315 80% 75%;
+    --trend-glow: 315 80% 85%;
+  }
+  
+  .platform-youtube {
+    --trend-color: 0 85% 65%;
+    --trend-glow: 0 85% 75%;
+  }
+  
+  .platform-twitter {
+    --trend-color: 200 100% 70%;
+    --trend-glow: 200 100% 80%;
+  }
+  
+  /* Trend Radar Container */
+  .trend-radar-container {
+    background: hsl(var(--surface-primary));
+    min-height: 100vh;
+    padding: clamp(1rem, 3vw, 2rem);
+  }
+  
+  .trend-radar-header {
+    background: hsl(var(--surface-secondary) / 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .trend-radar-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--accent-electric) / 0.05),
+      hsl(var(--success-green) / 0.05),
+      hsl(var(--accent-teal) / 0.05)
+    );
+    pointer-events: none;
+  }
+  
+  /* Trend Grid Layouts */
+  .trend-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  @media (min-width: 768px) {
+    .trend-grid {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    .trend-grid {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.5rem;
+    }
+  }
+  
+  /* Filter Pills */
+  .trend-filter-pills {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  
+  .trend-filter-pill {
+    background: hsl(var(--surface-secondary));
+    border: 1px solid hsl(var(--border-subtle));
+    border-radius: 24px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--text-secondary));
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+  
+  .trend-filter-pill:hover {
+    background: hsl(var(--surface-tertiary));
+    border-color: hsl(var(--accent-electric) / 0.4);
+    color: hsl(var(--text-primary));
+    transform: translateY(-1px);
+  }
+  
+  .trend-filter-pill.active {
+    background: hsl(var(--accent-electric));
+    border-color: hsl(var(--accent-electric));
+    color: hsl(var(--surface-primary));
+    box-shadow: 0 4px 16px hsl(var(--accent-electric) / 0.2);
+  }
+  
+  /* Trend Velocity Badge */
+  .velocity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid hsl(var(--trend-color) / 0.3);
+    background: hsl(var(--trend-bg));
+    color: hsl(var(--trend-color));
+  }
+  
+  .velocity-lightning {
+    animation: trend-sparkle 1s ease-in-out infinite;
+  }
+  
+  .velocity-wave {
+    animation: wave-flow 2s linear infinite;
+  }
+  
+  .velocity-fire {
+    animation: fire-particles 1.5s ease-out infinite;
+  }
+  
+  /* Mobile Optimizations */
+  @media (max-width: 767px) {
+    .trend-card {
+      padding: 1rem;
+      border-radius: 12px;
+    }
+    
+    .trend-radar-header {
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .trend-filter-pills {
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .trend-filter-pill {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+  }
 }

@@ -23,6 +23,7 @@ import HistoryPage from '@/pages/HistoryPage'
 import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
+import TrendRadarPage from '@/pages/TrendRadarPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 // Marketing pages (kept for reference, not used in routing)
@@ -91,6 +92,12 @@ function App() {
                   <Route path="/billing">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <BillingPage />
+                    </ProtectedRoute>
+                  </Route>
+
+                  <Route path="/trends">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <TrendRadarPage />
                     </ProtectedRoute>
                   </Route>
                   

@@ -28,6 +28,9 @@ export { default as AuthForm } from './auth/AuthForm'
 export { default as MobileHookCard } from './mobile/MobileHookCard'
 export { default as MobileBottomNav } from './mobile/MobileBottomNav'
 
+// Trend Components
+export * from './trends'
+
 // Utility Components
 export { LoadingSpinner } from './ui/LoadingSpinner'
 export { ErrorBoundary } from './ui/ErrorBoundary'
