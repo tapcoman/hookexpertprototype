@@ -19,7 +19,7 @@ const SimplifiedMobileNav: React.FC<SimplifiedMobileNavProps> = ({ className }) 
 
   const navItems = [
     {
-      href: '/app',
+      href: '/projects',
       icon: FolderPlus,
       label: 'Projects',
       isActive: location === '/projects'

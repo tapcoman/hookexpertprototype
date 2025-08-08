@@ -49,35 +49,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className }) => {
   const [location] = useLocation()
   const [projectsExpanded, setProjectsExpanded] = useState(true)
   
-  // Mock projects data - in real app this would come from API
-  const [projects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Fitness Content',
-      description: 'Workout and nutrition hooks',
-      hookCount: 45,
-      createdAt: new Date('2024-01-15'),
-      lastUsed: new Date('2024-01-20'),
-      color: '#10b981'
-    },
-    {
-      id: '2', 
-      name: 'Tech Reviews',
-      description: 'Product review content',
-      hookCount: 28,
-      createdAt: new Date('2024-01-10'),
-      lastUsed: new Date('2024-01-18'),
-      color: '#06b6d4'
-    },
-    {
-      id: '3',
-      name: 'Travel Vlogs',
-      hookCount: 12,
-      createdAt: new Date('2024-01-05'),
-      lastUsed: new Date('2024-01-16'),
-      color: '#f59e0b'
-    }
-  ])
+  // Projects data - will be loaded from API
+  const [projects] = useState<Project[]>([])
 
   const creditsRemaining = user ? (user.freeCredits - user.usedCredits) : 0
   const displayName = user?.firstName || user?.displayName || 'User'
@@ -255,55 +228,62 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className }) => {
                 transition={{ duration: 0.2 }}
                 className="space-y-2 mb-6"
               >
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: project.color }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {project.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {project.hookCount} hooks
-                        </p>
+                {projects.length > 0 ? (
+                  projects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="group flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: project.color }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {project.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {project.hookCount} hooks
+                          </p>
+                        </div>
                       </div>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreHorizontal className="w-3 h-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem 
+                            onClick={() => handleProjectAction('edit', project.id)}
+                            className="cursor-pointer"
+                          >
+                            <Edit3 className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleProjectAction('delete', project.id)}
+                            className="cursor-pointer text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <MoreHorizontal className="w-3 h-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem 
-                          onClick={() => handleProjectAction('edit', project.id)}
-                          className="cursor-pointer"
-                        >
-                          <Edit3 className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleProjectAction('delete', project.id)}
-                          className="cursor-pointer text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p className="text-sm">No projects yet</p>
+                    <p className="text-xs mt-1">Create your first project to get started</p>
                   </div>
-                ))}
+                )}
                 
                 {/* New Project Button */}
                 <button

@@ -18,6 +18,7 @@ import { RootRedirect } from '@/components/routing/RootRedirect'
 import SimpleAuthPage from '@/pages/SimpleAuthPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import MainAppPage from '@/pages/MainAppPage'
+import ProjectsPage from '@/pages/ProjectsPage'
 import FavoritesPage from '@/pages/FavoritesPage'
 import HistoryPage from '@/pages/HistoryPage'
 import ProfilePage from '@/pages/ProfilePage'
@@ -67,6 +68,12 @@ function App() {
                   <Route path="/app">
                     <ProtectedRoute requireAuth={true} requireOnboarding={true}>
                       <MainAppPage />
+                    </ProtectedRoute>
+                  </Route>
+                  
+                  <Route path="/projects">
+                    <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                      <ProjectsPage />
                     </ProtectedRoute>
                   </Route>
                   

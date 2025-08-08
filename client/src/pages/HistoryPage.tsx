@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Eye, History, Heart, Copy, Trash2 } from 'lucide-react'
+import AppShell from '@/components/layout/AppShell'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
@@ -88,27 +89,42 @@ const HistoryPageContent: React.FC = () => {
   }
 
   if (isLoading) {
-    return <LoadingSpinner className="flex items-center justify-center min-h-96" text="Loading history..." />
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-96">
+          <LoadingSpinner text="Loading history..." />
+        </div>
+        <div className="h-20 lg:h-0" />
+      </AppShell>
+    )
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive">Failed to load history</p>
-      </div>
+      <AppShell>
+        <div className="text-center py-12">
+          <p className="text-destructive">Failed to load history</p>
+        </div>
+        <div className="h-20 lg:h-0" />
+      </AppShell>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-foreground mb-2">Generation History</h1>
-        <p className="text-muted-foreground">All your hook generations in one place</p>
-      </motion.div>
+    <AppShell>
+      {/* Page Header */}
+      <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Generation History</h1>
+              <p className="text-sm text-muted-foreground">All your hook generations in one place</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
 
       {/* Filters */}
       <motion.div
@@ -302,7 +318,11 @@ const HistoryPageContent: React.FC = () => {
           </div>
         </motion.div>
       )}
-    </div>
+      </div>
+      
+      {/* Mobile bottom padding */}
+      <div className="h-20 lg:h-0" />
+    </AppShell>
   )
 }
 

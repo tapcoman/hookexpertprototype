@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Heart, Copy, Trash2 } from 'lucide-react'
+import AppShell from '@/components/layout/AppShell'
 import { ProtectedRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
@@ -47,27 +48,42 @@ const FavoritesPageContent: React.FC = () => {
   }
 
   if (isLoading) {
-    return <LoadingSpinner className="flex items-center justify-center min-h-96" text="Loading favorites..." />
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center min-h-96">
+          <LoadingSpinner text="Loading favorites..." />
+        </div>
+        <div className="h-20 lg:h-0" />
+      </AppShell>
+    )
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive">Failed to load favorites</p>
-      </div>
+      <AppShell>
+        <div className="text-center py-12">
+          <p className="text-destructive">Failed to load favorites</p>
+        </div>
+        <div className="h-20 lg:h-0" />
+      </AppShell>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-foreground mb-2">Saved Hooks</h1>
-        <p className="text-muted-foreground">Your collection of favorite viral hooks</p>
-      </motion.div>
+    <AppShell>
+      {/* Page Header */}
+      <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Saved Hooks</h1>
+              <p className="text-sm text-muted-foreground">Your collection of favorite viral hooks</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
 
       {!favorites?.data || favorites.data.length === 0 ? (
         <motion.div
@@ -169,7 +185,11 @@ const FavoritesPageContent: React.FC = () => {
           )}
         </>
       )}
-    </div>
+      </div>
+      
+      {/* Mobile bottom padding */}
+      <div className="h-20 lg:h-0" />
+    </AppShell>
   )
 }
 
