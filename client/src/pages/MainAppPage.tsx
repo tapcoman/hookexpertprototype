@@ -36,6 +36,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [charCount, setCharCount] = useState(0)
   const [liveFeedback, setLiveFeedback] = useState('')
+  const [isFormFocused, setIsFormFocused] = useState(false)
 
   // Set initial focus and tabindex for platform buttons
   useEffect(() => {
@@ -148,35 +149,52 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
   )
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* AI-Native Floating Interface */}
-      <div className="professional-glass-card rounded-2xl p-8 space-y-8">
-        {/* Modern Header */}
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold text-text-primary professional-text-emphasis">
-            Generate Viral Hooks
-          </h1>
-          <p className="text-lg text-text-secondary">
-            Create platform-optimized hooks that drive engagement
-          </p>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      {/* Premium AI Interface */}
+      <motion.div 
+        className="professional-glass-card rounded-2xl sm:rounded-3xl overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* Modern Header with Gradient */}
+        <div className="relative px-6 sm:px-10 py-6 sm:py-8 text-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent-electric/10 via-transparent to-success-green/10 opacity-50" />
+          <div className="relative space-y-3 sm:space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-electric/10 border border-accent-electric/20 text-accent-electric text-sm font-medium"
+            >
+              <Sparkles className="w-4 h-4" />
+              AI-Powered Hook Generation
+            </motion.div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary bg-gradient-to-r from-text-primary via-accent-electric to-success-green bg-clip-text text-transparent">
+              Create Viral Hooks
+            </h1>
+            <p className="text-base sm:text-lg lg:text-xl text-text-secondary max-w-2xl mx-auto px-4">
+              Generate platform-optimized hooks using advanced AI and psychological frameworks
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Modern Platform Selection - Pill Style */}
-            <div className="space-y-5">
+        <form onSubmit={handleSubmit} className="px-6 sm:px-10 pb-8 sm:pb-10 space-y-8 sm:space-y-10">
+            {/* Premium Platform Selection */}
+            <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-text-primary mb-2" id="platform-legend">
-                  Choose Your Platform
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-text-primary mb-2 sm:mb-3" id="platform-legend">
+                  Select Platform
                 </h3>
-                <p className="text-sm text-text-secondary">
-                  Select where you'll share your content
+                <p className="text-sm sm:text-base text-text-secondary max-w-lg mx-auto px-4">
+                  Choose your target platform to optimize hook performance
                 </p>
               </div>
               
               <div 
                 role="radiogroup" 
                 aria-labelledby="platform-legend"
-                className="flex justify-center gap-3 flex-wrap"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto"
               >
                 {platforms.map((platform, index) => (
                   <motion.button
@@ -189,13 +207,20 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                     tabIndex={formData.platform === platform.value ? 0 : -1}
                     onClick={() => handlePlatformSelection(platform.value as Platform)}
                     onKeyDown={(e) => handlePlatformKeyDown(e, platform.value as Platform, index)}
-                    className={`group relative px-6 py-4 rounded-2xl backdrop-blur-sm transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-accent-electric focus:ring-offset-2 focus:ring-offset-surface-primary min-w-[140px] ${
+                    className={`group relative p-4 sm:p-6 rounded-xl sm:rounded-2xl backdrop-blur-sm transition-all duration-500 ease-out focus:outline-none focus:ring-3 focus:ring-accent-electric/30 focus:ring-offset-2 focus:ring-offset-surface-primary ${
                       formData.platform === platform.value
-                        ? 'bg-accent-electric text-surface-primary shadow-lg shadow-accent-electric/25 scale-105'
-                        : 'bg-surface-secondary hover:bg-surface-tertiary border border-border-subtle hover:border-accent-electric/50 text-text-primary hover:shadow-lg hover:shadow-accent-electric/10'
+                        ? 'bg-gradient-to-br from-accent-electric to-accent-electric/80 text-surface-primary shadow-xl shadow-accent-electric/25 border-2 border-accent-electric/50'
+                        : 'bg-surface-secondary/80 hover:bg-surface-tertiary border-2 border-border-subtle hover:border-accent-electric/30 text-text-primary hover:shadow-xl hover:shadow-accent-electric/10'
                     }`}
-                    whileHover={{ scale: formData.platform === platform.value ? 1.05 : 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ 
+                      scale: formData.platform === platform.value ? 1.02 : 1.03, 
+                      y: -3,
+                      rotateY: 2
+                    }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
                     {/* Selection indicator */}
                     {formData.platform === platform.value && (
@@ -207,17 +232,39 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                       />
                     )}
                     
-                    <div className="relative flex flex-col items-center space-y-2">
-                      <span className="text-2xl" aria-hidden="true">{platform.icon}</span>
-                      <span className="font-semibold text-sm">{platform.label}</span>
-                      <span 
-                        className="text-xs opacity-75 text-center leading-tight" 
-                        id={`platform-${platform.value}-desc`}
-                      >
-                        {platform.description}
-                      </span>
+                    <div className="relative flex flex-col items-center space-y-3">
+                      <div className="relative">
+                        <span className="text-4xl" aria-hidden="true">{platform.icon}</span>
+                        {formData.platform === platform.value && (
+                          <motion.div
+                            className="absolute -inset-2 rounded-full bg-surface-primary/20"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <span className="font-semibold text-base sm:text-lg block">{platform.label}</span>
+                        <span 
+                          className="text-xs sm:text-sm opacity-80 text-center leading-relaxed mt-1" 
+                          id={`platform-${platform.value}-desc`}
+                        >
+                          {platform.description}
+                        </span>
+                      </div>
                       {formData.platform === platform.value && (
-                        <span className="sr-only">selected</span>
+                        <>
+                          <motion.div 
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-success-green flex items-center justify-center"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <span className="text-xs text-surface-primary">✓</span>
+                          </motion.div>
+                          <span className="sr-only">selected</span>
+                        </>
                       )}
                     </div>
                   </motion.button>
@@ -225,111 +272,146 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
               </div>
             </div>
 
-            {/* Smart Goal - Auto-optimized based on platform */}
-            <div className="text-center p-6 bg-surface-secondary/50 rounded-xl border border-border-subtle">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Target className="w-5 h-5 text-accent-electric" />
-                <span className="font-semibold text-text-primary">Smart Optimization</span>
+            {/* Smart Goal - Enhanced Design */}
+            <motion.div 
+              className="text-center p-6 sm:p-8 bg-gradient-to-br from-surface-secondary/80 to-surface-tertiary/60 rounded-xl sm:rounded-2xl border border-border-subtle backdrop-blur-sm"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="p-2 rounded-full bg-accent-electric/10">
+                  <Target className="w-6 h-6 text-accent-electric" />
+                </div>
+                <span className="font-semibold text-lg text-text-primary">AI Optimization</span>
               </div>
-              <p className="text-sm text-text-secondary">
+              <p className="text-base text-text-secondary leading-relaxed">
                 Automatically optimizing for{' '}
-                <span className="font-medium text-accent-electric">
-                  {formData.platform === 'tiktok' ? 'Watch Time' : 
-                   formData.platform === 'instagram' ? 'Shares & Engagement' : 'Click-Through Rate'}
+                <span className="font-semibold text-accent-electric px-2 py-1 rounded-md bg-accent-electric/10">
+                  {formData.platform === 'tiktok' ? 'Watch Time & Retention' : 
+                   formData.platform === 'instagram' ? 'Shares & Engagement' : 'Click-Through & Retention'}
                 </span>
-                {' '}based on your platform selection
+                {' '}based on {formData.platform} best practices
               </p>
-            </div>
+            </motion.div>
 
-            {/* AI-Native Topic Input */}
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <label htmlFor="topic" className="text-lg font-semibold text-text-primary block text-center">
-                  Describe Your Content Idea
+            {/* Premium Topic Input */}
+            <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4">
+                <label htmlFor="topic" className="text-xl sm:text-2xl font-semibold text-text-primary block text-center">
+                  Describe Your Content
                 </label>
-                <p className="text-sm text-text-secondary text-center max-w-lg mx-auto leading-relaxed" id="topic-description">
-                  Share your topic, angle, or story. The more specific you are, the better your hooks will be.
+                <p className="text-sm sm:text-base text-text-secondary text-center max-w-2xl mx-auto leading-relaxed px-4" id="topic-description">
+                  Share your topic, angle, or story. Be specific about your unique perspective, results, or insights for the best hooks.
                 </p>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent-electric/20 via-transparent to-accent-electric/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                <div className="relative group max-w-4xl mx-auto">
+                  <div className="absolute inset-0 bg-gradient-to-r from-accent-electric/10 via-success-green/5 to-accent-electric/10 rounded-3xl opacity-0 group-focus-within:opacity-100 transition-all duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent-electric/5 to-transparent rounded-3xl opacity-0 group-focus-within:opacity-100 transition-all duration-700 delay-100" />
                   <textarea
                     id="topic"
                     value={formData.topic}
                     onChange={handleTopicChange}
-                    placeholder="Example: I tried eating only white foods for 30 days and documented every single change to my energy levels, skin, and mood - the results completely shocked me..."
-                    className={`professional-input w-full min-h-[140px] resize-none rounded-2xl px-6 py-5 text-text-primary placeholder-text-secondary/70 leading-relaxed focus:outline-none transition-all duration-300 ${
+                    onFocus={() => setIsFormFocused(true)}
+                    onBlur={() => setIsFormFocused(false)}
+                    placeholder="Example: I tried eating only white foods for 30 days and documented every single change to my energy levels, skin, and mood - the results completely shocked me and my doctor..."
+                    className={`professional-input w-full min-h-[120px] sm:min-h-[160px] resize-none rounded-2xl sm:rounded-3xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-base sm:text-lg text-text-primary placeholder-text-secondary/60 leading-relaxed focus:outline-none transition-all duration-500 relative z-10 ${
                       errors.topic 
-                        ? 'border-destructive focus:ring-destructive' 
+                        ? 'border-2 border-destructive focus:ring-4 focus:ring-destructive/20' 
                         : charCount < 10 
-                        ? 'border-yellow-400/50 focus:border-yellow-400' 
-                        : 'focus:border-accent-electric'
+                        ? 'border-2 border-warning-amber/50 focus:border-warning-amber focus:ring-4 focus:ring-warning-amber/20' 
+                        : 'border-2 focus:border-accent-electric focus:ring-4 focus:ring-accent-electric/20'
                     }`}
                     aria-describedby="topic-description topic-feedback topic-counter"
                     aria-invalid={!!errors.topic}
+                    rows={5}
                   />
-                  <div className="absolute bottom-4 right-5 flex items-center space-x-2">
-                    <span className={`text-xs font-mono transition-colors ${
-                      charCount < 10 ? 'text-yellow-400' : 
-                      charCount > 800 ? 'text-yellow-400' : 
-                      charCount > 30 ? 'text-accent-electric' :
-                      'text-text-secondary'
-                    }`}>
+                  <div className="absolute bottom-3 sm:bottom-6 right-4 sm:right-8 flex items-center space-x-2 sm:space-x-3 bg-surface-primary/90 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 border border-border-subtle">
+                    <motion.span 
+                      className={`text-xs sm:text-sm font-semibold transition-colors ${
+                        charCount < 10 ? 'text-warning-amber' : 
+                        charCount > 800 ? 'text-warning-amber' : 
+                        charCount > 30 ? 'text-success-green' :
+                        'text-text-secondary'
+                      }`}
+                      animate={{
+                        scale: charCount > 30 ? [1, 1.05, 1] : 1
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
                       {charCount}
-                    </span>
-                    <div className="w-1 h-4 bg-border-subtle rounded-full" />
-                    <span className="text-xs text-text-secondary font-mono">1000</span>
+                    </motion.span>
+                    <div className="w-1 h-5 bg-border-subtle rounded-full" />
+                    <span className="text-sm text-text-secondary font-semibold">1000</span>
                   </div>
                 </div>
                 
-                {/* Smart Feedback */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                {/* Enhanced Smart Feedback */}
+                <div className="space-y-6">
+                  <div className="text-center">
                     <div 
-                      className="flex-1"
+                      className="inline-flex items-center justify-center min-h-[48px] px-6 py-3 rounded-2xl backdrop-blur-sm transition-all duration-300"
                       role="status" 
                       aria-live="polite" 
                       id="topic-feedback"
                     >
-                      {liveFeedback && (
-                        <motion.div
-                          className="flex items-center space-x-2"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <div className={`w-2 h-2 rounded-full ${
-                            liveFeedback.includes('Great') ? 'bg-success-green' :
-                            liveFeedback.includes('Good') ? 'bg-accent-electric' :
-                            liveFeedback.includes('Consider') ? 'bg-warning-amber' :
-                            'bg-text-secondary'
-                          }`} />
-                          <p className={`text-sm font-medium ${
-                            liveFeedback.includes('Great') ? 'text-success-green' :
-                            liveFeedback.includes('Good') ? 'text-accent-electric' :
-                            liveFeedback.includes('Consider') ? 'text-warning-amber' :
-                            'text-text-secondary'
-                          }`}>
-                            {liveFeedback}
-                          </p>
-                        </motion.div>
-                      )}
+                      <AnimatePresence mode="wait">
+                        {liveFeedback && (
+                          <motion.div
+                            key={liveFeedback}
+                            className="flex items-center space-x-3"
+                            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                            transition={{ duration: 0.4 }}
+                          >
+                            <motion.div 
+                              className={`w-3 h-3 rounded-full ${
+                                liveFeedback.includes('Great') ? 'bg-success-green' :
+                                liveFeedback.includes('Good') ? 'bg-accent-electric' :
+                                liveFeedback.includes('Consider') ? 'bg-warning-amber' :
+                                'bg-text-secondary'
+                              }`}
+                              animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.7, 1, 0.7]
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                            <p className={`text-base font-semibold ${
+                              liveFeedback.includes('Great') ? 'text-success-green' :
+                              liveFeedback.includes('Good') ? 'text-accent-electric' :
+                              liveFeedback.includes('Consider') ? 'text-warning-amber' :
+                              'text-text-secondary'
+                            }`}>
+                              {liveFeedback}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                   
-                  {/* Elegant Progress Bar */}
-                  <div className="relative">
-                    <div className="w-full h-1 bg-surface-tertiary rounded-full overflow-hidden">
+                  {/* Premium Progress Bar */}
+                  <div className="relative max-w-2xl mx-auto">
+                    <div className="w-full h-2 bg-surface-tertiary rounded-full overflow-hidden border border-border-subtle">
                       <motion.div 
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          charCount < 10 ? 'bg-gradient-to-r from-warning-amber/70 to-warning-amber' :
-                          charCount > 800 ? 'bg-gradient-to-r from-warning-amber/70 to-warning-amber' :
-                          charCount > 30 ? 'bg-gradient-to-r from-accent-electric/70 to-success-green' :
-                          'bg-gradient-to-r from-accent-electric/50 to-accent-electric'
+                        className={`h-full rounded-full transition-all duration-700 relative ${
+                          charCount < 10 ? 'bg-gradient-to-r from-warning-amber/60 via-warning-amber to-warning-amber/80' :
+                          charCount > 800 ? 'bg-gradient-to-r from-warning-amber/60 via-warning-amber to-warning-amber/80' :
+                          charCount > 30 ? 'bg-gradient-to-r from-accent-electric via-accent-electric/80 to-success-green' :
+                          'bg-gradient-to-r from-accent-electric/40 via-accent-electric/60 to-accent-electric'
                         }`}
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min((charCount / 1000) * 100, 100)}%` }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                      />
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        {charCount > 30 && (
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            animate={{ x: ['-100%', '100%'] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                          />
+                        )}
+                      </motion.div>
                     </div>
                   </div>
                 </div>
@@ -352,34 +434,44 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
               </div>
             </div>
 
-            {/* AI-Native Generate Button */}
+            {/* Premium Generate Button */}
             <motion.button
               type="submit"
               disabled={isLoading || !canGenerate}
-              className={`relative w-full min-h-[56px] rounded-2xl font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-electric focus:ring-offset-4 focus:ring-offset-surface-primary overflow-hidden ${
+              className={`relative w-full min-h-[56px] sm:min-h-[68px] rounded-2xl sm:rounded-3xl font-bold text-lg sm:text-xl transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-accent-electric/30 focus:ring-offset-4 focus:ring-offset-surface-primary overflow-hidden group ${
                 isLoading || !canGenerate
                   ? 'bg-surface-tertiary text-text-secondary cursor-not-allowed'
-                  : 'professional-button text-surface-primary hover:scale-[1.02] active:scale-[0.98]'
+                  : 'professional-button text-surface-primary shadow-2xl hover:shadow-3xl'
               }`}
-              whileHover={!isLoading && canGenerate ? { scale: 1.02 } : {}}
+              whileHover={!isLoading && canGenerate ? { 
+                scale: 1.02, 
+                y: -2,
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)'
+              } : {}}
               whileTap={!isLoading && canGenerate ? { scale: 0.98 } : {}}
               aria-describedby={!canGenerate ? "no-credits-message" : undefined}
               aria-live="polite"
             >
-              {/* Animated background */}
+              {/* Enhanced Animated background */}
               {!isLoading && canGenerate && (
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-accent-electric via-accent-teal to-success-green opacity-90"
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                  }}
-                  transition={{
-                    duration: 3,
-                    ease: 'linear',
-                    repeat: Infinity,
-                  }}
-                  style={{ backgroundSize: '200% 200%' }}
-                />
+                <>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-accent-electric via-success-green to-accent-teal opacity-90"
+                    animate={{
+                      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                    }}
+                    transition={{
+                      duration: 4,
+                      ease: 'linear',
+                      repeat: Infinity,
+                    }}
+                    style={{ backgroundSize: '300% 300%' }}
+                  />
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100"
+                    transition={{ duration: 0.3 }}
+                  />
+                </>
               )}
               
               <div className="relative z-10">
@@ -409,7 +501,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                           transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
                         />
                       </div>
-                      <span>Creating magic...</span>
+                      <span className="text-base sm:text-lg">Creating your viral hooks...</span>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -419,8 +511,8 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
                       exit={{ opacity: 0, y: -5 }}
                       className="flex items-center justify-center space-x-3"
                     >
-                      <Sparkles className="w-5 h-5" aria-hidden="true" />
-                      <span>Generate 10 Viral Hooks</span>
+                      <Sparkles className="w-6 h-6" aria-hidden="true" />
+                      <span className="text-lg sm:text-xl">Generate Viral Hooks</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -451,7 +543,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({ onGenerate, isL
               </motion.div>
             )}
           </form>
-      </div>
+      </motion.div>
     </div>
   )
 }
@@ -472,28 +564,52 @@ const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCop
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-8"
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="space-y-10"
     >
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Your Viral Hooks</h2>
-        <p className="text-muted-foreground">
-          <span className="font-semibold">{generation.hooks.length}</span> hooks generated for{' '}
-          <Badge variant="secondary" className="capitalize">{generation.platform}</Badge>
-        </p>
+      {/* Premium Header */}
+      <div className="text-center space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="space-y-4"
+        >
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-success-green/10 to-accent-electric/10 border border-success-green/20">
+            <motion.div
+              animate={{ rotate: [0, 180, 360] }}
+              transition={{ duration: 2, ease: 'linear', repeat: Infinity }}
+            >
+              <Sparkles className="w-5 h-5 text-success-green" />
+            </motion.div>
+            <span className="font-semibold text-success-green">Generation Complete</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-text-primary via-accent-electric to-success-green bg-clip-text text-transparent">
+            Your Viral Hooks
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-base sm:text-lg">
+            <span className="font-bold text-xl sm:text-2xl text-accent-electric">{generation.hooks.length}</span>
+            <span className="text-text-secondary text-center">premium hooks generated for</span>
+            <Badge 
+              variant="secondary" 
+              className="capitalize px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-semibold bg-gradient-to-r from-accent-electric/10 to-success-green/10 border-accent-electric/30 text-accent-electric"
+            >
+              {generation.platform}
+            </Badge>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Hook Grid */}
+      {/* Premium Hook Grid */}
       <motion.div 
-        className="grid gap-6"
+        className="grid gap-6 sm:gap-8 max-w-7xl mx-auto px-4 sm:px-6"
         variants={{
           hidden: { opacity: 0 },
           show: {
             opacity: 1,
             transition: {
-              staggerChildren: 0.1,
-              delayChildren: 0.3
+              staggerChildren: 0.15,
+              delayChildren: 0.4
             }
           }
         }}
@@ -503,27 +619,84 @@ const HookResults: React.FC<HookResultsProps> = ({ generation, onFavorite, onCop
         {generation.hooks.map((hook: any, index: number) => {
           const favoriteKey = `${generation.id}-${index}`
           const isFavorite = favoriteHooks?.has(favoriteKey) || false
+          const isTopPerformer = index < 3 // Mark top 3 as premium
           
           return (
             <motion.div
               key={index}
               variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+                hidden: { opacity: 0, y: 30, scale: 0.95 },
+                show: { 
+                  opacity: 1, 
+                  y: 0, 
+                  scale: 1,
+                  transition: { 
+                    duration: 0.6, 
+                    ease: [0.16, 1, 0.3, 1],
+                    type: 'spring',
+                    stiffness: 100,
+                    damping: 15
+                  } 
+                }
               }}
+              className="relative"
             >
+              {/* Premium Badge for Top Performers */}
+              {isTopPerformer && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.3 }}
+                  className="absolute -top-3 -right-3 z-10 bg-gradient-to-r from-premium-gold to-premium-gold-light text-surface-primary px-3 py-1 rounded-full text-xs font-bold shadow-lg"
+                >
+                  {index === 0 ? '🏆 TOP' : `#${index + 1}`}
+                </motion.div>
+              )}
+              
               <HookCard
                 hook={hook}
                 platform={generation.platform}
                 objective={generation.objective}
                 isFavorite={isFavorite}
+                isHighestScoring={index === 0}
                 onFavoriteToggle={() => onFavorite(index)}
                 onCopy={() => onCopy(hook.verbalHook)}
                 showDetails={true}
+                className={isTopPerformer ? 'premium-hook-card' : ''}
               />
             </motion.div>
           )
         })}
+      </motion.div>
+      
+      {/* Results Summary Footer */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.5 }}
+        className="text-center space-y-4 pt-8 border-t border-border-subtle"
+      >
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6 sm:px-8 py-4 sm:py-4 rounded-2xl bg-surface-secondary/50 backdrop-blur-sm border border-border-subtle">
+          <div className="flex items-center gap-2">
+            <Target className="w-4 sm:w-5 h-4 sm:h-5 text-accent-electric" />
+            <span className="text-xs sm:text-sm text-text-secondary">Optimized for {generation.platform}</span>
+          </div>
+          <div className="hidden sm:block w-1 h-6 bg-border-subtle rounded-full" />
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 sm:w-5 h-4 sm:h-5 text-success-green" />
+            <span className="text-xs sm:text-sm text-text-secondary">AI-analyzed for engagement</span>
+          </div>
+          <div className="hidden sm:block w-1 h-6 bg-border-subtle rounded-full" />
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-premium-gold" />
+            <span className="text-xs sm:text-sm text-text-secondary">Ready to use</span>
+          </div>
+        </div>
+        
+        <p className="text-xs sm:text-sm text-text-secondary max-w-2xl mx-auto leading-relaxed px-4 text-center">
+          Each hook has been crafted using psychological frameworks and platform-specific optimization. 
+          Click to copy your favorites and start creating viral content.
+        </p>
       </motion.div>
     </motion.div>
   )
@@ -656,21 +829,41 @@ const MainAppPageContent: React.FC = () => {
 
   return (
     <AppShell>
-      {/* Page Header */}
-      <div className="border-b border-white/10 bg-white/10 backdrop-blur-md sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4">
+      {/* Premium Page Header */}
+      <div className="border-b border-white/10 bg-gradient-to-r from-surface-primary/90 via-surface-secondary/80 to-surface-primary/90 backdrop-blur-xl sticky top-0 z-20 shadow-lg">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Hook Generator</h1>
-              <p className="text-sm text-muted-foreground">Create viral hooks for your content</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-accent-electric to-success-green bg-clip-text text-transparent">
+                AI Hook Generator
+              </h1>
+              <p className="text-sm sm:text-base text-text-secondary mt-1">Create viral hooks with advanced AI and psychology</p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="hidden md:flex items-center gap-4"
+            >
+              <div className="text-right">
+                <p className="text-xs sm:text-sm text-text-secondary">Credits Remaining</p>
+                <p className="text-base sm:text-lg font-bold text-accent-electric">
+                  {user ? Math.max(0, user.freeCredits - user.usedCredits) : 0}
+                </p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Page Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="space-y-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-7xl">
+        <div className="space-y-8 sm:space-y-12">
           
           {/* Generation Form */}
           <HookGenerationForm
@@ -678,13 +871,14 @@ const MainAppPageContent: React.FC = () => {
             isLoading={generateHooksMutation.isPending}
           />
 
-          {/* Loading State */}
+          {/* Premium Loading State */}
           {generateHooksMutation.isPending && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -40, scale: 0.9 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="professional-glass-card rounded-3xl p-8 max-w-4xl mx-auto"
             >
               <HookGenerationLoading />
             </motion.div>

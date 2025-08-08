@@ -177,19 +177,47 @@ app.use(globalErrorHandler)
 
 // Start server (skip for Vercel serverless)
 if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`)
-    console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
-    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`)
-  })
-  
-  server.on('error', (error: any) => {
-    if (error.code === 'EADDRINUSE') {
-      console.error(`❌ Port ${PORT} is already in use`)
-      process.exit(1)
-    } else {
-      console.error('❌ Server error:', error)
+  // Try to start server with fallback ports
+  async function startServer() {
+    const ports = [PORT, PORT + 1, PORT + 2, 3001, 3002, 3003]
+    
+    for (const port of ports) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const server = app.listen(port, '0.0.0.0', () => {
+            console.log(`🚀 Server running on port ${port}`)
+            console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
+            console.log(`🔗 Health check: http://localhost:${port}/api/health`)
+            console.log(`🌐 API base URL: http://localhost:${port}/api`)
+            resolve()
+          })
+          
+          server.on('error', (error: any) => {
+            if (error.code === 'EADDRINUSE') {
+              console.log(`⚠️  Port ${port} is in use, trying next port...`)
+              reject(error)
+            } else {
+              console.error('❌ Server error:', error)
+              reject(error)
+            }
+          })
+        })
+        
+        // If we get here, server started successfully
+        return
+      } catch (error) {
+        // Continue to next port
+        continue
+      }
     }
+    
+    console.error('❌ Could not start server on any available port')
+    process.exit(1)
+  }
+  
+  startServer().catch(error => {
+    console.error('❌ Failed to start server:', error)
+    process.exit(1)
   })
 }
 

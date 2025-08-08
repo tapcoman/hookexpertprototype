@@ -112,26 +112,26 @@ export class StartupValidator {
   }
 
   private static async validateDatabase(): Promise<void> {
-    const serviceName = 'SQLite Database'
+    const serviceName = 'PostgreSQL Database'
     
     try {
-      console.log('🔍 Testing SQLite database...')
+      console.log('🔍 Testing PostgreSQL database...')
       
       const healthCheck = await checkDatabaseConnection()
       
       if (healthCheck && healthCheck.connected) {
         this.setServiceStatus(serviceName, {
           status: 'healthy',
-          message: 'SQLite database ready',
-          critical: false, // SQLite is always available
-          details: healthCheck.details || { type: 'SQLite' }
+          message: 'PostgreSQL database ready',
+          critical: true, // Database is critical for the application
+          details: healthCheck.details || { type: 'PostgreSQL' }
         })
-        console.log('✅ SQLite database validated')
+        console.log('✅ PostgreSQL database validated')
       } else {
         this.setServiceStatus(serviceName, {
           status: 'unavailable',
-          message: 'SQLite database failed',
-          critical: false, // Non-critical for startup
+          message: 'PostgreSQL database failed',
+          critical: true, // Critical for startup
           details: { error: 'Connection test failed' }
         })
         console.log('❌ Database connection failed')
