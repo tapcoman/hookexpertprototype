@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu } from 'lucide-react'
 import AppSidebar from './AppSidebar'
+import FloatingNav from './FloatingNav'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/utils'
 
@@ -19,8 +20,11 @@ const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
 
   return (
     <div className={cn("flex h-screen overflow-hidden", className)}>
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex">
+      {/* Floating Navigation */}
+      <FloatingNav />
+      
+      {/* Desktop Sidebar - Hidden to use floating nav instead */}
+      <div className="hidden">
         <AppSidebar />
       </div>
 
@@ -54,8 +58,8 @@ const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-white/10 bg-white/10 backdrop-blur-md sticky top-0 z-30">
+        {/* Mobile Header - Hidden since floating nav handles mobile too */}
+        <div className="hidden flex items-center justify-between p-4 border-b border-white/10 bg-white/10 backdrop-blur-md sticky top-0 z-30">
           <Button
             variant="ghost"
             size="sm"
@@ -77,7 +81,7 @@ const AppShell: React.FC<AppShellProps> = ({ children, className }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="h-full">
+          <div className="h-full pt-4 md:pt-16">
             {children}
           </div>
         </main>
