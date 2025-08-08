@@ -1,8 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/Button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu'
 import { FolderPlus, FolderOpen, PlusCircle } from 'lucide-react'
 import { ProjectDialog } from './project-dialog'
 import type { Project } from './project-types'
