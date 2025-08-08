@@ -80,22 +80,22 @@
     --popover: 240 15% 10%;
     --popover-foreground: 250 100% 98%;
     
-    /* Modern 2025 Theme - Sophisticated Palette */
-    --surface-primary: 240 12% 6%;     /* Deep space background */
-    --surface-secondary: 240 15% 9%;   /* Card surfaces */
-    --surface-tertiary: 240 18% 12%;   /* Elevated surfaces */
-    --text-primary: 250 100% 98%;      /* High contrast white */
-    --text-secondary: 240 8% 65%;      /* Subtle readable gray */
-    --text-tertiary: 240 5% 50%;       /* Muted text */
-    --accent-electric: 240 85% 70%;    /* Electric indigo */
+    /* Modern 2025 Theme - Professional Palette (No Purple) */
+    --surface-primary: 210 20% 6%;     /* Deep navy background */
+    --surface-secondary: 210 18% 9%;   /* Card surfaces */
+    --surface-tertiary: 210 16% 12%;   /* Elevated surfaces */
+    --text-primary: 210 20% 98%;       /* High contrast white */
+    --text-secondary: 210 10% 65%;     /* Subtle readable gray */
+    --text-tertiary: 210 8% 50%;       /* Muted text */
+    --accent-electric: 200 95% 70%;    /* Electric teal instead of purple */
     --accent-success: 140 85% 65%;     /* Success green */
-    --border-subtle: 240 15% 20%;      /* Subtle borders */
-    --border-strong: 240 25% 35%;      /* Strong borders */
+    --border-subtle: 210 15% 20%;      /* Subtle borders */
+    --border-strong: 210 20% 35%;      /* Strong borders */
     
-    /* Sophisticated Dark Mode - Professional Palette */
-    --primary: 240 85% 70%;
-    --primary-foreground: 240 12% 6%;
-    --electric-indigo: 240 85% 70%;
+    /* Sophisticated Dark Mode - Professional Palette (No Purple) */
+    --primary: 200 95% 70%; /* Teal primary instead of purple */
+    --primary-foreground: 210 20% 6%;
+    --electric-blue: 200 95% 70%; /* Electric blue/teal */
     --success-green: 140 85% 65%;
     --warning-amber: 25 95% 65%;
     --accent-teal: 190 95% 70%;
@@ -125,30 +125,30 @@
     --viral-gradient-start: 240 85% 70%;
     --viral-gradient-end: 140 85% 65%;
     
-    /* Enhanced System Colors - 2025 Modern */
-    --secondary: 240 18% 12%;
-    --secondary-foreground: 240 8% 65%;
-    --muted: 240 15% 11%;
-    --muted-foreground: 240 8% 65%;
-    --accent: 240 85% 70%;
-    --accent-foreground: 240 15% 9%;
+    /* Enhanced System Colors - 2025 Modern (No Purple) */
+    --secondary: 210 18% 12%;
+    --secondary-foreground: 210 8% 65%;
+    --muted: 210 15% 11%;
+    --muted-foreground: 210 8% 65%;
+    --accent: 200 95% 70%; /* Teal instead of purple */
+    --accent-foreground: 210 15% 9%;
     --destructive: 0 85% 65%;
     --destructive-foreground: 250 100% 98%;
-    --border: 240 15% 20%;
-    --input: 240 15% 11%;
-    --ring: 240 85% 70%;
+    --border: 210 15% 20%;
+    --input: 210 15% 11%;
+    --ring: 200 95% 70%; /* Teal focus ring */
     
     /* Professional Score Colors - Dark Mode */
     --score-high: 140 85% 65%;
     --score-medium: 240 85% 70%;
     --score-low: 25 95% 65%;
     
-    /* Chart Colors - Professional Dark Palette */
-    --chart-1: 240 85% 70%;
-    --chart-2: 140 85% 65%;
-    --chart-3: 25 95% 65%;
-    --chart-4: 190 95% 70%;
-    --chart-5: 280 60% 70%;
+    /* Chart Colors - Professional Dark Palette (No Purple) */
+    --chart-1: 200 95% 70%;  /* Teal */
+    --chart-2: 140 85% 65%;  /* Green */
+    --chart-3: 25 95% 65%;   /* Amber */
+    --chart-4: 190 95% 70%;  /* Light blue */
+    --chart-5: 220 70% 70%;  /* Soft blue instead of purple */
   }
 }
 

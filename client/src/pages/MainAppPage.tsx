@@ -9,7 +9,7 @@ import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { HookGenerationLoading } from '@/components/ui/LoadingSpinner'
 import HookCard from '@/components/hook/HookCard'
 import EmptyState from '@/components/ui/EmptyState'
-import AppHeader from '@/components/layout/AppHeader'
+import AppShell from '@/components/layout/AppShell'
 import { Badge } from '@/components/ui/Badge'
 import { api } from '@/lib/api'
 import { Sparkles, Target, TrendingUp, PlayCircle, Users } from 'lucide-react'
@@ -655,11 +655,21 @@ const MainAppPageContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-      
-      {/* Clean shadcn/ui Layout */}
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+    <AppShell>
+      {/* Page Header */}
+      <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Hook Generator</h1>
+              <p className="text-sm text-muted-foreground">Create viral hooks for your content</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-8">
           
           {/* Generation Form */}
@@ -713,8 +723,11 @@ const MainAppPageContent: React.FC = () => {
           )}
           
         </div>
-      </main>
-    </div>
+      </div>
+      
+      {/* Mobile bottom padding for simplified nav */}
+      <div className="h-20 lg:h-0" />
+    </AppShell>
   )
 }
 

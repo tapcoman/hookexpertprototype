@@ -10,7 +10,7 @@ import { queryClient } from '@/lib/react-query'
 // Components
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Toaster } from '@/components/ui/Toaster'
-import { MobileLayout } from '@/components/mobile'
+import SimplifiedMobileNav from '@/components/mobile/SimplifiedMobileNav'
 import { ProtectedRoute, PublicRoute, OnboardingRoute } from '@/components/routing/SimpleProtectedRoute'
 import { RootRedirect } from '@/components/routing/RootRedirect'
 
@@ -39,8 +39,7 @@ function App() {
         <SimpleAuthProvider>
           <AppProvider>
             <Router>
-              <MobileLayout>
-                <Switch>
+              <Switch>
                   {/* Root Route - Redirects based on auth status */}
                   <Route path="/" component={RootRedirect} />
                   
@@ -109,7 +108,9 @@ function App() {
                   {/* 404 Route */}
                   <Route component={NotFoundPage} />
                 </Switch>
-              </MobileLayout>
+              
+              {/* Simplified Mobile Navigation */}
+              <SimplifiedMobileNav />
             </Router>
             
             {/* React Query Devtools (only in development) */}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Trend } from '../types/trends'
 import TrendDashboard from '../components/trends/TrendDashboard'
 import TrendDetail from '../components/trends/TrendDetail'
-import Container from '../components/layout/Container'
+import AppShell from '../components/layout/AppShell'
 
 const TrendRadarPage: React.FC = () => {
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null)
@@ -26,19 +26,21 @@ const TrendRadarPage: React.FC = () => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-blue-950 dark:to-indigo-950"
-    >
-      <Container className="py-6">
-        <TrendDashboard
-          onTrendSelect={handleTrendSelect}
-          onGenerateHooks={handleGenerateHooks}
-        />
-      </Container>
+    <AppShell>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-full"
+      >
+        <div className="py-6">
+          <TrendDashboard
+            onTrendSelect={handleTrendSelect}
+            onGenerateHooks={handleGenerateHooks}
+          />
+        </div>
+      </motion.div>
 
       {/* Trend Detail Modal */}
       <TrendDetail
@@ -51,7 +53,10 @@ const TrendRadarPage: React.FC = () => {
           console.log('Bookmarked trend:', trend.title)
         }}
       />
-    </motion.div>
+      
+      {/* Mobile bottom padding */}
+      <div className="h-20 lg:h-0" />
+    </AppShell>
   )
 }
 
