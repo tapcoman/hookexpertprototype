@@ -141,12 +141,29 @@ export default function ExactApp() {
         toneOfVoice: tones,
       }
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
+      const token = localStorage.getItem('auth_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+      
       const res = await fetch('/api/hooks/generate/enhanced', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       })
       if (!res.ok) {
+        if (res.status === 401 && !token) {
+          // User is not authenticated, fallback to sample data
+          console.log('No authentication, using sample data for demo')
+          const sampleHooks = getSampleHooks(idea, platform)
+          const rankedSampleHooks = postProcessAndRank(sampleHooks, platform)
+          setHooks(rankedSampleHooks)
+          setTab('results')
+          return
+        }
         const t = await res.text()
         throw new Error(t || 'Generation failed')
       }
@@ -215,13 +232,40 @@ export default function ExactApp() {
       }
       
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
+      const token = localStorage.getItem('auth_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+      
       const res = await fetch('/api/hooks/generate/enhanced', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       })
       
       if (!res.ok) {
+        if (res.status === 401 && !token) {
+          // User is not authenticated, fallback to sample data with streaming simulation
+          console.log('No authentication, using sample data for demo with streaming')
+          const sampleHooks = getSampleHooks(idea, platform)
+          const rankedSampleHooks = postProcessAndRank(sampleHooks, platform)
+          
+          // Simulate streaming by showing hooks one by one
+          let currentHooks: HookItem[] = []
+          for (let i = 0; i < rankedSampleHooks.length; i++) {
+            currentHooks = [...currentHooks, rankedSampleHooks[i]]
+            setHooks([...currentHooks])
+            
+            // Add delay to simulate streaming
+            if (i < rankedSampleHooks.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 200))
+            }
+          }
+          return
+        }
         const t = await res.text()
         throw new Error(t || 'Generation failed')
       }
@@ -501,41 +545,47 @@ export default function ExactApp() {
           localStorage.setItem('hle:bannedTerms', JSON.stringify(v.bannedTerms))
           localStorage.setItem('hle:tones', JSON.stringify(v.tones))
           
-          // Also save to database for persistence
+          // Also save to database for persistence (if authenticated)
           try {
-            // Map brandVoice to voice enum - use first tone if available, fallback to 'friendly'
-            const voiceMapping: { [key: string]: string } = {
-              'friendly': 'friendly',
-              'authoritative': 'authoritative', 
-              'playful': 'playful',
-              'inspirational': 'inspirational',
-              'professional': 'authoritative', // map to closest
-              'bold': 'contrarian', // map to closest
-              'casual': 'friendly', // map to closest
-              'educational': 'educational',
-              'witty': 'playful' // map to closest
-            }
-            
-            const voice = v.tones && v.tones.length > 0 
-              ? voiceMapping[v.tones[0]] || 'friendly'
-              : 'friendly'
-            
-            const response = await fetch('/api/users/profile', {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                company: v.brandName,
-                industry: v.industry as any,
-                audience: v.audience,
-                voice: voice,
-                bannedTerms: v.bannedTerms,
-              }),
-            })
-            
-            if (!response.ok) {
-              console.warn('Failed to save onboarding to database, but localStorage saved')
+            const token = localStorage.getItem('auth_token')
+            if (token) {
+              // Map brandVoice to voice enum - use first tone if available, fallback to 'friendly'
+              const voiceMapping: { [key: string]: string } = {
+                'friendly': 'friendly',
+                'authoritative': 'authoritative', 
+                'playful': 'playful',
+                'inspirational': 'inspirational',
+                'professional': 'authoritative', // map to closest
+                'bold': 'contrarian', // map to closest
+                'casual': 'friendly', // map to closest
+                'educational': 'educational',
+                'witty': 'playful' // map to closest
+              }
+              
+              const voice = v.tones && v.tones.length > 0 
+                ? voiceMapping[v.tones[0]] || 'friendly'
+                : 'friendly'
+              
+              const response = await fetch('/api/users/profile', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  company: v.brandName,
+                  industry: v.industry as any,
+                  audience: v.audience,
+                  voice: voice,
+                  bannedTerms: v.bannedTerms,
+                }),
+              })
+              
+              if (!response.ok) {
+                console.warn('Failed to save onboarding to database, but localStorage saved')
+              }
+            } else {
+              console.log('No auth token found, skipping database sync (localStorage saved)')
             }
           } catch (error) {
             console.warn('Error saving onboarding to database:', error)
