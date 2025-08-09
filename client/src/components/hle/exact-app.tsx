@@ -19,7 +19,7 @@ import { Download, Rocket, User, HistoryIcon, Star } from 'lucide-react'
 import { useLocation } from 'wouter'
 import { AppSidebar } from '@/components/hle/app-sidebar'
 import { ResultsList } from '@/components/hle/results-list'
-import { OnboardingDialog } from '@/components/hle/onboarding-dialog'
+// Removed OnboardingDialog - using signup onboarding flow instead
 import { downloadCsv } from '@/components/hle/utils/csv'
 import { HistoryList } from '@/components/hle/history-list'
 import { SavedList } from '@/components/hle/saved-list'
@@ -99,39 +99,85 @@ export default function ExactApp() {
   const [audience, setAudience] = useState('')
   const [bannedTerms, setBannedTerms] = useState<string[]>([])
   const [tones, setTones] = useState<Tone[]>([])
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  // Removed showOnboarding - using signup onboarding flow instead
 
   const [savedHooks, setSavedHooks] = useState<HookItem[]>([])
 
   useEffect(() => {
     setSavedHooks(getSavedHooks())
-    const firstRun = localStorage.getItem('hle:onboarded')
-    const name = localStorage.getItem('hle:brandName') || ''
-    const ind = localStorage.getItem('hle:industry') || ''
-    const plat = localStorage.getItem('hle:platforms') || '[]'
-    const aud = localStorage.getItem('hle:audience') || ''
-    const banned = localStorage.getItem('hle:bannedTerms') || '[]'
-    const tonesRaw = localStorage.getItem('hle:tones') || '[]'
     
-    try {
-      setPlatforms(JSON.parse(plat))
-    } catch {
-      setPlatforms([])
+    // Load onboarding data from user profile (database) first, then fallback to localStorage
+    const loadUserProfile = async () => {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        try {
+          const response = await fetch('/api/users/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          
+          if (response.ok) {
+            const profileData = await response.json()
+            const user = profileData.data?.user
+            
+            if (user) {
+              console.log('✅ Loaded profile data from database:', user)
+              
+              // Set state from database
+              setBrandName(user.company || '')
+              setIndustry(user.industry || '')
+              setAudience(user.audience || '')
+              setBannedTerms(user.bannedTerms || [])
+              // Note: platforms and tones aren't in the DB schema yet, use localStorage fallback
+              
+              // Sync database data to localStorage for consistency  
+              localStorage.setItem('hle:brandName', user.company || '')
+              localStorage.setItem('hle:industry', user.industry || '')
+              localStorage.setItem('hle:audience', user.audience || '')
+              localStorage.setItem('hle:bannedTerms', JSON.stringify(user.bannedTerms || []))
+              
+              console.log('🔄 Synced database profile to localStorage')
+              return // Exit early if database load successful
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to load profile from database, using localStorage fallback:', error)
+        }
+      }
+      
+      // Fallback: Load from localStorage (for backwards compatibility)
+      console.log('📂 Loading from localStorage fallback...')
+      const name = localStorage.getItem('hle:brandName') || ''
+      const ind = localStorage.getItem('hle:industry') || ''
+      const plat = localStorage.getItem('hle:platforms') || '[]'
+      const aud = localStorage.getItem('hle:audience') || ''
+      const banned = localStorage.getItem('hle:bannedTerms') || '[]'
+      const tonesRaw = localStorage.getItem('hle:tones') || '[]'
+      
+      try {
+        setPlatforms(JSON.parse(plat))
+      } catch {
+        setPlatforms([])
+      }
+      try {
+        setBannedTerms(JSON.parse(banned))
+      } catch {
+        setBannedTerms([])
+      }
+      try {
+        setTones(JSON.parse(tonesRaw))
+      } catch {
+        setTones([])
+      }
+      setBrandName(name)
+      setIndustry(ind)
+      setAudience(aud)
+      
+      console.log('📋 Loaded from localStorage fallback:', {
+        brandName: name, industry: ind, audience: aud
+      })
     }
-    try {
-      setBannedTerms(JSON.parse(banned))
-    } catch {
-      setBannedTerms([])
-    }
-    try {
-      setTones(JSON.parse(tonesRaw))
-    } catch {
-      setTones([])
-    }
-    setBrandName(name)
-    setIndustry(ind)
-    setAudience(aud)
-    if (!firstRun) setShowOnboarding(true)
+    
+    loadUserProfile()
   }, [])
 
   const lastParams = useRef<{ idea: string; platform: Platform; outcome: Outcome; count: number } | null>(null)
@@ -382,7 +428,10 @@ export default function ExactApp() {
         onCountChange={setCount}
         onGenerate={() => void doGenerateStream()}
         onPreview={loadSample}
-        onOpenOnboarding={() => setShowOnboarding(true)}
+        onOpenOnboarding={() => {
+          // Redirect to profile page for brand settings instead
+          console.log('Redirecting to profile for brand settings')
+        }}
         onProjectChange={(p: Project | null) => {
           if (!p) return // personal mode; keep current settings
           if (p.defaultPlatform) setPlatform(p.defaultPlatform)
@@ -545,84 +594,6 @@ export default function ExactApp() {
           </div>
         </main>
       </SidebarInset>
-
-      <OnboardingDialog
-        open={showOnboarding}
-        onOpenChange={setShowOnboarding}
-        brandVoice={brandName}
-        audience={audience}
-        bannedTerms={bannedTerms}
-        tones={tones}
-        onSave={async (v) => {
-          setBrandName(v.brandName)
-          setIndustry(v.industry)
-          setPlatforms(v.platforms)
-          setAudience(v.audience)
-          setBannedTerms(v.bannedTerms)
-          setTones(v.tones as Tone[])
-          
-          // Save to localStorage for immediate use
-          localStorage.setItem('hle:onboarded', 'true')
-          localStorage.setItem('hle:brandName', v.brandName)
-          localStorage.setItem('hle:industry', v.industry)
-          localStorage.setItem('hle:platforms', JSON.stringify(v.platforms))
-          localStorage.setItem('hle:audience', v.audience)
-          localStorage.setItem('hle:bannedTerms', JSON.stringify(v.bannedTerms))
-          localStorage.setItem('hle:tones', JSON.stringify(v.tones))
-          
-          // Also save to database for persistence (if authenticated)
-          try {
-            const token = localStorage.getItem('auth_token')
-            console.log('Auth token exists:', !!token)
-            console.log('Auth token preview:', token ? token.substring(0, 20) + '...' : 'none')
-            if (token) {
-              // Map brandVoice to voice enum - use first tone if available, fallback to 'friendly'
-              const voiceMapping: { [key: string]: string } = {
-                'friendly': 'friendly',
-                'authoritative': 'authoritative', 
-                'playful': 'playful',
-                'inspirational': 'inspirational',
-                'professional': 'authoritative', // map to closest
-                'bold': 'contrarian', // map to closest
-                'casual': 'friendly', // map to closest
-                'educational': 'educational',
-                'witty': 'playful' // map to closest
-              }
-              
-              const voice = v.tones && v.tones.length > 0 
-                ? voiceMapping[v.tones[0]] || 'friendly'
-                : 'friendly'
-              
-              const response = await fetch('/api/users/profile', {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  company: v.brandName,
-                  industry: v.industry as any,
-                  audience: v.audience,
-                  voice: voice,
-                  bannedTerms: v.bannedTerms,
-                }),
-              })
-              
-              if (!response.ok) {
-                console.warn('Failed to save onboarding to database, but localStorage saved')
-              }
-            } else {
-              console.log('No auth token found, skipping database sync (localStorage saved)')
-            }
-          } catch (error) {
-            console.warn('Error saving onboarding to database:', error)
-            // Continue anyway - localStorage is saved
-          }
-          
-          // Close onboarding dialog
-          setShowOnboarding(false)
-        }}
-      />
     </SidebarProvider>
   )
 }
