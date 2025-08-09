@@ -66,7 +66,9 @@ export default function ExactApp() {
   }, [])
 
   // Onboarding/brand data
-  const [brandVoice, setBrandVoice] = useState('')
+  const [brandName, setBrandName] = useState('')
+  const [industry, setIndustry] = useState('')
+  const [platforms, setPlatforms] = useState<string[]>([])
   const [audience, setAudience] = useState('')
   const [bannedTerms, setBannedTerms] = useState<string[]>([])
   const [tones, setTones] = useState<Tone[]>([])
@@ -77,10 +79,18 @@ export default function ExactApp() {
   useEffect(() => {
     setSavedHooks(getSavedHooks())
     const firstRun = localStorage.getItem('hle:onboarded')
-    const voice = localStorage.getItem('hle:brandVoice') || ''
+    const name = localStorage.getItem('hle:brandName') || ''
+    const ind = localStorage.getItem('hle:industry') || ''
+    const plat = localStorage.getItem('hle:platforms') || '[]'
     const aud = localStorage.getItem('hle:audience') || ''
     const banned = localStorage.getItem('hle:bannedTerms') || '[]'
     const tonesRaw = localStorage.getItem('hle:tones') || '[]'
+    
+    try {
+      setPlatforms(JSON.parse(plat))
+    } catch {
+      setPlatforms([])
+    }
     try {
       setBannedTerms(JSON.parse(banned))
     } catch {
@@ -91,7 +101,8 @@ export default function ExactApp() {
     } catch {
       setTones([])
     }
-    setBrandVoice(voice)
+    setBrandName(name)
+    setIndustry(ind)
     setAudience(aud)
     if (!firstRun) setShowOnboarding(true)
   }, [])
@@ -107,7 +118,7 @@ export default function ExactApp() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [idea, platform, outcome, count, brandVoice, audience, bannedTerms, tones])
+  }, [idea, platform, outcome, count, brandName, audience, bannedTerms, tones])
 
   async function doGenerate(countOverride?: number) {
     setLoading(true)
@@ -124,7 +135,7 @@ export default function ExactApp() {
         topic: idea,
         modelType: 'gpt-4o-mini',
         adaptationLevel: 50,
-        brandVoice,
+        brandVoice: brandName,
         audience,
         bannedTerms,
         toneOfVoice: tones,
@@ -167,7 +178,7 @@ export default function ExactApp() {
         platform,
         outcome,
         count: countOverride ?? count,
-        brandVoice,
+        brandVoice: brandName,
         audience,
         bannedTerms,
         hooks: data.hooks,
@@ -197,7 +208,7 @@ export default function ExactApp() {
         topic: idea,
         modelType: 'gpt-4o-mini',
         adaptationLevel: 50,
-        brandVoice,
+        brandVoice: brandName,
         audience,
         bannedTerms,
         toneOfVoice: tones,
@@ -264,7 +275,7 @@ export default function ExactApp() {
           platform,
           outcome,
           count: countOverride ?? count,
-          brandVoice,
+          brandVoice: brandName,
           audience,
           bannedTerms,
           hooks: finalHooks,
@@ -307,7 +318,7 @@ export default function ExactApp() {
           if (!p) return // personal mode; keep current settings
           if (p.defaultPlatform) setPlatform(p.defaultPlatform)
           if (p.defaultOutcome) setOutcome(p.defaultOutcome)
-          if (p.brandVoice !== undefined) setBrandVoice(p.brandVoice)
+          if (p.brandVoice !== undefined) setBrandName(p.brandVoice)
           if (p.audience !== undefined) setAudience(p.audience)
           if (p.bannedTerms) setBannedTerms(p.bannedTerms)
           if (p.tones) setTones(p.tones as Tone[])
@@ -469,19 +480,23 @@ export default function ExactApp() {
       <OnboardingDialog
         open={showOnboarding}
         onOpenChange={setShowOnboarding}
-        brandVoice={brandVoice}
+        brandVoice={brandName}
         audience={audience}
         bannedTerms={bannedTerms}
         tones={tones}
         onSave={async (v) => {
-          setBrandVoice(v.brandVoice)
+          setBrandName(v.brandName)
+          setIndustry(v.industry)
+          setPlatforms(v.platforms)
           setAudience(v.audience)
           setBannedTerms(v.bannedTerms)
           setTones(v.tones as Tone[])
           
           // Save to localStorage for immediate use
           localStorage.setItem('hle:onboarded', 'true')
-          localStorage.setItem('hle:brandVoice', v.brandVoice)
+          localStorage.setItem('hle:brandName', v.brandName)
+          localStorage.setItem('hle:industry', v.industry)
+          localStorage.setItem('hle:platforms', JSON.stringify(v.platforms))
           localStorage.setItem('hle:audience', v.audience)
           localStorage.setItem('hle:bannedTerms', JSON.stringify(v.bannedTerms))
           localStorage.setItem('hle:tones', JSON.stringify(v.tones))
@@ -511,6 +526,8 @@ export default function ExactApp() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
+                company: v.brandName,
+                industry: v.industry as any,
                 audience: v.audience,
                 voice: voice,
                 bannedTerms: v.bannedTerms,
