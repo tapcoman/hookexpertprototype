@@ -30,7 +30,7 @@ import {
 } from '@/components/hle/utils/store'
 import { getSampleHooks } from '@/components/hle/utils/sample-data'
 import { postProcessAndRank } from '@/lib/scoring'
-import type { HookItem, GenerateRequestBody, GenerateResponseBody, Platform, Outcome, Tone } from '@/components/hle/types'
+import type { HookItem, Platform, Outcome, Tone } from '@/components/hle/types'
 import type { Project } from '@/components/hle/project-types'
 
 export default function ExactApp() {
@@ -473,18 +473,57 @@ export default function ExactApp() {
         audience={audience}
         bannedTerms={bannedTerms}
         tones={tones}
-        onSave={(v) => {
+        onSave={async (v) => {
           setBrandVoice(v.brandVoice)
           setAudience(v.audience)
           setBannedTerms(v.bannedTerms)
           setTones(v.tones as Tone[])
           
-          // Save to localStorage
+          // Save to localStorage for immediate use
           localStorage.setItem('hle:onboarded', 'true')
           localStorage.setItem('hle:brandVoice', v.brandVoice)
           localStorage.setItem('hle:audience', v.audience)
           localStorage.setItem('hle:bannedTerms', JSON.stringify(v.bannedTerms))
           localStorage.setItem('hle:tones', JSON.stringify(v.tones))
+          
+          // Also save to database for persistence
+          try {
+            // Map brandVoice to voice enum - use first tone if available, fallback to 'friendly'
+            const voiceMapping: { [key: string]: string } = {
+              'friendly': 'friendly',
+              'authoritative': 'authoritative', 
+              'playful': 'playful',
+              'inspirational': 'inspirational',
+              'professional': 'authoritative', // map to closest
+              'bold': 'contrarian', // map to closest
+              'casual': 'friendly', // map to closest
+              'educational': 'educational',
+              'witty': 'playful' // map to closest
+            }
+            
+            const voice = v.tones && v.tones.length > 0 
+              ? voiceMapping[v.tones[0]] || 'friendly'
+              : 'friendly'
+            
+            const response = await fetch('/api/users/profile', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                audience: v.audience,
+                voice: voice,
+                bannedTerms: v.bannedTerms,
+              }),
+            })
+            
+            if (!response.ok) {
+              console.warn('Failed to save onboarding to database, but localStorage saved')
+            }
+          } catch (error) {
+            console.warn('Error saving onboarding to database:', error)
+            // Continue anyway - localStorage is saved
+          }
           
           // Close onboarding dialog
           setShowOnboarding(false)

@@ -83,10 +83,8 @@ export function OnboardingDialog({
       if (user) {
         try {
           await updateProfile({
-            brandVoice: voice,
             audience: aud,
-            bannedTerms: terms,
-            tones: toneSelections
+            bannedTerms: terms
           })
         } catch (error) {
           console.error('Failed to sync profile to backend:', error)
