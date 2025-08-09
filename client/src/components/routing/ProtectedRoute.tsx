@@ -36,16 +36,27 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Redirect to={redirectTo || '/auth'} />
   }
 
-  // Check onboarding requirement
-  if (requireOnboarding && user && (!user.company || !user.industry || !user.role)) {
-    console.log('📋 ProtectedRoute: User needs onboarding, redirecting to /onboarding', {
-      userId: user.id,
-      email: user.email,
-      company: user.company,
-      industry: user.industry,
-      role: user.role
-    })
-    return <Redirect to="/onboarding" />
+  // Check onboarding requirement - support both new and legacy onboarding
+  if (requireOnboarding && user) {
+    // Check new localStorage-based onboarding (v0.dev interface)
+    const isNewOnboardingComplete = localStorage.getItem('hle:onboarded')
+    
+    // Check legacy database-based onboarding
+    const isLegacyOnboardingComplete = user.company && user.industry && user.role
+    
+    // If neither onboarding system is complete, redirect
+    if (!isNewOnboardingComplete && !isLegacyOnboardingComplete) {
+      console.log('📋 ProtectedRoute: User needs onboarding, redirecting to /onboarding', {
+        userId: user.id,
+        email: user.email,
+        company: user.company,
+        industry: user.industry,
+        role: user.role,
+        hasNewOnboarding: !!isNewOnboardingComplete,
+        hasLegacyOnboarding: !!isLegacyOnboardingComplete
+      })
+      return <Redirect to="/onboarding" />
+    }
   }
 
   // Check subscription requirement
@@ -105,14 +116,19 @@ export const OnboardingRoute: React.FC<OnboardingRouteProps> = ({ children }) =>
     return <Redirect to="/auth" />
   }
 
-  // Check onboarding status
-  const hasOnboarding = user && user.company && user.industry && user.role
+  // Check onboarding status - support both new and legacy onboarding
+  const hasNewOnboarding = localStorage.getItem('hle:onboarded')
+  const hasLegacyOnboarding = user && user.company && user.industry && user.role
+  const hasOnboarding = hasNewOnboarding || hasLegacyOnboarding
+  
   console.log('🎯 OnboardingRoute: Checking onboarding status', {
     userId: user.id,
     email: user.email,
     company: user.company || 'NOT SET',
     industry: user.industry || 'NOT SET',
     role: user.role || 'NOT SET',
+    hasNewOnboarding: !!hasNewOnboarding,
+    hasLegacyOnboarding: !!hasLegacyOnboarding,
     hasOnboarding,
     companyType: typeof user.company,
     industryType: typeof user.industry,

@@ -45,6 +45,26 @@ export default function ExactApp() {
   const [count, setCount] = useState(10)
   const [tab, setTab] = useState<'results' | 'history' | 'saved'>('results')
 
+  // Clear cache on component mount to ensure fresh API calls
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw-clear.js').catch(() => {
+        // Ignore service worker registration errors
+      })
+    }
+    
+    // Clear any cached API responses
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          if (name.includes('api')) {
+            caches.delete(name)
+          }
+        })
+      })
+    }
+  }, [])
+
   // Onboarding/brand data
   const [brandVoice, setBrandVoice] = useState('')
   const [audience, setAudience] = useState('')
@@ -458,6 +478,16 @@ export default function ExactApp() {
           setAudience(v.audience)
           setBannedTerms(v.bannedTerms)
           setTones(v.tones as Tone[])
+          
+          // Save to localStorage
+          localStorage.setItem('hle:onboarded', 'true')
+          localStorage.setItem('hle:brandVoice', v.brandVoice)
+          localStorage.setItem('hle:audience', v.audience)
+          localStorage.setItem('hle:bannedTerms', JSON.stringify(v.bannedTerms))
+          localStorage.setItem('hle:tones', JSON.stringify(v.tones))
+          
+          // Close onboarding dialog
+          setShowOnboarding(false)
         }}
       />
     </SidebarProvider>

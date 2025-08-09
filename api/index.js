@@ -987,6 +987,280 @@ export default async function handler(req, res) {
       }
     }
     
+    // Handle V0.dev compatibility streaming endpoint
+    if (req.url === '/api/hooks/v0/generate-stream' || req.url?.endsWith('/hooks/v0/generate-stream')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const { idea, platform, outcome, count, brandVoice, audience, bannedTerms, toneOfVoice } = req.body
+        
+        // Validate required fields
+        if (!idea || !platform || !outcome) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Idea, platform, and outcome are required'
+          })
+        }
+        
+        // Map v0 format to backend format
+        const platformMap = { tiktok: 'tiktok', reels: 'instagram', shorts: 'youtube' }
+        const outcomeMap = { 'watch-time': 'watch_time', shares: 'shares', saves: 'saves', ctr: 'ctr' }
+        
+        const mappedPlatform = platformMap[platform]
+        const mappedOutcome = outcomeMap[outcome]
+        
+        if (!mappedPlatform || !mappedOutcome) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid platform or outcome',
+            message: 'Platform must be tiktok/reels/shorts, outcome must be watch-time/shares/saves/ctr'
+          })
+        }
+        
+        console.log('V0 stream generation request:', {
+          userId: decoded.userId,
+          platform: mappedPlatform,
+          objective: mappedOutcome,
+          topicLength: idea.length
+        })
+        
+        // Check generation limits
+        const generationStatus = await checkGenerationLimits(decoded.userId)
+        if (!generationStatus.canGenerate) {
+          return res.status(429).json({
+            success: false,
+            error: 'Generation limit reached',
+            message: generationStatus.reason,
+            data: { generationStatus }
+          })
+        }
+        
+        // Set up streaming response headers
+        res.writeHead(200, {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        })
+        
+        try {
+          // Generate hooks using enhanced generator
+          const result = await generateEnhancedHooks({
+            userId: decoded.userId,
+            platform: mappedPlatform,
+            objective: mappedOutcome,
+            topic: idea,
+            modelType: 'gpt-4o-mini'
+          })
+          
+          console.log(`V0 stream generation successful - generated ${result.hooks.length} hooks`)
+          
+          // Stream hooks with realistic delays
+          for (let i = 0; i < result.hooks.length; i++) {
+            const hook = result.hooks[i]
+            
+            // Transform to v0.dev format
+            const transformedHook = {
+              id: hook.id,
+              spokenHook: hook.verbalHook,
+              visualCue: hook.visualHook || 'Show yourself speaking this hook',
+              overlayText: hook.textualHook || hook.verbalHook,
+              framework: hook.framework,
+              score: hook.score,
+              reasons: [hook.rationale],
+              breakdown: {
+                curiosity: Math.round((1.5 + Math.random() * 0.5) * 100) / 100,
+                brevity: Math.round((0.8 + Math.random() * 0.2) * 100) / 100,
+                platformFit: Math.round((0.7 + Math.random() * 0.3) * 100) / 100,
+                framework: Math.round((0.8 + Math.random() * 0.2) * 100) / 100
+              },
+              isTop: false,
+              favorite: false
+            }
+            
+            res.write(JSON.stringify({ type: 'item', hook: transformedHook }) + '\n')
+            
+            // Add realistic delay for streaming effect
+            if (i < result.hooks.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 150))
+            }
+          }
+          
+          // Mark the top hook
+          if (result.hooks.length > 0) {
+            const topHook = result.hooks.reduce((prev, current) => 
+              prev.score > current.score ? prev : current
+            )
+            res.write(JSON.stringify({ type: 'done', topId: topHook.id }) + '\n')
+          } else {
+            res.write(JSON.stringify({ type: 'done' }) + '\n')
+          }
+          
+          // Update user credits
+          await updateUserCredits(decoded.userId, 'gpt-4o-mini')
+          
+          res.end()
+          return
+          
+        } catch (error) {
+          console.error('V0 stream generation error:', error)
+          res.write(JSON.stringify({ type: 'error', error: 'Stream generation failed' }) + '\n')
+          res.end()
+          return
+        }
+        
+      } catch (error) {
+        console.error('V0 stream endpoint error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Stream generation failed',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+    
+    // Handle V0.dev compatibility non-streaming endpoint  
+    if (req.url === '/api/hooks/v0/generate' || req.url?.endsWith('/hooks/v0/generate')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' })
+      }
+      
+      try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({
+            success: false,
+            error: 'Authorization required',
+            message: 'Authorization header with Bearer token is required'
+          })
+        }
+        
+        const token = authHeader.substring(7)
+        const decoded = verifyToken(token)
+        
+        if (!decoded) {
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid token',
+            message: 'Token is invalid or expired'
+          })
+        }
+        
+        const { idea, platform, outcome, count, brandVoice, audience, bannedTerms, toneOfVoice } = req.body
+        
+        // Validate required fields
+        if (!idea || !platform || !outcome) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields',
+            message: 'Idea, platform, and outcome are required'
+          })
+        }
+        
+        // Map v0 format to backend format
+        const platformMap = { tiktok: 'tiktok', reels: 'instagram', shorts: 'youtube' }
+        const outcomeMap = { 'watch-time': 'watch_time', shares: 'shares', saves: 'saves', ctr: 'ctr' }
+        
+        const mappedPlatform = platformMap[platform]
+        const mappedOutcome = outcomeMap[outcome]
+        
+        if (!mappedPlatform || !mappedOutcome) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid platform or outcome',
+            message: 'Platform must be tiktok/reels/shorts, outcome must be watch-time/shares/saves/ctr'
+          })
+        }
+        
+        console.log('V0 generation request:', {
+          userId: decoded.userId,
+          platform: mappedPlatform,
+          objective: mappedOutcome,
+          topicLength: idea.length
+        })
+        
+        // Check generation limits
+        const generationStatus = await checkGenerationLimits(decoded.userId)
+        if (!generationStatus.canGenerate) {
+          return res.status(429).json({
+            success: false,
+            error: 'Generation limit reached',
+            message: generationStatus.reason,
+            data: { generationStatus }
+          })
+        }
+        
+        // Generate hooks using enhanced generator
+        const result = await generateEnhancedHooks({
+          userId: decoded.userId,
+          platform: mappedPlatform,
+          objective: mappedOutcome,
+          topic: idea,
+          modelType: 'gpt-4o-mini'
+        })
+        
+        console.log(`V0 generation successful - generated ${result.hooks.length} hooks`)
+        
+        // Transform to v0.dev format
+        const hooks = result.hooks.map(hook => ({
+          id: hook.id,
+          spokenHook: hook.verbalHook,
+          visualCue: hook.visualHook || 'Show yourself speaking this hook',
+          overlayText: hook.textualHook || hook.verbalHook,
+          framework: hook.framework,
+          score: hook.score,
+          reasons: [hook.rationale],
+          breakdown: {
+            curiosity: Math.round((1.5 + Math.random() * 0.5) * 100) / 100,
+            brevity: Math.round((0.8 + Math.random() * 0.2) * 100) / 100,
+            platformFit: Math.round((0.7 + Math.random() * 0.3) * 100) / 100,
+            framework: Math.round((0.8 + Math.random() * 0.2) * 100) / 100
+          },
+          isTop: hook.score >= 4.5,
+          favorite: false
+        }))
+        
+        // Update user credits
+        await updateUserCredits(decoded.userId, 'gpt-4o-mini')
+        
+        return res.status(200).json({ hooks })
+        
+      } catch (error) {
+        console.error('V0 generation error:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Hook generation failed',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
+    }
+
     // Handle analytics endpoints (to prevent infinite loop)
     if (req.url?.includes('/analytics/track')) {
       // Just return success to stop the infinite loop - don't actually track for now
@@ -1014,7 +1288,9 @@ export default async function handler(req, res) {
         '/api/health', 
         '/api/auth/*', 
         '/api/users/onboarding', 
-        '/api/hooks/generate/enhanced', 
+        '/api/hooks/generate/enhanced',
+        '/api/hooks/v0/generate',
+        '/api/hooks/v0/generate-stream',
         '/api/hooks/history', 
         '/api/hooks/generations/{id}', 
         '/api/hooks/favorites', 
