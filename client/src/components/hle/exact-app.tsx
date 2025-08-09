@@ -63,6 +63,33 @@ export default function ExactApp() {
         })
       })
     }
+
+    // Debug: Check auth status on component mount
+    const checkAuthStatus = async () => {
+      const token = localStorage.getItem('auth_token')
+      console.log('🔍 Checking auth status on mount...')
+      console.log('- Token in localStorage:', !!token)
+      
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/verify', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          console.log('- Auth verify response:', response.status)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('- User authenticated:', data.success)
+            console.log('- User email:', data.data?.user?.email)
+          } else {
+            console.log('❌ Auth verify failed:', await response.text())
+          }
+        } catch (error) {
+          console.log('❌ Auth verify error:', error)
+        }
+      }
+    }
+    
+    checkAuthStatus()
   }, [])
 
   // Onboarding/brand data
@@ -142,11 +169,20 @@ export default function ExactApp() {
       }
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
       const token = localStorage.getItem('auth_token')
+      console.log('🔐 Hook Generation Auth Debug:')
+      console.log('- Token exists:', !!token)
+      console.log('- Token type:', typeof token)
+      console.log('- Token length:', token?.length || 0)
+      console.log('- Token preview:', token ? token.substring(0, 30) + '...' : 'null')
+      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
       if (token) {
         headers.Authorization = `Bearer ${token}`
+        console.log('- Authorization header set')
+      } else {
+        console.log('❌ No auth token found in localStorage')
       }
       
       const res = await fetch('/api/hooks/generate/enhanced', {
@@ -155,17 +191,12 @@ export default function ExactApp() {
         body: JSON.stringify(body),
       })
       if (!res.ok) {
-        if (res.status === 401 && !token) {
-          // User is not authenticated, fallback to sample data
-          console.log('No authentication, using sample data for demo')
-          const sampleHooks = getSampleHooks(idea, platform)
-          const rankedSampleHooks = postProcessAndRank(sampleHooks, platform)
-          setHooks(rankedSampleHooks)
-          setTab('results')
-          return
+        const errorText = await res.text()
+        console.error(`Hook generation failed (${res.status}):`, errorText)
+        if (res.status === 401) {
+          throw new Error('Authentication required. Please sign in to generate hooks.')
         }
-        const t = await res.text()
-        throw new Error(t || 'Generation failed')
+        throw new Error(errorText || 'Generation failed')
       }
       const data = await res.json()
       
@@ -233,11 +264,20 @@ export default function ExactApp() {
       
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
       const token = localStorage.getItem('auth_token')
+      console.log('🔐 Hook Generation Auth Debug:')
+      console.log('- Token exists:', !!token)
+      console.log('- Token type:', typeof token)
+      console.log('- Token length:', token?.length || 0)
+      console.log('- Token preview:', token ? token.substring(0, 30) + '...' : 'null')
+      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
       if (token) {
         headers.Authorization = `Bearer ${token}`
+        console.log('- Authorization header set')
+      } else {
+        console.log('❌ No auth token found in localStorage')
       }
       
       const res = await fetch('/api/hooks/generate/enhanced', {
@@ -247,27 +287,12 @@ export default function ExactApp() {
       })
       
       if (!res.ok) {
-        if (res.status === 401 && !token) {
-          // User is not authenticated, fallback to sample data with streaming simulation
-          console.log('No authentication, using sample data for demo with streaming')
-          const sampleHooks = getSampleHooks(idea, platform)
-          const rankedSampleHooks = postProcessAndRank(sampleHooks, platform)
-          
-          // Simulate streaming by showing hooks one by one
-          let currentHooks: HookItem[] = []
-          for (let i = 0; i < rankedSampleHooks.length; i++) {
-            currentHooks = [...currentHooks, rankedSampleHooks[i]]
-            setHooks([...currentHooks])
-            
-            // Add delay to simulate streaming
-            if (i < rankedSampleHooks.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 200))
-            }
-          }
-          return
+        const errorText = await res.text()
+        console.error(`Hook generation failed (${res.status}):`, errorText)
+        if (res.status === 401) {
+          throw new Error('Authentication required. Please sign in to generate hooks.')
         }
-        const t = await res.text()
-        throw new Error(t || 'Generation failed')
+        throw new Error(errorText || 'Generation failed')
       }
       
       const data = await res.json()
@@ -548,6 +573,8 @@ export default function ExactApp() {
           // Also save to database for persistence (if authenticated)
           try {
             const token = localStorage.getItem('auth_token')
+            console.log('Auth token exists:', !!token)
+            console.log('Auth token preview:', token ? token.substring(0, 20) + '...' : 'none')
             if (token) {
               // Map brandVoice to voice enum - use first tone if available, fallback to 'friendly'
               const voiceMapping: { [key: string]: string } = {
