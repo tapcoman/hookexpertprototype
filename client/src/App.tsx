@@ -17,13 +17,9 @@ import { RootRedirect } from '@/components/routing/RootRedirect'
 // Pages
 import SimpleAuthPage from '@/pages/SimpleAuthPage'
 import OnboardingPage from '@/pages/OnboardingPage'
-import ProjectsPage from '@/pages/ProjectsPage'
-import FavoritesPage from '@/pages/FavoritesPage'
-import HistoryPage from '@/pages/HistoryPage'
 import ProfilePage from '@/pages/ProfilePage'
 import PricingPage from '@/pages/PricingPage'
 import BillingPage from '@/pages/BillingPage'
-import TrendRadarPage from '@/pages/TrendRadarPage'
 import ExactApp from '@/components/hle/exact-app'
 import NotFoundPage from '@/pages/NotFoundPage'
 
