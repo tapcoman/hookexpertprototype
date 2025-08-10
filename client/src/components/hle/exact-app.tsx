@@ -27,6 +27,7 @@ import {
   persistRun,
   getSavedHooks,
   removeSavedHook,
+  toggleSavedHook,
 } from '@/components/hle/utils/store'
 import { getSampleHooks } from '@/components/hle/utils/sample-data'
 import { postProcessAndRank } from '@/lib/scoring'
@@ -523,9 +524,14 @@ export default function ExactApp() {
                       hooks={hooks}
                       platform={platform}
                       streaming={streaming}
-                      onToggleFavorite={(id) =>
-                        setHooks((prev) => prev.map((h) => (h.id === id ? { ...h, favorite: !h.favorite } : h)))
-                      }
+                      onToggleFavorite={(id) => {
+                        const hook = hooks.find((h) => h.id === id)
+                        if (hook) {
+                          toggleSavedHook(hook)
+                          setHooks((prev) => prev.map((h) => (h.id === id ? { ...h, favorite: !h.favorite } : h)))
+                          setSavedHooks(getSavedHooks())
+                        }
+                      }}
                       onCopySpoken={async (id) => {
                         const item = hooks.find((h) => h.id === id)
                         if (item?.spokenHook) await navigator.clipboard.writeText(item.spokenHook)
@@ -563,6 +569,7 @@ export default function ExactApp() {
                   hooks={savedHooks}
                   onRemove={(id) => {
                     removeSavedHook(id as string)
+                    setSavedHooks(getSavedHooks())
                     setHooks((prev) => prev.map((h) => (h.id === id ? { ...h, favorite: false } : h)))
                   }}
                   onCopyAll={async (id) => {

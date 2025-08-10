@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/Label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Separator } from '@/components/ui/separator'
-import { User, Settings, Palette, Target, Shield, CreditCard } from 'lucide-react'
+import { User, Settings, Palette, Target, Shield, CreditCard, LogOut } from 'lucide-react'
 import type { UserProfile } from '@/types/shared'
 import type { Tone } from '@/components/hle/types'
 
@@ -30,7 +30,7 @@ const TONE_OPTIONS: Tone[] = [
 ]
 
 const ProfilePageContent: React.FC = () => {
-  const { user, updateProfile, updatePassword } = useAuth()
+  const { user, updateProfile, updatePassword, signOut } = useAuth()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
   
   // Basic profile data
@@ -537,6 +537,24 @@ const ProfilePageContent: React.FC = () => {
                 <Button variant="outline" onClick={() => setActiveTab('brand')}>
                   <Settings className="mr-2 h-4 w-4" />
                   Update Brand Settings
+                </Button>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-4">
+                <h3 className="font-medium text-foreground">Danger Zone</h3>
+                <Button 
+                  variant="destructive" 
+                  onClick={async () => {
+                    if (confirm('Are you sure you want to logout?')) {
+                      await signOut()
+                      window.location.href = '/auth'
+                    }
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
                 </Button>
               </div>
             </div>
