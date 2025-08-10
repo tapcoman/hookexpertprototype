@@ -25,7 +25,7 @@ const formSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07'),
+  // Model type is now automatically determined by subscription status
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -54,10 +54,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
     formState: { errors, isValid }
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    mode: 'onChange',
-    defaultValues: {
-      modelType: 'gpt-5-mini-2025-08-07'
-    }
+    mode: 'onChange'
   })
 
   const watchedValues = watch()
@@ -119,40 +116,8 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
     },
   ]
 
-  const modelTypes = [
-    {
-      value: 'gpt-4o-mini' as ModelType,
-      label: 'GPT-4o Mini',
-      description: 'Fast and efficient',
-      credits: 1
-    },
-    {
-      value: 'gpt-4o' as ModelType,
-      label: 'GPT-4o',
-      description: 'Premium quality',
-      credits: 3
-    },
-    {
-      value: 'gpt-4-turbo' as ModelType,
-      label: 'GPT-4 Turbo',
-      description: 'Enhanced performance',
-      credits: 2
-    },
-    {
-      value: 'gpt-5-mini-2025-08-07' as ModelType,
-      label: 'ChatGPT-5 Mini',
-      description: 'Latest AI - Fast & efficient (Recommended)',
-      credits: 2,
-      isNew: true
-    },
-    {
-      value: 'gpt-5-2025-08-07' as ModelType,
-      label: 'ChatGPT-5',
-      description: 'Latest AI - Superior quality & reasoning',
-      credits: 5,
-      isNew: true
-    }
-  ]
+  // Model types are now automatically determined by subscription status
+  // No need for user selection
 
   const handleTopicChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
@@ -335,46 +300,15 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                 </div>
               </div>
 
-              {/* Model Selection */}
-              <div className="space-y-3">
-                <Label className="text-base font-medium">AI Model</Label>
-                <div className="space-y-2">
-                  {modelTypes.map((model) => (
-                    <button
-                      key={model.value}
-                      type="button"
-                      onClick={() => setValue('modelType', model.value)}
-                      className={cn(
-                        "w-full p-3 border rounded-lg text-left transition-all hover:shadow-sm flex items-center justify-between",
-                        watchedValues.modelType === model.value
-                          ? "border-[hsl(var(--viral-gold))] bg-[hsl(var(--viral-gold)/0.05)] shadow-sm"
-                          : "border-border hover:border-[hsl(var(--viral-gold))/0.5] hover:bg-[hsl(var(--viral-gold)/0.02)]"
-                      )}
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{model.label}</span>
-                          {(model as any).isPreview && (
-                            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
-                              Preview
-                            </Badge>
-                          )}
-                          {(model as any).isNew && (
-                            <Badge variant="default" className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0">
-                              New
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {model.description}
-                        </div>
-                      </div>
-                      <Badge variant="outline">
-                        {model.credits} credit{model.credits > 1 ? 's' : ''}
-                      </Badge>
-                    </button>
-                  ))}
+              {/* AI Model Information */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-[hsl(var(--viral-gold))]" />
+                  <h4 className="font-medium">Smart AI Selection</h4>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  We'll automatically choose the best AI model based on your subscription plan for optimal results.
+                </p>
               </div>
 
               {/* Summary */}
@@ -384,7 +318,7 @@ const HookGenerationForm: React.FC<HookGenerationFormProps> = ({
                   <div className="text-sm space-y-1">
                     <div>Platform: <span className="font-medium">{formatPlatformName(watchedValues.platform)}</span></div>
                     <div>Objective: <span className="font-medium">{getObjectiveLabel(watchedValues.objective)}</span></div>
-                    <div>Model: <span className="font-medium">{modelTypes.find(m => m.value === watchedValues.modelType)?.label}</span></div>
+                    <div>AI Model: <span className="font-medium">Auto-selected based on your plan</span></div>
                   </div>
                 </div>
               )}

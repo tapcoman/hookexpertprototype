@@ -114,8 +114,8 @@ export const ContentTypeSchema = z.enum([
 ])
 
 export const ModelTypeSchema = z.enum([
-  'gpt-4o',
-  'gpt-4o-mini'
+  'gpt-5-2025-08-07',
+  'gpt-5-mini-2025-08-07'
 ])
 
 // ==================== HOOK OBJECT SCHEMA ====================
@@ -161,7 +161,7 @@ export const GenerateHooksRequestSchema = z.object({
   platform: PlatformSchema,
   objective: ObjectiveSchema,
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: ModelTypeSchema.optional().default('gpt-4o-mini'),
+  modelType: ModelTypeSchema.optional().default('gpt-5-mini-2025-08-07'),
 })
 
 export const GenerateHooksResponseSchema = z.object({

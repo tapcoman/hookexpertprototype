@@ -50,47 +50,47 @@ export class StripeConfig {
       name: 'free',
       displayName: 'Free',
       price: 0,
-      proGenerationsLimit: 0, // No GPT-4o generations on free plan
-      draftGenerationsLimit: 5, // 5 Draft generations/month (GPT-4o-mini only)
+      proGenerationsLimit: 0, // No GPT-5 generations on free plan
+      draftGenerationsLimit: 5, // 5 Draft generations/month (GPT-5-mini only)
       teamSeats: 1,
       trialPeriodDays: 0,
       resetInterval: 'month' as const,
-      allowedModels: ['gpt-4o-mini'], // Only GPT-4o-mini allowed
+      allowedModels: ['gpt-5-mini-2025-08-07'], // Only GPT-5-mini allowed
     },
     starter: {
       name: 'starter',
       displayName: 'Starter',
       price: 900, // $9.00
-      proGenerationsLimit: 100, // 100 Pro generations/month (GPT-4o)
+      proGenerationsLimit: 100, // 100 Pro generations/month (GPT-5)
       draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
-      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
+      allowedModels: ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07'], // Both models allowed
     },
     creator: {
       name: 'creator',
       displayName: 'Creator',
       price: 1500, // $15.00
-      proGenerationsLimit: 200, // 200 Pro generations/month (GPT-4o)
+      proGenerationsLimit: 200, // 200 Pro generations/month (GPT-5)
       draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
       isPopular: true,
-      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
+      allowedModels: ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07'], // Both models allowed
     },
     pro: {
       name: 'pro',
       displayName: 'Pro',
       price: 2400, // $24.00
-      proGenerationsLimit: 400, // 400 Pro generations/month (GPT-4o)
+      proGenerationsLimit: 400, // 400 Pro generations/month (GPT-5)
       draftGenerationsLimit: null, // Unlimited Draft generations
       teamSeats: 1,
       trialPeriodDays: 7,
       resetInterval: 'month' as const,
       hasAdvancedAnalytics: true,
-      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
+      allowedModels: ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07'], // Both models allowed
     },
     teams: {
       name: 'teams',
@@ -103,7 +103,7 @@ export class StripeConfig {
       resetInterval: 'month' as const,
       hasAdvancedAnalytics: true,
       hasPrioritySupport: true,
-      allowedModels: ['gpt-4o', 'gpt-4o-mini'], // Both models allowed
+      allowedModels: ['gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07'], // Both models allowed
     },
   } as const
 

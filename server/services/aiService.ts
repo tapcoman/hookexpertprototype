@@ -32,27 +32,27 @@ const OPENAI_PRICING = {
 // Map model names to actual OpenAI API model identifiers
 function mapToOpenAIModel(modelType: string): string {
   const modelMapping: Record<string, string> = {
-    // Current models
-    'gpt-4o': 'gpt-4o',
-    'gpt-4o-mini': 'gpt-4o-mini',
-    'gpt-4-turbo': 'gpt-4-turbo',
-    'gpt-4-turbo-preview': 'gpt-4-turbo-preview',
-    'gpt-4': 'gpt-4',
-    'gpt-3.5-turbo': 'gpt-3.5-turbo',
-    
-    // ChatGPT-5 models (released)
+    // GPT-5 models (primary models in use)
     'gpt-5-2025-08-07': 'gpt-5-2025-08-07',
     'gpt-5-mini-2025-08-07': 'gpt-5-mini-2025-08-07',
     
-    // Legacy names mapping to actual models
+    // Legacy names mapping to actual models (for backward compatibility)
     'gpt-5': 'gpt-5-2025-08-07',
-    'gpt-5-mini': 'gpt-5-mini-2025-08-07'
+    'gpt-5-mini': 'gpt-5-mini-2025-08-07',
+    
+    // Deprecated models (for compatibility during migration)
+    'gpt-4o': 'gpt-5-2025-08-07', // Map old pro model to GPT-5
+    'gpt-4o-mini': 'gpt-5-mini-2025-08-07', // Map old mini model to GPT-5-mini
+    'gpt-4-turbo': 'gpt-5-2025-08-07',
+    'gpt-4-turbo-preview': 'gpt-5-2025-08-07',
+    'gpt-4': 'gpt-5-2025-08-07',
+    'gpt-3.5-turbo': 'gpt-5-mini-2025-08-07'
   }
   
   const mappedModel = modelMapping[modelType]
   if (!mappedModel) {
-    console.warn(`Unknown model type: ${modelType}, falling back to gpt-4o-mini`)
-    return 'gpt-4o-mini'
+    console.warn(`Unknown model type: ${modelType}, falling back to gpt-5-mini-2025-08-07`)
+    return 'gpt-5-mini-2025-08-07'
   }
   
   // Log model usage for monitoring

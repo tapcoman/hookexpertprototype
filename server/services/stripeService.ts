@@ -468,7 +468,7 @@ export class StripeService {
   /**
    * Check if user can generate hooks with enhanced tier-based logic
    */
-  static async checkGenerationLimits(userId: string, modelType: 'gpt-4o' | 'gpt-4o-mini'): Promise<GenerationStatus> {
+  static async checkGenerationLimits(userId: string, modelType: 'gpt-5-2025-08-07' | 'gpt-5-mini-2025-08-07'): Promise<GenerationStatus> {
     try {
       const usage = await this.getCurrentUsageTracking(userId)
       const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
@@ -504,10 +504,10 @@ export class StripeService {
 
       // Check if model is allowed for this plan
       if (!planConfig.allowedModels.includes(modelType)) {
-        const upgradePlan = modelType === 'gpt-4o' ? 'Starter plan' : 'any paid plan'
+        const upgradePlan = modelType === 'gpt-5-2025-08-07' ? 'Starter plan' : 'any paid plan'
         return {
           canGenerate: false,
-          reason: `${modelType === 'gpt-4o' ? 'Smart AI (GPT-4o)' : 'Draft (GPT-4o-mini)'} requires ${upgradePlan}. Upgrade to access this feature.`,
+          reason: `${modelType === 'gpt-5-2025-08-07' ? 'Smart AI (GPT-5)' : 'Draft (GPT-5-mini)'} requires ${upgradePlan}. Upgrade to access this feature.`,
           remainingProGenerations: 0,
           remainingDraftGenerations: planName === 'free' ? Math.max(0, 5 - (userData.draftGenerationsUsed || 0)) : 0,
           subscriptionPlan: planName as SubscriptionPlanName,
@@ -545,7 +545,7 @@ export class StripeService {
         const remainingCredits = Math.max(0, freeCredits - usedCredits)
         const remainingDraft = Math.max(0, 5 - draftUsed) // 5 monthly limit for free users
 
-        // Free users can only use GPT-4o-mini and are limited to 5/month
+        // Free users can only use GPT-5-mini and are limited to 5/month
         const canGenerate = remainingDraft > 0
         const usagePercentage = (draftUsed / 5) * 100
 
@@ -586,10 +586,10 @@ export class StripeService {
         return this.checkGenerationLimits(userId, modelType)
       }
 
-      const isPro = modelType === 'gpt-4o'
+      const isPro = modelType === 'gpt-5-2025-08-07'
       
       if (isPro) {
-        // Pro generations (GPT-4o)
+        // Pro generations (GPT-5)
         const limit = usage.proGenerationsLimit
         const used = usage.proGenerationsUsed || 0
         const remaining = limit ? Math.max(0, limit - used) : Infinity
@@ -648,7 +648,7 @@ export class StripeService {
           upgradeMessage: !canGenerate ? upgradeMessage : undefined,
         }
       } else {
-        // Draft generations (GPT-4o-mini) 
+        // Draft generations (GPT-5-mini) 
         const limit = usage.draftGenerationsLimit
         const used = usage.draftGenerationsUsed || 0
         const remaining = limit ? Math.max(0, limit - used) : Infinity
@@ -686,9 +686,9 @@ export class StripeService {
   /**
    * Record hook generation usage with enhanced tracking
    */
-  static async recordGeneration(userId: string, modelType: 'gpt-4o' | 'gpt-4o-mini'): Promise<void> {
+  static async recordGeneration(userId: string, modelType: 'gpt-5-2025-08-07' | 'gpt-5-mini-2025-08-07'): Promise<void> {
     try {
-      const isPro = modelType === 'gpt-4o'
+      const isPro = modelType === 'gpt-5-2025-08-07'
       const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
       
       if (!user.length) {
@@ -704,8 +704,8 @@ export class StripeService {
       // For free users, update legacy counters
       if (!isSubscriptionActive && planName === 'free') {
         if (isPro) {
-          // This shouldn't happen as free users can't use GPT-4o, but handle gracefully
-          logger.warn(`Free user ${userId} attempted to use GPT-4o`, { modelType, plan: planName })
+          // This shouldn't happen as free users can't use GPT-5, but handle gracefully
+          logger.warn(`Free user ${userId} attempted to use GPT-5`, { modelType, plan: planName })
           return
         }
 
@@ -793,7 +793,7 @@ export class StripeService {
           .where(eq(users.id, userId))
 
       } else {
-        // Draft generations (GPT-4o-mini)
+        // Draft generations (GPT-5-mini)
         const currentUsed = usage.draftGenerationsUsed || 0
         await db
           .update(usageTracking)
@@ -826,6 +826,72 @@ export class StripeService {
         error: error instanceof Error ? error.message : String(error) 
       })
       throw error
+    }
+  }
+
+  /**
+   * Automatically determine the best GPT-5 model based on user subscription status
+   */
+  static async determineOptimalModel(userId: string): Promise<'gpt-5-2025-08-07' | 'gpt-5-mini-2025-08-07'> {
+    try {
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+      
+      if (!user.length) {
+        // New users get GPT-5-mini by default
+        return 'gpt-5-mini-2025-08-07'
+      }
+
+      const userData = user[0]
+      const planName = userData.subscriptionPlan || 'free'
+      const isSubscriptionActive = userData.subscriptionStatus === 'active' || 
+                                   userData.subscriptionStatus === 'trialing' || 
+                                   userData.isPremium
+
+      // Free users always get GPT-5-mini
+      if (!isSubscriptionActive && planName === 'free') {
+        return 'gpt-5-mini-2025-08-07'
+      }
+
+      // For paid users, check if they have remaining GPT-5 credits
+      const usage = await this.getCurrentUsageTracking(userId)
+      if (!usage) {
+        // No usage tracking yet, initialize and return based on plan
+        return planName === 'free' ? 'gpt-5-mini-2025-08-07' : 'gpt-5-2025-08-07'
+      }
+
+      // Check if current period has expired
+      if (new Date() > usage.periodEnd) {
+        await this.resetUsageTracking(userId)
+        const updatedUsage = await this.getCurrentUsageTracking(userId)
+        if (updatedUsage) {
+          usage.proGenerationsUsed = 0
+          usage.proOverageUsed = 0
+        }
+      }
+
+      const proLimit = usage.proGenerationsLimit
+      const proUsed = (usage.proGenerationsUsed || 0) + (usage.proOverageUsed || 0)
+
+      // If user has unlimited GPT-5 generations, use GPT-5
+      if (proLimit === null) {
+        return 'gpt-5-2025-08-07'
+      }
+
+      // If user has remaining GPT-5 credits (including overage allowance), use GPT-5
+      const maxOverage = proLimit ? Math.floor(proLimit * StripeConfig.USAGE_LIMITS.MAX_OVERAGE_PERCENTAGE) : 0
+      const totalAllowedProGenerations = proLimit + maxOverage
+
+      if (proUsed < totalAllowedProGenerations) {
+        return 'gpt-5-2025-08-07'
+      }
+
+      // Fallback to GPT-5-mini when out of credits
+      return 'gpt-5-mini-2025-08-07'
+
+    } catch (error) {
+      logger.error('Failed to determine optimal model', { userId, error: error instanceof Error ? error.message : String(error) })
+      // Fallback to GPT-5-mini on error
+      return 'gpt-5-mini-2025-08-07'
     }
   }
 

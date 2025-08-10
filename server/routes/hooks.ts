@@ -33,7 +33,7 @@ const generateHooksSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07')
+  // modelType is now automatically determined by subscription status
 })
 
 // Enhanced hook generation schema
@@ -41,7 +41,7 @@ const enhancedGenerateHooksSchema = z.object({
   platform: z.enum(['tiktok', 'instagram', 'youtube']),
   objective: z.enum(['watch_time', 'shares', 'saves', 'ctr', 'follows']),
   topic: z.string().min(10, 'Topic must be at least 10 characters').max(1000, 'Topic too long'),
-  modelType: z.enum(['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-5-2025-08-07', 'gpt-5-mini-2025-08-07', 'gpt-5', 'gpt-5-mini']).optional().default('gpt-5-mini-2025-08-07'),
+  // modelType is now automatically determined by subscription status
   adaptationLevel: z.number().min(0).max(100).optional(),
   forceCategories: z.array(z.enum(['question-based', 'statement-based', 'narrative', 'urgency-exclusivity', 'efficiency'])).optional(),
   psychologicalPreferences: z.object({
@@ -80,7 +80,6 @@ router.post('/generate/enhanced',
       platform, 
       objective, 
       topic, 
-      modelType, 
       adaptationLevel, 
       forceCategories, 
       psychologicalPreferences 
@@ -88,8 +87,11 @@ router.post('/generate/enhanced',
     const userId = req.user.id
     const startTime = Date.now()
 
+    // Automatically determine the optimal model based on subscription
+    const modelType = await StripeService.determineOptimalModel(userId)
+
     // Check generation limits using Stripe service
-    const generationStatus = await StripeService.checkGenerationLimits(userId, modelType || 'gpt-4o-mini')
+    const generationStatus = await StripeService.checkGenerationLimits(userId, modelType)
     if (!generationStatus.canGenerate) {
       return res.status(429).json({
         success: false,
@@ -133,7 +135,7 @@ router.post('/generate/enhanced',
         platform,
         objective,
         topic,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         adaptationLevel,
         forceCategories,
         userContext,
@@ -151,7 +153,7 @@ router.post('/generate/enhanced',
         platform,
         objective,
         topic,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         hooks: enhancedResult.hooks as any,
         topThreeVariants: enhancedResult.topThreeVariants as any,
         usedFormulas: enhancedResult.hookTaxonomyAnalysis.formulasUsed,
@@ -161,8 +163,8 @@ router.post('/generate/enhanced',
       })
 
       // Record generation usage
-      await StripeService.recordGeneration(userId, modelType || 'gpt-4o-mini')
-      const isPro = modelType === 'gpt-4o' || user.isPremium
+      await StripeService.recordGeneration(userId, modelType)
+      const isPro = modelType === 'gpt-5-2025-08-07' || user.isPremium
       await UserService.incrementGenerationUsage(userId, isPro)
 
       // Update user's psychological profile with performance data
@@ -174,7 +176,7 @@ router.post('/generate/enhanced',
         platform,
         objective,
         hookCount: enhancedResult.hooks.length,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         adaptationLevel: enhancedResult.psychologicalStrategy.adaptationLevel,
         confidenceScore: enhancedResult.psychologicalStrategy.confidenceScore,
         formulasUsed: enhancedResult.hookTaxonomyAnalysis.formulasUsed.length,
@@ -196,7 +198,7 @@ router.post('/generate/enhanced',
         data: {
           ...enhancedResult,
           createdAt: generation.createdAt?.toISOString() || new Date().toISOString(),
-          generationStatus: await StripeService.checkGenerationLimits(userId, modelType || 'gpt-4o-mini')
+          generationStatus: await StripeService.checkGenerationLimits(userId, modelType)
         },
         message: `Generated ${enhancedResult.hooks.length} enhanced hooks with psychological framework analysis`
       })
@@ -219,12 +221,15 @@ router.post('/generate',
   hookGenerationRateLimit,
   validateRequest(generateHooksSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
-    const { platform, objective, topic, modelType } = req.body as GenerateHooksRequest
+    const { platform, objective, topic } = req.body as GenerateHooksRequest
     const userId = req.user.id
     const startTime = Date.now()
 
+    // Automatically determine the optimal model based on subscription
+    const modelType = await StripeService.determineOptimalModel(userId)
+
     // Check generation limits using Stripe service
-    const generationStatus = await StripeService.checkGenerationLimits(userId, modelType || 'gpt-4o-mini')
+    const generationStatus = await StripeService.checkGenerationLimits(userId, modelType)
     if (!generationStatus.canGenerate) {
       return res.status(429).json({
         success: false,
@@ -257,7 +262,7 @@ router.post('/generate',
         platform,
         objective,
         topic,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         adaptationLevel: 50, // Default adaptation level
         userContext
       })
@@ -273,7 +278,7 @@ router.post('/generate',
         platform,
         objective,
         topic,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         hooks: enhancedResult.hooks as any, // JSONB field
         topThreeVariants: enhancedResult.topThreeVariants as any, // Top 3 hooks
         usedFormulas: enhancedResult.hookTaxonomyAnalysis.formulasUsed,
@@ -287,10 +292,10 @@ router.post('/generate',
       })
 
       // Record generation usage with Stripe service
-      await StripeService.recordGeneration(userId, modelType || 'gpt-4o-mini')
+      await StripeService.recordGeneration(userId, modelType)
       
       // Also update legacy user service for backward compatibility
-      const isPro = modelType === 'gpt-4o' || user.isPremium
+      const isPro = modelType === 'gpt-5-2025-08-07' || user.isPremium
       await UserService.incrementGenerationUsage(userId, isPro)
 
       // Log business event
@@ -299,7 +304,7 @@ router.post('/generate',
         platform,
         objective,
         hookCount: enhancedResult.hooks.length,
-        modelType: modelType || 'gpt-4o-mini',
+        modelType,
         isPro
       }, userId)
 
@@ -322,9 +327,9 @@ router.post('/generate',
           platform,
           objective,
           topic,
-          modelType: modelType || 'gpt-4o-mini',
+          modelType,
           createdAt: generation.createdAt?.toISOString() || new Date().toISOString(),
-          generationStatus: await StripeService.checkGenerationLimits(userId, modelType || 'gpt-4o-mini')
+          generationStatus: await StripeService.checkGenerationLimits(userId, modelType)
         },
         message: `Generated ${enhancedResult.hooks.length} hooks successfully`
       })
@@ -733,7 +738,7 @@ router.post('/regenerate/:id',
     })
 
     // Update generation usage
-    const isPro = originalGeneration.modelType === 'gpt-4o' || user.isPremium
+    const isPro = originalGeneration.modelType === 'gpt-5-2025-08-07' || user.isPremium
     await UserService.incrementGenerationUsage(userId, isPro)
 
     logBusinessEvent('hooks_regenerated', {
@@ -796,7 +801,7 @@ router.post('/v0/generate',
       platform: platformMap[platform],
       objective: outcomeMap[outcome],
       topic: idea,
-      modelType: 'gpt-4o-mini',
+      modelType: 'gpt-5-mini-2025-08-07',
       adaptationLevel: 50,
       userContext
     })
@@ -864,7 +869,7 @@ router.post('/v0/generate-stream',
         platform: platformMap[platform],
         objective: outcomeMap[outcome],
         topic: idea,
-        modelType: 'gpt-4o-mini',
+        modelType: 'gpt-5-mini-2025-08-07',
         adaptationLevel: 50,
         userContext
       })
@@ -1056,7 +1061,7 @@ v0Router.post('/generate',
       platform: platformMap[platform],
       objective: outcomeMap[outcome],
       topic: idea,
-      modelType: 'gpt-4o-mini',
+      modelType: 'gpt-5-mini-2025-08-07',
       adaptationLevel: 50,
       userContext
     })
@@ -1125,7 +1130,7 @@ v0Router.post('/generate-stream',
         platform: platformMap[platform],
         objective: outcomeMap[outcome],
         topic: idea,
-        modelType: 'gpt-4o-mini',
+        modelType: 'gpt-5-mini-2025-08-07',
         adaptationLevel: 50,
         userContext
       })

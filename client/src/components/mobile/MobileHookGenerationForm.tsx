@@ -39,7 +39,7 @@ const MobileHookGenerationForm: React.FC<MobileHookGenerationFormProps> = ({
     platform: 'tiktok',
     objective: 'watch_time',
     topic: '',
-    modelType: 'gpt-4o-mini',
+    // modelType is now automatically determined by subscription
   })
   
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -419,29 +419,22 @@ const MobileHookGenerationForm: React.FC<MobileHookGenerationFormProps> = ({
           </CardContent>
         </Card>
 
-        {/* Model Selection */}
+        {/* Smart AI Selection Info */}
         <Card className="mx-4">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-muted/30 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-foreground">AI Model</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {formData.modelType === 'gpt-4o' ? 'Premium Quality' : 'Fast & Efficient'}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-muted/30 rounded-full flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-muted-foreground" />
               </div>
-              <select
-                value={formData.modelType}
-                onChange={(e) => setFormData(prev => ({ ...prev, modelType: e.target.value as 'gpt-4o' | 'gpt-4o-mini' }))}
-                className="bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                <option value="gpt-4o">GPT-4o Pro</option>
-              </select>
+              <div className="flex-1">
+                <h3 className="font-medium text-foreground">Smart AI Selection</h3>
+                <p className="text-sm text-muted-foreground">
+                  We'll choose the best model based on your subscription
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                Auto
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -454,7 +447,7 @@ const MobileHookGenerationForm: React.FC<MobileHookGenerationFormProps> = ({
                 <div>
                   <p className="text-sm font-medium text-foreground">Available Credits</p>
                   <p className="text-xs text-muted-foreground">
-                    {formData.modelType === 'gpt-4o' ? 'Uses pro credits' : 'Uses draft credits'}
+                    Auto-selected model based on your subscription
                   </p>
                 </div>
                 <div className="text-right">

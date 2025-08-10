@@ -31,8 +31,7 @@ async function generateHooks(params: {
   const request: GenerateHooksRequest = {
     platform: platformMap[params.platform],
     objective: outcomeMap[params.outcome],
-    topic: params.idea,
-    modelType: 'gpt-4o-mini'
+    topic: params.idea
   }
   
   const response = await api.hooks.generateHooks(request)
