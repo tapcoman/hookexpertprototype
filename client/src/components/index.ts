@@ -9,6 +9,8 @@ export { default as Hero } from './layout/Hero'
 
 // Hook Components
 export { default as HookCard } from './hook/HookCard'
+export { default as HookResults } from './hook/HookResults'
+export { default as TriModalHookResults } from './hook/TriModalHookResults'
 
 // Form Components
 export { default as HookGenerationForm } from './forms/HookGenerationForm'
@@ -19,9 +21,19 @@ export { default as OnboardingStep1 } from './onboarding/OnboardingStep1'
 export { default as OnboardingStep2 } from './onboarding/OnboardingStep2'
 export { default as OnboardingStep3 } from './onboarding/OnboardingStep3'
 
+// Authentication Components
+export { default as AuthForm } from './auth/AuthForm'
+
 // Mobile Components
 export { default as MobileHookCard } from './mobile/MobileHookCard'
+export { default as MobileBottomNav } from './mobile/MobileBottomNav'
+
+// Trend Components
+export * from './trends'
 
 // Utility Components
 export { LoadingSpinner } from './ui/LoadingSpinner'
 export { ErrorBoundary } from './ui/ErrorBoundary'
+
+// Routing Components
+export { ProtectedRoute } from './routing/ProtectedRoute'
