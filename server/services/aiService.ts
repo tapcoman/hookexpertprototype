@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { HookObject, Platform, Objective, ModelType, HookCategory, PsychologicalDriver } from '../../shared/types.js'
+import { HookObject, HookObjectSchema, Platform, Objective, ModelType, HookCategory, PsychologicalDriver } from '../../shared/types.js'
 import { HookFormulaService, PsychologicalProfileService } from './database.js'
 import { ExternalServiceError, ValidationError } from '../middleware/errorHandler.js'
 import { logAIServiceCall, logPerformanceMetric } from '../middleware/logging.js'
@@ -69,15 +69,40 @@ function calculateOpenAICost(model: string, totalTokens: number): number {
   if (!pricing) {
     return 0 // Unknown model, return 0 cost
   }
-  
-  // Estimate input/output token split (roughly 80% input, 20% output for hook generation)
-  const inputTokens = Math.round(totalTokens * 0.8)
-  const outputTokens = Math.round(totalTokens * 0.2)
-  
+
+  // Updated split based on actual usage: 60% input, 40% output for comprehensive hook generation
+  const inputTokens = Math.round(totalTokens * 0.6)
+  const outputTokens = Math.round(totalTokens * 0.4)
+
   const inputCost = (inputTokens / 1000) * pricing.input
   const outputCost = (outputTokens / 1000) * pricing.output
-  
+
   return Math.round((inputCost + outputCost) * 100) // Return in cents
+}
+
+// Token budget limits per subscription plan (monthly)
+const TOKEN_BUDGET_LIMITS: Record<string, number> = {
+  'free': 10000,          // ~5 draft generations
+  'starter': 500000,      // ~100 pro or unlimited draft
+  'creator': 1500000,     // ~300 pro or unlimited draft
+  'pro': 5000000,         // ~1000 pro or unlimited draft
+  'teams': 15000000       // ~3000 pro (soft cap)
+}
+
+// Check if user has exceeded token budget for the month
+async function checkTokenBudget(userId: string, plan: string, estimatedTokens: number): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  const limit = TOKEN_BUDGET_LIMITS[plan] || TOKEN_BUDGET_LIMITS['free']
+
+  // Query monthly token usage (simplified - would need actual DB query)
+  // For now, return allowed - implement proper tracking in production
+  const monthlyUsage = 0 // TODO: Implement actual tracking
+  const remaining = limit - monthlyUsage
+
+  return {
+    allowed: monthlyUsage + estimatedTokens <= limit,
+    remaining,
+    limit
+  }
 }
 
 // BLOCK 1: Master HookBot Persona System
@@ -367,11 +392,20 @@ export async function generateHooksWithAI(params: {
     // Map requested model to actual OpenAI model identifier
     const actualModel = mapToOpenAIModel(params.modelType)
     
-    // Call OpenAI API with HookBot Master Prompt System
+    // Call OpenAI API with HookBot Master Prompt System + Prompt Caching
     const completion = await openai.chat.completions.create({
       model: actualModel,
       messages: [
-        { role: 'system', content: HOOKBOT_MASTER_PROMPT },
+        {
+          role: 'system',
+          content: [
+            {
+              type: 'text',
+              text: HOOKBOT_MASTER_PROMPT,
+              cache_control: { type: 'ephemeral' } as any // Enable prompt caching for system prompt
+            }
+          ] as any
+        },
         { role: 'user', content: prompt }
       ],
       temperature: 0.8, // Balanced creativity for psychological authenticity
@@ -400,14 +434,33 @@ export async function generateHooksWithAI(params: {
     } catch (error) {
       throw new ExternalServiceError('OpenAI', 'Invalid JSON response from AI service')
     }
-    
+
+    // Validate hooks using Zod schema
+    const rawHooks = aiResponse.hooks || []
+    const validatedHooks = rawHooks
+      .map((hook: any) => HookObjectSchema.safeParse(hook))
+      .filter((result: any) => result.success)
+      .map((result: any) => result.data)
+
+    // Log validation failures for monitoring
+    const failedValidations = rawHooks.length - validatedHooks.length
+    if (failedValidations > 0) {
+      console.warn(`⚠️  ${failedValidations} hooks failed validation and were filtered out`)
+    }
+
+    // Require at least 3 valid hooks, otherwise retry would be needed
+    if (validatedHooks.length < 3) {
+      throw new ValidationError(`Only ${validatedHooks.length} valid hooks generated (minimum 3 required). Response may be malformed.`)
+    }
+
     // Validate and process hooks with enhanced psychological scoring
-    const hooks = await processAIHooks(aiResponse.hooks || [], {
+    const hooks = await processAIHooks(validatedHooks, {
       platform: params.platform,
       objective: params.objective,
       topic: params.topic,
       selectedFormulas,
-      contentStrategy
+      contentStrategy,
+      userContext: params.userContext
     })
     
     // Log performance metrics
@@ -467,19 +520,10 @@ function buildAIPrompt(params: {
 - Cognitive_Biases: ${contentStrategy.cognitiveBiases.join(', ')}
 - Risk_Profile: ${contentStrategy.riskProfile}`
   
-  // Enhanced formula descriptions with psychological insights
-  const formulaDescriptions = selectedFormulas.map(formula => 
-    `**${formula.code} - ${formula.name}** (${formula.category})
-    - Template: ${formula.structuralTemplate}
-    - Primary Driver: ${formula.primaryDriver}
-    - Psychological Triggers: ${Array.isArray(formula.psychologicalTriggers) ? formula.psychologicalTriggers.join(', ') : 'N/A'}
-    - Risk Factor: ${formula.riskFactor}
-    - Effectiveness: ${formula.effectivenessRating}% (Fatigue Resistance: ${formula.fatigueResistance || 'N/A'}%)
-    - Current Trend: ${(formula as any).trendDirection || 'stable'} (Usage: ${(formula as any).weeklyUsage || '0'}/week)
-    - Example: ${Array.isArray(formula.exampleVariations) ? formula.exampleVariations[0] : 'N/A'}
-    - Strategic Use: ${formula.usageGuidelines || 'General purpose'}
-    - Cautions: ${formula.cautionaryNotes || 'Standard precautions'}`
-  ).join('\n\n')
+  // Optimized formula references (concise format to reduce token usage)
+  const formulaDescriptions = selectedFormulas.map(formula =>
+    `${formula.code}: ${formula.name} | ${formula.structuralTemplate} | Driver: ${formula.primaryDriver} | Risk: ${formula.riskFactor} | ${formula.effectivenessRating}% effective`
+  ).join('\n')
   
   // Enhanced context section
   let contextSection = ''
@@ -671,6 +715,212 @@ function getTriModalRequirements(platform: Platform): string {
 6. **Psychological Coherence**: Consistent emotional tone across all three modalities`
 }
 
+// QUALITY FILTERS: Cringe & Overpromise Detection
+
+/**
+ * Detect cringe risk in hooks based on overused patterns and excessive styling
+ * Returns score 0-1 where 1 = maximum cringe
+ */
+function detectCringeRisk(hook: any): number {
+  let cringeScore = 0
+  const verbalHook = hook.verbalHook.toLowerCase()
+
+  // Patterns that audiences commonly report as cringe
+  const cringePatterns = [
+    { pattern: /let that sink in/i, weight: 0.4 },
+    { pattern: /mind\.?\s*blown/i, weight: 0.3 },
+    { pattern: /game\.?\s*changer/i, weight: 0.3 },
+    { pattern: /you won'?t believe/i, weight: 0.4 },
+    { pattern: /this one (trick|hack|secret)/i, weight: 0.5 },
+    { pattern: /doctors hate (him|her|them|this)/i, weight: 0.6 },
+    { pattern: /wait for it/i, weight: 0.3 },
+    { pattern: /hear me out/i, weight: 0.2 },
+    { pattern: /not what you think/i, weight: 0.3 },
+    { pattern: /the internet is (going crazy|obsessed)/i, weight: 0.4 },
+    { pattern: /you're doing it (all )?wrong/i, weight: 0.3 },
+    { pattern: /life\.?\s*changing/i, weight: 0.3 },
+    { pattern: /everything you know is (wrong|a lie)/i, weight: 0.5 }
+  ]
+
+  cringePatterns.forEach(({ pattern, weight }) => {
+    if (pattern.test(hook.verbalHook)) {
+      cringeScore += weight
+    }
+  })
+
+  // Excessive punctuation (multiple exclamation marks)
+  const exclamationCount = (hook.verbalHook.match(/!/g) || []).length
+  if (exclamationCount > 2) {
+    cringeScore += Math.min(exclamationCount * 0.15, 0.5)
+  }
+
+  // Multiple question marks
+  const questionMarkCount = (hook.verbalHook.match(/\?/g) || []).length
+  if (questionMarkCount > 2) {
+    cringeScore += 0.3
+  }
+
+  // Caps lock words (shouting)
+  const capsWords = hook.verbalHook.match(/\b[A-Z]{3,}\b/g) || []
+  if (capsWords.length > 1) {
+    cringeScore += capsWords.length * 0.2
+  }
+
+  // Excessive emojis in verbal hook (emojis should be in textual hook)
+  const emojiCount = (hook.verbalHook.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length
+  if (emojiCount > 2) {
+    cringeScore += Math.min(emojiCount * 0.15, 0.4)
+  }
+
+  // Clickbait red flags
+  const clickbaitPhrases = [
+    'you need to see', 'mind = blown', 'i can\'t even',
+    'literally', 'not clickbait', 'no cap'
+  ]
+  clickbaitPhrases.forEach(phrase => {
+    if (verbalHook.includes(phrase)) {
+      cringeScore += 0.2
+    }
+  })
+
+  return Math.min(cringeScore, 1.0)
+}
+
+/**
+ * Detect overpromise risk - hooks that make claims content can't deliver
+ * Returns score 0-1.5 where higher = more overpromise
+ */
+function detectOverpromise(hook: any, topic: string): number {
+  let overpromiseScore = 0
+  const hookLower = hook.verbalHook.toLowerCase()
+  const topicLower = topic.toLowerCase()
+
+  // Absolute/exaggeration words that rarely deliver
+  const exaggerationWords = [
+    { word: 'secret', weight: 0.2 },
+    { word: 'hidden', weight: 0.2 },
+    { word: 'never', weight: 0.15 },
+    { word: 'always', weight: 0.15 },
+    { word: 'everyone', weight: 0.15 },
+    { word: 'nobody', weight: 0.15 },
+    { word: 'ultimate', weight: 0.2 },
+    { word: 'perfect', weight: 0.2 },
+    { word: 'guaranteed', weight: 0.3 },
+    { word: 'instant', weight: 0.25 },
+    { word: 'effortless', weight: 0.25 },
+    { word: 'shocking', weight: 0.2 },
+    { word: 'unbelievable', weight: 0.3 },
+    { word: 'revolutionary', weight: 0.2 },
+    { word: 'changed my life', weight: 0.4 }
+  ]
+
+  exaggerationWords.forEach(({ word, weight }) => {
+    if (hookLower.includes(word)) {
+      overpromiseScore += weight
+    }
+  })
+
+  // Absolute percentages without context
+  const absolutePercentages = [
+    /100%/,
+    /zero (risk|cost|effort|time)/i,
+    /completely free/i,
+    /totally (free|safe|guaranteed)/i
+  ]
+  absolutePercentages.forEach(pattern => {
+    if (pattern.test(hook.verbalHook)) {
+      overpromiseScore += 0.3
+    }
+  })
+
+  // Superlatives without proof
+  const superlatives = /\b(best|worst|most|least|biggest|smallest|fastest|easiest)\b/gi
+  const superlativeMatches = hook.verbalHook.match(superlatives) || []
+  overpromiseScore += Math.min(superlativeMatches.length * 0.2, 0.6)
+
+  // Large numbers without context or credibility
+  const largeNumberPatterns = [
+    /\$\d{4,}|\$\d+k|\$\d+m/gi, // Money amounts
+    /\d{4,}\s*(views|followers|subscribers)/gi, // Engagement numbers
+    /\d+x\s*(more|better|faster)/gi // Multipliers
+  ]
+
+  largeNumberPatterns.forEach(pattern => {
+    if (pattern.test(hook.verbalHook)) {
+      // Check if there's credibility context (years, proof, specific)
+      const hasContext = /\b(in|after|over)\s+\d+\s+(years?|months?|days?)/i.test(hook.verbalHook)
+      if (!hasContext) {
+        overpromiseScore += 0.3
+      }
+    }
+  })
+
+  // Time-based promises that are unrealistic
+  const unrealisticTimeClaims = [
+    /in (seconds|minutes|one day)/i,
+    /(instant|immediate) results/i,
+    /overnight (success|change|transformation)/i
+  ]
+  unrealisticTimeClaims.forEach(pattern => {
+    if (pattern.test(hook.verbalHook)) {
+      overpromiseScore += 0.4
+    }
+  })
+
+  // "Secret" or "hack" without substantiation
+  if (/(secret|hack|trick)/i.test(hook.verbalHook) && hook.verbalHook.length < 50) {
+    // Short hooks with "secret" are usually overpromises
+    overpromiseScore += 0.3
+  }
+
+  // Risk-free claims
+  if (/no (risk|catch|strings|commitment)/i.test(hook.verbalHook)) {
+    overpromiseScore += 0.25
+  }
+
+  return Math.min(overpromiseScore, 1.5)
+}
+
+/**
+ * Detect brand voice mismatch between hook and user's brand voice
+ */
+function detectBrandMismatch(hook: any, userContext?: { voice?: string; safety?: string }): number {
+  if (!userContext?.voice) return 0
+
+  let mismatchScore = 0
+  const hookLower = hook.verbalHook.toLowerCase()
+  const voice = userContext.voice
+
+  // Voice-specific anti-patterns
+  const voiceMismatches: Record<string, string[]> = {
+    'authoritative': ['literally', 'lol', 'tbh', 'ngl', 'fr', 'no cap'],
+    'luxury': ['cheap', 'budget', 'affordable', 'hack', 'trick'],
+    'professional': ['omg', 'wtf', 'insane', 'crazy', 'wild'],
+    'educational': ['mind blown', 'wait for it', 'you won\'t believe'],
+    'minimal': ['amazing', 'incredible', 'unbelievable', '!!!'],
+    'inspirational': ['trick', 'hack', 'cheat', 'shortcut']
+  }
+
+  const mismatches = voiceMismatches[voice] || []
+  mismatches.forEach(term => {
+    if (hookLower.includes(term)) {
+      mismatchScore += 0.2
+    }
+  })
+
+  // Safety mode violations
+  if (userContext.safety === 'family-friendly') {
+    const edgyTerms = ['damn', 'hell', 'crap', 'suck', 'screw']
+    edgyTerms.forEach(term => {
+      if (hookLower.includes(term)) {
+        mismatchScore += 0.3
+      }
+    })
+  }
+
+  return Math.min(mismatchScore, 0.5)
+}
+
 // BLOCK 5: Advanced Quality Scoring & Hook Processing Engine
 async function processAIHooks(
   rawHooks: any[], 
@@ -723,21 +973,43 @@ async function processAIHooks(
       
       // Promise-Content Match Assessment
       const promiseContentMatch = assessPromiseContentMatch(rawHook, context.topic)
-      
-      // COMPOSITE SCORE CALCULATION
-      const compositeScore = Math.min(5.0, Math.max(0, 
-        baseScore + 
-        wordCountBonus + 
-        (frameworkEffectiveness * 0.8) + 
-        frameworkBonus + 
-        (platformObjectiveAlignment * 0.6) + 
-        (psychologicalResonance * 0.7) + 
-        (specificityScore * 0.5) + 
-        (freshnessScore * 0.4) + 
-        (triModalSynergy * 0.3) + 
-        (promiseContentMatch * 0.2) - 
-        riskPenalty
+
+      // NEW QUALITY FILTERS (v2 Scoring)
+      const cringeRisk = detectCringeRisk(rawHook)
+      const overpromiseRisk = detectOverpromise(rawHook, context.topic)
+      const brandMismatch = detectBrandMismatch(rawHook, (context as any).userContext)
+
+      // Calculate total quality penalties
+      const cringePenalty = cringeRisk * 1.0      // Up to -1.0 for high cringe
+      const overpromisePenalty = overpromiseRisk  // Up to -1.5 for severe overpromise
+      const brandMismatchPenalty = brandMismatch  // Up to -0.5 for voice mismatch
+
+      // Total quality reduction
+      const qualityPenalty = cringePenalty + overpromisePenalty + brandMismatchPenalty
+
+      // ENHANCED COMPOSITE SCORE CALCULATION (v2)
+      const compositeScore = Math.min(5.0, Math.max(0,
+        baseScore +
+        wordCountBonus +
+        (frameworkEffectiveness * 0.8) +
+        frameworkBonus +
+        (platformObjectiveAlignment * 0.6) +
+        (psychologicalResonance * 0.7) +
+        (specificityScore * 0.5) +
+        (freshnessScore * 0.4) +
+        (triModalSynergy * 0.3) +
+        (promiseContentMatch * 0.2) -
+        riskPenalty -
+        qualityPenalty  // NEW: Cringe, overpromise, brand mismatch penalties
       ))
+
+      // Log quality warnings for monitoring
+      if (cringeRisk > 0.5) {
+        console.warn(`⚠️  High cringe risk detected (${cringeRisk.toFixed(2)}): "${rawHook.verbalHook.substring(0, 50)}..."`)
+      }
+      if (overpromiseRisk > 0.7) {
+        console.warn(`⚠️  Overpromise detected (${overpromiseRisk.toFixed(2)}): "${rawHook.verbalHook.substring(0, 50)}..."`)
+      }
       
       const processedHook: HookObject = {
         verbalHook: rawHook.verbalHook,
@@ -760,7 +1032,10 @@ async function processAIHooks(
           freshnessScore,
           triModalSynergy,
           promiseContentMatch,
-          riskPenalty
+          riskPenalty,
+          cringeRisk,
+          overpromiseRisk,
+          brandMismatch
         }),
         rationale: rawHook.rationale || 'AI-generated psychological hook with strategic formula application',
         platformNotes: rawHook.platformNotes || `Optimized for ${context.platform} psychology and ${context.objective} objective`,
@@ -1058,7 +1333,20 @@ function extractPromises(hook: string): string[] {
 }
 
 function createEnhancedScoreBreakdown(scores: any): string {
-  return `Base: ${scores.baseScore.toFixed(1)} | Word Count: +${(scores.wordCountScore).toFixed(2)} | Framework: +${(scores.frameworkEffectiveness * 0.8).toFixed(2)} | Platform Alignment: +${(scores.platformAlignment * 0.6).toFixed(2)} | Psychology: +${(scores.psychologicalResonance * 0.7).toFixed(2)} | Risk: -${scores.riskPenalty.toFixed(2)}`
+  let breakdown = `Base: ${scores.baseScore.toFixed(1)} | Word Count: +${(scores.wordCountScore).toFixed(2)} | Framework: +${(scores.frameworkEffectiveness * 0.8).toFixed(2)} | Platform: +${(scores.platformAlignment * 0.6).toFixed(2)} | Psychology: +${(scores.psychologicalResonance * 0.7).toFixed(2)} | Risk: -${scores.riskPenalty.toFixed(2)}`
+
+  // Add quality filter penalties if present
+  if (scores.cringeRisk && scores.cringeRisk > 0) {
+    breakdown += ` | Cringe: -${(scores.cringeRisk * 1.0).toFixed(2)}`
+  }
+  if (scores.overpromiseRisk && scores.overpromiseRisk > 0) {
+    breakdown += ` | Overpromise: -${scores.overpromiseRisk.toFixed(2)}`
+  }
+  if (scores.brandMismatch && scores.brandMismatch > 0) {
+    breakdown += ` | Brand Mismatch: -${scores.brandMismatch.toFixed(2)}`
+  }
+
+  return breakdown
 }
 
 function ensureHookDiversity(hooks: HookObject[]): HookObject[] {
