@@ -16,6 +16,8 @@ import { RootRedirect } from '@/components/routing/RootRedirect'
 
 // Pages
 import SimpleAuthPage from '@/pages/SimpleAuthPage'
+import ClerkAuthPage from '@/pages/ClerkAuthPage'
+import ClerkTestPage from '@/pages/ClerkTestPage'
 import OnboardingPage from '@/pages/OnboardingPage'
 import ProjectsPage from '@/pages/ProjectsPage'
 import FavoritesPage from '@/pages/FavoritesPage'
@@ -43,14 +45,26 @@ function App() {
               <Switch>
                   {/* Root Route - Redirects based on auth status */}
                   <Route path="/" component={RootRedirect} />
-                  
+
                   {/* Public Routes */}
                   <Route path="/auth">
+                    <PublicRoute redirectIfAuthenticated={true} redirectTo="/app">
+                      <ClerkAuthPage />
+                    </PublicRoute>
+                  </Route>
+
+                  {/* Clerk Test Page */}
+                  <Route path="/clerk-test">
+                    <ClerkTestPage />
+                  </Route>
+
+                  {/* Legacy Auth (for fallback during migration) */}
+                  <Route path="/auth-legacy">
                     <PublicRoute redirectIfAuthenticated={true} redirectTo="/app">
                       <SimpleAuthPage />
                     </PublicRoute>
                   </Route>
-                  
+
                   <Route path="/pricing">
                     <PublicRoute>
                       <PricingPage />
