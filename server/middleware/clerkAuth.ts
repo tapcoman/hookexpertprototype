@@ -113,9 +113,7 @@ export async function verifyClerkToken(
       console.log('🔐 [ClerkAuth] Verifying token:', token.substring(0, 30) + '...')
       console.log('🔐 [ClerkAuth] Token length:', token.length)
 
-      const verifiedToken = await clerkClient.verifyToken(token, {
-        jwtKey: process.env.CLERK_JWT_KEY
-      })
+      const verifiedToken = await clerkClient.verifyToken(token)
 
       console.log('✅ [ClerkAuth] Token verified successfully')
       console.log('📋 [ClerkAuth] Verified token payload:', JSON.stringify(verifiedToken, null, 2))
