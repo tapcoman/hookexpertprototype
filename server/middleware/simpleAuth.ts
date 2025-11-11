@@ -1,3 +1,15 @@
+/**
+ * @deprecated This file is DEPRECATED and should not be used.
+ *
+ * Legacy JWT authentication has been replaced with Clerk authentication.
+ * Use clerkAuth from './clerkAuth.js' instead.
+ *
+ * This file is kept for reference only and may be removed in a future release.
+ * Migration completed: 2025-01-11
+ *
+ * @see server/middleware/clerkAuth.ts
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { db } from '../db/index.js'

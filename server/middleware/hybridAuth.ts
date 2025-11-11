@@ -1,3 +1,15 @@
+/**
+ * @deprecated This file is DEPRECATED and should not be used.
+ *
+ * Hybrid authentication has been replaced with Clerk-only authentication.
+ * Use clerkAuth from './clerkAuth.js' instead.
+ *
+ * This file is kept for reference only and may be removed in a future release.
+ * Migration completed: 2025-01-11
+ *
+ * @see server/middleware/clerkAuth.ts
+ */
+
 import { Request, Response, NextFunction } from 'express'
 import { verifyJWTToken, AuthenticatedRequest } from './simpleAuth.js'
 import { verifyClerkToken, isClerkToken, ClerkAuthenticatedRequest } from './clerkAuth.js'
@@ -6,6 +18,7 @@ import { logSecurityEvent } from './logging.js'
 
 /**
  * Hybrid Authentication Middleware
+ * @deprecated Use clerkAuth instead
  *
  * Accepts BOTH legacy JWT tokens AND Clerk session tokens
  * This allows for gradual migration from custom JWT to Clerk

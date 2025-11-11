@@ -2,9 +2,8 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useLocation } from 'wouter'
 import { useMutation } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/SimpleAuthContext'
+import { useUser } from '@clerk/clerk-react'
 import { useNotifications } from '@/contexts/AppContext'
-import { OnboardingRoute } from '@/components/routing/ProtectedRoute'
 import { PageErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { api } from '@/lib/api'
@@ -512,17 +511,36 @@ const OnboardingPageContent: React.FC = () => {
 
   const [, setLocation] = useLocation()
   const { showSuccessNotification, showErrorNotification } = useNotifications()
-  const { refreshUser } = useAuth()
+  const { user } = useUser()
 
   const onboardingMutation = useMutation({
     mutationFn: async (data: OnboardingData) => {
       console.log('🚀 Starting onboarding with data:', data)
+
+      // Save onboarding data to backend
       const response = await api.user.completeOnboarding(data)
       console.log('✅ Onboarding API response:', response.data)
+
+      // Update Clerk user metadata to mark onboarding as completed
+      if (user) {
+        try {
+          await user.update({
+            publicMetadata: {
+              ...user.publicMetadata,
+              onboardingCompleted: true
+            }
+          })
+          console.log('✅ Clerk metadata updated with onboarding status')
+        } catch (metadataError) {
+          console.error('❌ Failed to update Clerk metadata:', metadataError)
+          // Don't throw - onboarding data is saved, just metadata update failed
+        }
+      }
+
       return response.data
     },
     onSuccess: async (data) => {
-      console.log('🎉 Onboarding completed successfully, refreshing user context...')
+      console.log('🎉 Onboarding completed successfully')
       console.log('📋 Onboarding data saved:', {
         hasCompany: Boolean(data.company),
         hasIndustry: Boolean(data.industry),
@@ -531,29 +549,14 @@ const OnboardingPageContent: React.FC = () => {
         industry: data.industry,
         role: data.role
       })
-      
-      try {
-        // Add a small delay to ensure database transaction is committed
-        await new Promise(resolve => setTimeout(resolve, 500))
-        console.log('⏳ Database settle delay completed')
-        
-        // Refresh user profile to get updated onboarding data
-        await refreshUser()
-        console.log('🔄 User context refreshed successfully')
-        
-        showSuccessNotification('Welcome to Hook Line Studio!', 'Your profile has been set up successfully.')
-        
-        // Small delay to ensure UI updates before navigation
-        setTimeout(() => {
-          console.log('🧭 Navigating to /app')
-          setLocation('/app')
-        }, 200)
-      } catch (refreshError) {
-        console.error('❌ Failed to refresh user context:', refreshError)
-        showErrorNotification('Setup Warning', 'Your profile was saved but there was an issue refreshing the page. Please refresh manually.')
-        // Still navigate to app even if refresh fails
-        setTimeout(() => setLocation('/app'), 1000)
-      }
+
+      showSuccessNotification('Welcome to Hook Line Studio!', 'Your profile has been set up successfully.')
+
+      // Small delay to ensure UI updates before navigation
+      setTimeout(() => {
+        console.log('🧭 Navigating to /app')
+        setLocation('/app')
+      }, 500)
     },
     onError: (error: any) => {
       console.error('❌ Onboarding failed:', error)
@@ -651,9 +654,7 @@ const OnboardingPageContent: React.FC = () => {
 const OnboardingPage: React.FC = () => {
   return (
     <PageErrorBoundary pageName="Onboarding">
-      <OnboardingRoute>
-        <OnboardingPageContent />
-      </OnboardingRoute>
+      <OnboardingPageContent />
     </PageErrorBoundary>
   )
 }

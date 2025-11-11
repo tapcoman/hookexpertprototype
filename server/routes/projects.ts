@@ -1,7 +1,6 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { hybridAuth } from '../middleware/hybridAuth.js'
-import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { clerkAuth, AuthenticatedRequest } from '../middleware/clerkAuth.js'
 import { validateRequest, validatePagination, validateIdParam } from '../middleware/validation.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { ValidationError, NotFoundError } from '../middleware/errorHandler.js'
@@ -15,9 +14,8 @@ import { APIResponse } from '../../shared/types.js'
 
 const router = Router()
 
-// All routes require authentication and database
-// Using hybrid auth to support both legacy JWT and Clerk tokens
-router.use(hybridAuth)
+// All routes require Clerk authentication and database
+router.use(clerkAuth)
 router.use(requireDatabase)
 
 // Validation schemas

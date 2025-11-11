@@ -1,8 +1,7 @@
 import { Router, Response } from 'express'
 import { body, query, param } from 'express-validator'
 import { validateRequest } from '../middleware/validation.js'
-import { hybridAuth } from '../middleware/hybridAuth.js'
-import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { clerkAuth, AuthenticatedRequest } from '../middleware/clerkAuth.js'
 import { StripeService } from '../services/stripeService.js'
 import { StripeWebhookService } from '../services/stripeWebhookService.js'
 import { logger } from '../middleware/logging.js'
@@ -68,7 +67,7 @@ router.get('/plans', async (req: Request, res: Response) => {
  * Get current subscription status and usage
  */
 router.get('/subscription', 
-  hybridAuth,
+  clerkAuth,
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id
@@ -95,7 +94,7 @@ router.get('/subscription',
  * Create Stripe Checkout session for new subscription
  */
 router.post('/checkout',
-  hybridAuth,
+  clerkAuth,
   [
     body('priceId').isString().notEmpty().withMessage('Price ID is required'),
     body('successUrl').isURL().withMessage('Valid success URL is required'),
@@ -142,7 +141,7 @@ router.post('/checkout',
  * Create billing portal session for subscription management
  */
 router.post('/billing-portal',
-  hybridAuth,
+  clerkAuth,
   [
     body('returnUrl').isURL().withMessage('Valid return URL is required'),
   ],
@@ -177,7 +176,7 @@ router.post('/billing-portal',
  * Cancel subscription
  */
 router.post('/subscription/cancel',
-  hybridAuth,
+  clerkAuth,
   [
     body('cancelAtPeriodEnd').optional().isBoolean().withMessage('cancelAtPeriodEnd must be boolean'),
   ],
@@ -218,7 +217,7 @@ router.post('/subscription/cancel',
  * Reactivate cancelled subscription
  */
 router.post('/subscription/reactivate',
-  hybridAuth,
+  clerkAuth,
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id
@@ -252,7 +251,7 @@ router.post('/subscription/reactivate',
  * Resume cancelled subscription (alias for reactivate)
  */
 router.post('/subscription/resume',
-  hybridAuth,
+  clerkAuth,
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id
@@ -288,7 +287,7 @@ router.post('/subscription/resume',
  * Check generation limits for user
  */
 router.get('/usage/limits',
-  hybridAuth,
+  clerkAuth,
   [
     query('modelType').optional().isIn(['gpt-4o', 'gpt-4o-mini']).withMessage('Invalid model type'),
   ],
@@ -321,7 +320,7 @@ router.get('/usage/limits',
  * Record hook generation usage
  */
 router.post('/usage/record',
-  hybridAuth,
+  clerkAuth,
   [
     body('modelType').isIn(['gpt-4o', 'gpt-4o-mini']).withMessage('Invalid model type'),
   ],
@@ -356,7 +355,7 @@ router.post('/usage/record',
  * Get payment history for user
  */
 router.get('/history',
-  hybridAuth,
+  clerkAuth,
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be 1-100'),
@@ -473,7 +472,7 @@ router.post('/webhooks/stripe',
  * Update payment method
  */
 router.post('/payment-method',
-  hybridAuth,
+  clerkAuth,
   [
     body('paymentMethodId').isString().notEmpty().withMessage('Payment method ID is required'),
   ],

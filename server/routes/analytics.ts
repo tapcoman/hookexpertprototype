@@ -1,7 +1,6 @@
 import { Router, Response, Request } from 'express'
 import { z } from 'zod'
-import { hybridAuth, optionalHybridAuth } from '../middleware/hybridAuth.js'
-import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { clerkAuth, optionalClerkAuth, AuthenticatedRequest } from '../middleware/clerkAuth.js'
 import { validateRequest, validatePagination } from '../middleware/validation.js'
 import { analyticsRateLimit, apiRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -61,7 +60,7 @@ const abTestConfigSchema = z.object({
 
 // POST /api/analytics/events - Track analytics events (optional auth)
 router.post('/events',
-  optionalHybridAuth,
+  optionalClerkAuth,
   analyticsRateLimit,
   validateRequest(analyticsEventSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -88,7 +87,7 @@ router.post('/events',
 
 // POST /api/analytics/performance - Record hook performance feedback (requires auth)
 router.post('/performance',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   validateRequest(performanceFeedbackSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -161,7 +160,7 @@ router.post('/performance',
 
 // GET /api/analytics/performance/:generationId - Get performance data for a generation
 router.get('/performance/:generationId',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { generationId } = req.params
@@ -188,7 +187,7 @@ router.get('/performance/:generationId',
 
 // GET /api/analytics/trends - Get hook trend data (requires auth)
 router.get('/trends',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   validatePagination,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -215,7 +214,7 @@ router.get('/trends',
 
 // GET /api/analytics/formulas/:code/performance - Get formula performance stats
 router.get('/formulas/:code/performance',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { code } = req.params
@@ -244,7 +243,7 @@ router.get('/formulas/:code/performance',
 
 // POST /api/analytics/ab-test - Create A/B test configuration
 router.post('/ab-test',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   validateRequest(abTestConfigSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -313,7 +312,7 @@ router.post('/ab-test',
 
 // GET /api/analytics/ab-test/:testId/results - Get A/B test results
 router.get('/ab-test/:testId/results',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { testId } = req.params
@@ -352,7 +351,7 @@ router.get('/ab-test/:testId/results',
 
 // GET /api/analytics/dashboard - Get analytics dashboard data
 router.get('/dashboard',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const userId = req.user.id
@@ -397,7 +396,7 @@ router.get('/dashboard',
 
 // GET /api/analytics/insights - Get AI-powered insights (requires auth)
 router.get('/insights',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const userId = req.user.id
@@ -521,7 +520,7 @@ const webVitalsSchema = z.object({
 })
 
 router.post('/web-vitals',
-  optionalHybridAuth,
+  optionalClerkAuth,
   analyticsRateLimit,
   validateRequest(webVitalsSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -574,7 +573,7 @@ const errorSchema = z.object({
 })
 
 router.post('/error',
-  optionalHybridAuth,
+  optionalClerkAuth,
   analyticsRateLimit,
   validateRequest(errorSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -626,7 +625,7 @@ const journeySchema = z.object({
 })
 
 router.post('/journey',
-  optionalHybridAuth,
+  optionalClerkAuth,
   analyticsRateLimit,
   validateRequest(journeySchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -665,7 +664,7 @@ router.post('/journey',
 
 // GET /api/analytics/web-vitals-report - Get Core Web Vitals report (admin only)
 router.get('/web-vitals-report',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -684,7 +683,7 @@ router.get('/web-vitals-report',
 
 // GET /api/analytics/error-report - Get error tracking report (admin only)
 router.get('/error-report',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -703,7 +702,7 @@ router.get('/error-report',
 
 // GET /api/analytics/conversion-funnel - Get conversion funnel data (admin only)
 router.get('/conversion-funnel',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -722,7 +721,7 @@ router.get('/conversion-funnel',
 
 // GET /api/analytics/api-performance - Get API performance report (admin only)
 router.get('/api-performance',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -741,7 +740,7 @@ router.get('/api-performance',
 
 // GET /api/analytics/system-health - Get system health metrics (admin only)
 router.get('/system-health',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const hours = parseInt(req.query.hours as string) || 24
@@ -760,7 +759,7 @@ router.get('/system-health',
 
 // GET /api/analytics/ai-usage - Get AI service usage analytics (admin only)
 router.get('/ai-usage',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -779,7 +778,7 @@ router.get('/ai-usage',
 
 // GET /api/analytics/user-behavior/:userId - Get user behavior analytics (admin or own user)
 router.get('/user-behavior/:userId',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { userId } = req.params
@@ -808,7 +807,7 @@ router.get('/user-behavior/:userId',
 
 // GET /api/analytics/realtime - Get real-time metrics (admin only)
 router.get('/realtime',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const metrics = await AnalyticsService.getRealtimeMetrics()
@@ -825,7 +824,7 @@ router.get('/realtime',
 
 // GET /api/analytics/business-dashboard - Get business intelligence dashboard (admin only)
 router.get('/business-dashboard',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -841,7 +840,7 @@ router.get('/business-dashboard',
 
 // GET /api/analytics/trend/:metricName - Get trend data for a specific metric (admin only)
 router.get('/trend/:metricName',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { metricName } = req.params
@@ -862,7 +861,7 @@ router.get('/trend/:metricName',
 
 // POST /api/analytics/calculate-metrics - Trigger manual metrics calculation (admin only)
 router.post('/calculate-metrics',
-  hybridAuth,
+  clerkAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { period = 'daily' } = req.body

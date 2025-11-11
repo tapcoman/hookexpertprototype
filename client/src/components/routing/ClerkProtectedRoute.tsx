@@ -8,8 +8,9 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Protected Route - Requires authentication
+ * Protected Route - Requires authentication AND completed onboarding
  * Redirects to /auth if not signed in
+ * Redirects to /onboarding if signed in but not onboarded
  */
 export function ClerkProtectedRoute({ children, redirectTo = '/auth' }: ProtectedRouteProps) {
   const { isLoaded, isSignedIn } = useAuth()
@@ -27,6 +28,13 @@ export function ClerkProtectedRoute({ children, redirectTo = '/auth' }: Protecte
   // Redirect to auth if not signed in
   if (!isSignedIn) {
     return <Redirect to={redirectTo} />
+  }
+
+  // Check if onboarding is completed (stored in Clerk metadata)
+  const onboardingCompleted = user?.publicMetadata?.onboardingCompleted
+
+  if (!onboardingCompleted) {
+    return <Redirect to="/onboarding" />
   }
 
   return <>{children}</>

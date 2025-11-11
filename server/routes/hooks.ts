@@ -1,7 +1,6 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { hybridAuth } from '../middleware/hybridAuth.js'
-import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { clerkAuth, AuthenticatedRequest } from '../middleware/clerkAuth.js'
 import { validateRequest, validatePagination, validateIdParam } from '../middleware/validation.js'
 import { hookGenerationRateLimit, heavyOperationRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -24,9 +23,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 const router = Router()
 
-// All routes require authentication and database
-// Using hybrid auth to support both legacy JWT and Clerk tokens
-router.use(hybridAuth)
+// All routes require Clerk authentication and database
+router.use(clerkAuth)
 router.use(requireDatabase)
 router.use(degradedOpenAI) // AI is optional but may affect functionality
 
@@ -1023,8 +1021,8 @@ const v0GenerateSchema = z.object({
 // Mount v0.dev compatibility routes directly in hooks router
 const v0Router = Router()
 
-// All v0 routes require authentication and database
-v0Router.use(verifyJWTToken)
+// All v0 routes require Clerk authentication and database
+v0Router.use(clerkAuth)
 v0Router.use(requireDatabase)
 v0Router.use(degradedOpenAI)
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
-import { useAuth } from './SimpleAuthContext'
+import { useUser } from '@clerk/clerk-react'
 
 // ==================== TYPES ====================
 
@@ -124,8 +124,8 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [ui, setUI] = useState<UIState>(initialUIState)
   const [generation, setGeneration] = useState<GenerationState>(initialGenerationState)
-  
-  const { user } = useAuth()
+
+  const { user } = useUser()
 
   // ==================== PERSISTENCE ====================
 

@@ -37,11 +37,12 @@ function extractClerkToken(req: Request): string | null {
 /**
  * Check if token is a Clerk token vs legacy JWT
  * Clerk session tokens are longer and have different structure
+ * @deprecated No longer needed - only Clerk authentication is supported
  */
 function isClerkToken(token: string): boolean {
   // Clerk tokens are typically longer (>200 chars) and contain specific prefixes in payload
   // Legacy JWTs are shorter and simpler
-  // This is a heuristic - actual verification happens in verifyClerkToken
+  // This is a heuristic - actual verification happens in clerkAuth
   return token.length > 200
 }
 
@@ -64,6 +65,12 @@ export async function verifyClerkToken(
     const token = extractClerkToken(req)
 
     if (!token) {
+      logSecurityEvent('clerk_token_missing', {
+        endpoint: req.path,
+        method: req.method,
+        ipAddress: req.ip
+      })
+
       return res.status(401).json({
         success: false,
         error: 'Authentication required',
@@ -221,7 +228,116 @@ export async function verifyClerkToken(
 }
 
 /**
+ * Optional Clerk authentication middleware
+ * Doesn't fail if no token or invalid token, but attaches user if valid
+ * Useful for endpoints that work with or without authentication
+ */
+export async function optionalClerkAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const token = extractClerkToken(req)
+
+    if (!token) {
+      return next() // Continue without authentication
+    }
+
+    const clerkSecretKey = process.env.CLERK_SECRET_KEY
+    if (!clerkSecretKey) {
+      return next() // Continue without authentication if Clerk not configured
+    }
+
+    try {
+      // Verify the session token with Clerk
+      const verifiedToken = await clerkClient.verifyToken(token)
+      const clerkUserId = verifiedToken.sub as string
+
+      if (!clerkUserId) {
+        return next() // Continue without authentication
+      }
+
+      // Get user details from Clerk
+      const clerkUser = await clerkClient.users.getUser(clerkUserId)
+      const email = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress
+
+      if (!email) {
+        return next() // Continue without authentication
+      }
+
+      // Find user in local database
+      let userResult = await db.select()
+        .from(users)
+        .where(eq(users.firebaseUid, clerkUserId))
+        .limit(1)
+
+      if (userResult.length === 0) {
+        // Try by email
+        userResult = await db.select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1)
+
+        if (userResult.length === 0) {
+          // User doesn't exist, create minimal object
+          ;(req as ClerkAuthenticatedRequest).user = {
+            id: clerkUserId,
+            email: email,
+            subscriptionStatus: 'free',
+            isPremium: false
+          }
+          ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
+          return next()
+        }
+
+        // Update clerkId if found by email
+        const user = userResult[0]
+        await db.update(users)
+          .set({ firebaseUid: clerkUserId })
+          .where(eq(users.id, user.id))
+
+        ;(req as ClerkAuthenticatedRequest).user = {
+          id: user.id,
+          email: user.email,
+          subscriptionStatus: user.subscriptionStatus || 'free',
+          isPremium: user.isPremium || false
+        }
+        ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
+      } else {
+        const user = userResult[0]
+        ;(req as ClerkAuthenticatedRequest).user = {
+          id: user.id,
+          email: user.email,
+          subscriptionStatus: user.subscriptionStatus || 'free',
+          isPremium: user.isPremium || false
+        }
+        ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
+      }
+
+      next()
+    } catch (clerkError) {
+      // Ignore Clerk errors in optional auth
+      next()
+    }
+  } catch (error) {
+    // Don't fail on optional auth errors
+    next()
+  }
+}
+
+/**
+ * Primary authentication middleware - renamed for clarity
+ */
+export const clerkAuth = verifyClerkToken
+
+/**
+ * Type alias for backwards compatibility
+ */
+export type AuthenticatedRequest = ClerkAuthenticatedRequest
+
+/**
  * Helper function to check if a token appears to be a Clerk token
- * Used by hybrid auth to determine which verification method to use
+ * @deprecated No longer needed - only Clerk authentication is supported
  */
 export { isClerkToken }
