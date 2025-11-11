@@ -1,6 +1,7 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { verifyJWTToken, AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { hybridAuth } from '../middleware/hybridAuth.js'
+import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { validateRequest } from '../middleware/validation.js'
 import { enhancedHookGenerator } from '../services/enhancedHookGenerator.js'
@@ -21,7 +22,8 @@ const v0GenerateSchema = z.object({
 })
 
 // All routes require authentication
-router.use(verifyJWTToken)
+// Using hybrid auth to support both legacy JWT and Clerk tokens
+router.use(hybridAuth)
 
 // Direct hook generation for v0.dev compatibility
 router.post('/generate',

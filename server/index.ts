@@ -7,11 +7,12 @@ import dotenv from 'dotenv'
 // Import essential middleware
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { serviceStatusChecker } from './middleware/serviceAvailability.js'
+import { hybridAuth } from './middleware/hybridAuth.js'
 
 // Import startup validation
 import { validateEnvironmentAndServices } from './config/simpleStartup.js'
 
-// Import basic routes  
+// Import basic routes
 import authRoutes from './routes/simpleAuth.js'
 import hookRoutes, { v0Router } from './routes/hooks.js'
 import userRoutes from './routes/users.js'

@@ -1,6 +1,7 @@
 import { Router, Response, Request } from 'express'
 import { z } from 'zod'
-import { verifyJWTToken, optionalAuth, AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { hybridAuth, optionalHybridAuth } from '../middleware/hybridAuth.js'
+import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
 import { validateRequest, validatePagination } from '../middleware/validation.js'
 import { analyticsRateLimit, apiRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -60,7 +61,7 @@ const abTestConfigSchema = z.object({
 
 // POST /api/analytics/events - Track analytics events (optional auth)
 router.post('/events',
-  optionalAuth,
+  optionalHybridAuth,
   analyticsRateLimit,
   validateRequest(analyticsEventSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -87,7 +88,7 @@ router.post('/events',
 
 // POST /api/analytics/performance - Record hook performance feedback (requires auth)
 router.post('/performance',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   validateRequest(performanceFeedbackSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -160,7 +161,7 @@ router.post('/performance',
 
 // GET /api/analytics/performance/:generationId - Get performance data for a generation
 router.get('/performance/:generationId',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { generationId } = req.params
@@ -187,7 +188,7 @@ router.get('/performance/:generationId',
 
 // GET /api/analytics/trends - Get hook trend data (requires auth)
 router.get('/trends',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   validatePagination,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -214,7 +215,7 @@ router.get('/trends',
 
 // GET /api/analytics/formulas/:code/performance - Get formula performance stats
 router.get('/formulas/:code/performance',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { code } = req.params
@@ -243,7 +244,7 @@ router.get('/formulas/:code/performance',
 
 // POST /api/analytics/ab-test - Create A/B test configuration
 router.post('/ab-test',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   validateRequest(abTestConfigSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -312,7 +313,7 @@ router.post('/ab-test',
 
 // GET /api/analytics/ab-test/:testId/results - Get A/B test results
 router.get('/ab-test/:testId/results',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { testId } = req.params
@@ -351,7 +352,7 @@ router.get('/ab-test/:testId/results',
 
 // GET /api/analytics/dashboard - Get analytics dashboard data
 router.get('/dashboard',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const userId = req.user.id
@@ -396,7 +397,7 @@ router.get('/dashboard',
 
 // GET /api/analytics/insights - Get AI-powered insights (requires auth)
 router.get('/insights',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const userId = req.user.id
@@ -520,7 +521,7 @@ const webVitalsSchema = z.object({
 })
 
 router.post('/web-vitals',
-  optionalAuth,
+  optionalHybridAuth,
   analyticsRateLimit,
   validateRequest(webVitalsSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -573,7 +574,7 @@ const errorSchema = z.object({
 })
 
 router.post('/error',
-  optionalAuth,
+  optionalHybridAuth,
   analyticsRateLimit,
   validateRequest(errorSchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -625,7 +626,7 @@ const journeySchema = z.object({
 })
 
 router.post('/journey',
-  optionalAuth,
+  optionalHybridAuth,
   analyticsRateLimit,
   validateRequest(journeySchema),
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
@@ -664,7 +665,7 @@ router.post('/journey',
 
 // GET /api/analytics/web-vitals-report - Get Core Web Vitals report (admin only)
 router.get('/web-vitals-report',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -683,7 +684,7 @@ router.get('/web-vitals-report',
 
 // GET /api/analytics/error-report - Get error tracking report (admin only)
 router.get('/error-report',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -702,7 +703,7 @@ router.get('/error-report',
 
 // GET /api/analytics/conversion-funnel - Get conversion funnel data (admin only)
 router.get('/conversion-funnel',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -721,7 +722,7 @@ router.get('/conversion-funnel',
 
 // GET /api/analytics/api-performance - Get API performance report (admin only)
 router.get('/api-performance',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -740,7 +741,7 @@ router.get('/api-performance',
 
 // GET /api/analytics/system-health - Get system health metrics (admin only)
 router.get('/system-health',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const hours = parseInt(req.query.hours as string) || 24
@@ -759,7 +760,7 @@ router.get('/system-health',
 
 // GET /api/analytics/ai-usage - Get AI service usage analytics (admin only)
 router.get('/ai-usage',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -778,7 +779,7 @@ router.get('/ai-usage',
 
 // GET /api/analytics/user-behavior/:userId - Get user behavior analytics (admin or own user)
 router.get('/user-behavior/:userId',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { userId } = req.params
@@ -807,7 +808,7 @@ router.get('/user-behavior/:userId',
 
 // GET /api/analytics/realtime - Get real-time metrics (admin only)
 router.get('/realtime',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const metrics = await AnalyticsService.getRealtimeMetrics()
@@ -824,7 +825,7 @@ router.get('/realtime',
 
 // GET /api/analytics/business-dashboard - Get business intelligence dashboard (admin only)
 router.get('/business-dashboard',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const days = parseInt(req.query.days as string) || 30
@@ -840,7 +841,7 @@ router.get('/business-dashboard',
 
 // GET /api/analytics/trend/:metricName - Get trend data for a specific metric (admin only)
 router.get('/trend/:metricName',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { metricName } = req.params
@@ -861,7 +862,7 @@ router.get('/trend/:metricName',
 
 // POST /api/analytics/calculate-metrics - Trigger manual metrics calculation (admin only)
 router.post('/calculate-metrics',
-  verifyJWTToken,
+  hybridAuth,
   apiRateLimit,
   asyncHandler(async (req: AuthenticatedRequest, res: Response<APIResponse>) => {
     const { period = 'daily' } = req.body

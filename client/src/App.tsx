@@ -11,7 +11,11 @@ import { queryClient } from '@/lib/react-query'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Toaster } from '@/components/ui/Toaster'
 import SimplifiedMobileNav from '@/components/mobile/SimplifiedMobileNav'
-import { ProtectedRoute, PublicRoute, OnboardingRoute } from '@/components/routing/SimpleProtectedRoute'
+import {
+  HybridProtectedRoute as ProtectedRoute,
+  HybridPublicRoute as PublicRoute,
+  HybridOnboardingRoute as OnboardingRoute
+} from '@/components/routing/HybridProtectedRoute'
 import { RootRedirect } from '@/components/routing/RootRedirect'
 
 // Pages

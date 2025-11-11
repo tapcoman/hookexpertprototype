@@ -1,6 +1,7 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { verifyJWTToken, AuthenticatedRequest } from '../middleware/simpleAuth.js'
+import { hybridAuth } from '../middleware/hybridAuth.js'
+import { AuthenticatedRequest } from '../middleware/simpleAuth.js'
 import { validateRequest, validatePagination, validateIdParam } from '../middleware/validation.js'
 import { hookGenerationRateLimit, heavyOperationRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -24,7 +25,8 @@ import { v4 as uuidv4 } from 'uuid'
 const router = Router()
 
 // All routes require authentication and database
-router.use(verifyJWTToken)
+// Using hybrid auth to support both legacy JWT and Clerk tokens
+router.use(hybridAuth)
 router.use(requireDatabase)
 router.use(degradedOpenAI) // AI is optional but may affect functionality
 
