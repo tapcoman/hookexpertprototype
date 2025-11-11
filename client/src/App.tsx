@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/react-query'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Toaster } from '@/components/ui/Toaster'
 import SimplifiedMobileNav from '@/components/mobile/SimplifiedMobileNav'
+import { ClerkAuthSync } from '@/components/auth/ClerkAuthSync'
 import {
   ClerkProtectedRoute,
   ClerkPublicRoute,
@@ -32,6 +33,9 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AppProvider>
+          {/* Sync Clerk tokens with API client */}
+          <ClerkAuthSync />
+
           <Router>
             <Switch>
               {/* Root Route - Smart redirect based on auth and onboarding */}
