@@ -292,8 +292,8 @@ export default async function handler(req, res) {
         }
         
         const token = authHeader.substring(7)
-        const decoded = verifyToken(token)
-        
+        const decoded = await verifyToken(token)
+
         if (!decoded) {
           return res.status(401).json({
             success: false,
@@ -301,12 +301,59 @@ export default async function handler(req, res) {
             message: 'Token is invalid or expired'
           })
         }
-        
+
         // Get the onboarding data
         const onboardingData = req.body
-        
-        console.log('Processing onboarding for userId:', decoded.userId)
+
+        console.log('Processing onboarding for userId:', decoded.userId, 'clerkUserId:', decoded.clerkUserId)
         console.log('Onboarding request body:', onboardingData)
+
+        // If user doesn't exist in DB yet (Clerk user signing up for first time), create them
+        if (!decoded.userId && decoded.clerkUserId) {
+          console.log('Creating new user from Clerk ID:', decoded.clerkUserId)
+
+          // Get user details from Clerk
+          const { createClerkClient } = await import('@clerk/clerk-sdk-node')
+          const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
+          const clerkUser = await clerkClient.users.getUser(decoded.clerkUserId)
+
+          const primaryEmail = clerkUser.emailAddresses.find(
+            e => e.id === clerkUser.primaryEmailAddressId
+          )?.emailAddress
+
+          if (!primaryEmail) {
+            return res.status(400).json({
+              success: false,
+              error: 'No email address',
+              message: 'Your Clerk account must have an email address'
+            })
+          }
+
+          // Create user in database
+          const newUserResult = await db.sql`
+            INSERT INTO users (
+              email,
+              firebase_uid,
+              first_name,
+              last_name,
+              email_verified,
+              free_credits,
+              used_credits
+            ) VALUES (
+              ${primaryEmail.toLowerCase()},
+              ${decoded.clerkUserId},
+              ${clerkUser.firstName || ''},
+              ${clerkUser.lastName || ''},
+              ${true},
+              ${5},
+              ${0}
+            )
+            RETURNING id
+          `
+
+          decoded.userId = newUserResult[0].id
+          console.log('✅ Created new user with ID:', decoded.userId)
+        }
         
         // Validate required onboarding fields
         if (!onboardingData.company || !onboardingData.industry || !onboardingData.role) {

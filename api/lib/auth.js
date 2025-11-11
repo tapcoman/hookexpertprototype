@@ -1,8 +1,14 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { createClerkClient } from '@clerk/clerk-sdk-node'
 import { db } from './db.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secure-jwt-secret-key-for-testing-minimum-32-characters'
+
+// Initialize Clerk client for serverless functions
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY
+})
 
 // Hash password
 async function hashPassword(password) {
@@ -24,13 +30,46 @@ function generateToken(userId) {
   )
 }
 
-// Verify JWT token
-function verifyToken(token) {
+// Verify JWT token (supports both Clerk tokens and legacy JWT)
+async function verifyToken(token) {
   try {
+    console.log('🔐 [Auth] Verifying token, length:', token.length)
+
+    // Try Clerk verification first (Clerk tokens are longer, typically 400+ chars)
+    if (token.length > 200) {
+      try {
+        console.log('🔐 [Auth] Attempting Clerk verification...')
+        const verifiedToken = await clerkClient.verifyToken(token)
+        const clerkUserId = verifiedToken.sub
+
+        console.log('✅ [Auth] Clerk token verified, user ID:', clerkUserId)
+
+        // Find user in database by Clerk ID (stored in firebaseUid for now)
+        const user = await db.sql`
+          SELECT id FROM users WHERE firebase_uid = ${clerkUserId} LIMIT 1
+        `
+
+        if (user && user[0]) {
+          console.log('✅ [Auth] User found in DB:', user[0].id)
+          return { userId: user[0].id, clerkUserId }
+        } else {
+          // User not in database yet - this might happen during onboarding
+          console.log('⚠️ [Auth] Clerk user not in DB yet, will need to create')
+          return { clerkUserId, userId: null }
+        }
+      } catch (clerkError) {
+        console.warn('⚠️ [Auth] Clerk verification failed, trying legacy JWT:', clerkError.message)
+        // Fall through to legacy JWT verification
+      }
+    }
+
+    // Legacy JWT verification
+    console.log('🔐 [Auth] Attempting legacy JWT verification...')
     const decoded = jwt.verify(token, JWT_SECRET)
+    console.log('✅ [Auth] Legacy JWT verified, user ID:', decoded.userId)
     return { userId: decoded.userId }
   } catch (error) {
-    console.error('Token verification failed:', error)
+    console.error('❌ [Auth] Token verification failed:', error.message)
     return null
   }
 }
