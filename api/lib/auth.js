@@ -6,6 +6,14 @@ import { db } from './db.js'
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secure-jwt-secret-key-for-testing-minimum-32-characters'
 
 // Initialize Clerk client for serverless functions
+console.log('🔧 [Auth Init] Initializing Clerk client...')
+console.log('🔧 [Auth Init] CLERK_SECRET_KEY present:', !!process.env.CLERK_SECRET_KEY)
+console.log('🔧 [Auth Init] CLERK_SECRET_KEY prefix:', process.env.CLERK_SECRET_KEY?.substring(0, 20))
+
+if (!process.env.CLERK_SECRET_KEY) {
+  console.error('❌ [Auth Init] CLERK_SECRET_KEY is not set in environment variables!')
+}
+
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY
 })
@@ -39,6 +47,8 @@ async function verifyToken(token) {
     if (token.length > 200) {
       try {
         console.log('🔐 [Auth] Attempting Clerk verification...')
+        console.log('🔐 [Auth] Token preview:', token.substring(0, 50) + '...')
+
         const verifiedToken = await clerkClient.verifyToken(token)
         const clerkUserId = verifiedToken.sub
 
@@ -58,7 +68,15 @@ async function verifyToken(token) {
           return { clerkUserId, userId: null }
         }
       } catch (clerkError) {
-        console.warn('⚠️ [Auth] Clerk verification failed, trying legacy JWT:', clerkError.message)
+        console.error('⚠️ [Auth] Clerk verification failed:', {
+          message: clerkError.message,
+          name: clerkError.name,
+          code: clerkError.code,
+          status: clerkError.status,
+          clerkErrorType: clerkError.clerkErrorType,
+          fullError: JSON.stringify(clerkError, null, 2)
+        })
+        console.warn('⚠️ [Auth] Falling back to legacy JWT verification...')
         // Fall through to legacy JWT verification
       }
     }
