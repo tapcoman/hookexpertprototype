@@ -62,13 +62,18 @@ export async function verifyClerkToken(
   next: NextFunction
 ) {
   try {
+    console.log('🔍 [ClerkAuth] Middleware called for:', req.method, req.path)
+    console.log('🔍 [ClerkAuth] Authorization header:', req.headers.authorization ? 'Present' : 'Missing')
+
     const token = extractClerkToken(req)
 
     if (!token) {
+      console.error('❌ [ClerkAuth] No token extracted from request')
       logSecurityEvent('clerk_token_missing', {
         endpoint: req.path,
         method: req.method,
-        ipAddress: req.ip
+        ipAddress: req.ip,
+        authHeader: req.headers.authorization
       })
 
       return res.status(401).json({
@@ -80,6 +85,8 @@ export async function verifyClerkToken(
         actionRequired: ['Sign in to your account']
       } as any)
     }
+
+    console.log('✓ [ClerkAuth] Token extracted successfully')
 
     // Check if Clerk is configured
     const clerkSecretKey = process.env.CLERK_SECRET_KEY
@@ -103,20 +110,40 @@ export async function verifyClerkToken(
     try {
       // Clerk session tokens are JWTs that can be verified
       // Use verifyToken to check signature and extract claims
-      const verifiedToken = await clerkClient.verifyToken(token)
+      console.log('🔐 [ClerkAuth] Verifying token:', token.substring(0, 30) + '...')
+      console.log('🔐 [ClerkAuth] Token length:', token.length)
+
+      const verifiedToken = await clerkClient.verifyToken(token, {
+        jwtKey: process.env.CLERK_JWT_KEY
+      })
+
+      console.log('✅ [ClerkAuth] Token verified successfully')
+      console.log('📋 [ClerkAuth] Verified token payload:', JSON.stringify(verifiedToken, null, 2))
 
       // Extract user ID from verified token
       clerkUserId = verifiedToken.sub as string
 
       if (!clerkUserId) {
+        console.error('❌ [ClerkAuth] No user ID in verified token')
         throw new Error('No user ID in token')
       }
 
+      console.log('👤 [ClerkAuth] Clerk user ID:', clerkUserId)
+
       // Get user details from Clerk
       clerkUser = await clerkClient.users.getUser(clerkUserId)
+      console.log('✅ [ClerkAuth] User fetched from Clerk:', clerkUser.id, clerkUser.primaryEmailAddressId)
     } catch (clerkError: any) {
+      console.error('❌ [ClerkAuth] Token verification failed:', {
+        error: clerkError.message,
+        stack: clerkError.stack,
+        name: clerkError.name,
+        endpoint: req.path
+      })
+
       logSecurityEvent('clerk_verification_failed', {
         error: clerkError.message,
+        errorName: clerkError.name,
         endpoint: req.path,
         ipAddress: req.ip
       })
@@ -124,8 +151,10 @@ export async function verifyClerkToken(
       return res.status(401).json({
         success: false,
         error: 'Invalid Clerk session',
+        errorCode: 'CLERK_VERIFICATION_FAILED',
         userMessage: 'Your session is invalid. Please sign in again.',
-        canRetry: false
+        canRetry: false,
+        debugInfo: process.env.NODE_ENV === 'development' ? clerkError.message : undefined
       } as any)
     }
 
