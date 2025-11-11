@@ -53,12 +53,20 @@ async function apiFetch<T>(
 ): Promise<APIResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
   const finalRetryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig }
-  
+
+  // Get the current auth token (checks localStorage if not in memory)
+  const currentToken = getAuthToken()
+
+  // Debug logging for auth token
+  if (endpoint.includes('/onboarding')) {
+    console.log('🔑 API Client: Making onboarding request with token:', currentToken ? 'Present ✓' : 'MISSING ✗')
+  }
+
   const config: RequestInit = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(authToken && { Authorization: `Bearer ${authToken}` }),
+      ...(currentToken && { Authorization: `Bearer ${currentToken}` }),
       ...options.headers,
     },
     // Add timeout to prevent hanging requests
