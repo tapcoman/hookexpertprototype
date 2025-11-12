@@ -1,6 +1,6 @@
 // Vercel serverless API with real database authentication
 import { createUser, loginUser, findUserById, verifyToken, generateToken } from './lib/auth.js'
-import { testConnection } from './lib/db.js'
+import { testConnection, db } from './lib/db.js'
 import { generateEnhancedHooks, checkGenerationLimits, updateUserCredits } from './lib/hookGenerator.js'
 import { 
   getUserHookGenerations, 
