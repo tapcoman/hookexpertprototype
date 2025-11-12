@@ -55,16 +55,79 @@ async function verifyToken(token) {
         console.log('✅ [Auth] Clerk token verified, user ID:', clerkUserId)
 
         // Find user in database by Clerk ID (stored in firebaseUid for now)
-        const user = await db.sql`
+        let user = await db.sql`
           SELECT id FROM users WHERE firebase_uid = ${clerkUserId} LIMIT 1
         `
 
         if (user && user[0]) {
           console.log('✅ [Auth] User found in DB:', user[0].id)
           return { userId: user[0].id, clerkUserId }
-        } else {
-          // User not in database yet - this might happen during onboarding
-          console.log('⚠️ [Auth] Clerk user not in DB yet, will need to create')
+        }
+
+        // User not in database yet - create them automatically
+        console.log('🔧 [Auth] User not in DB, auto-creating...')
+
+        try {
+          // Get full user details from Clerk
+          const clerkUser = await clerkClient.users.getUser(clerkUserId)
+          const primaryEmail = clerkUser.emailAddresses.find(
+            e => e.id === clerkUser.primaryEmailAddressId
+          )
+
+          if (!primaryEmail) {
+            console.error('❌ [Auth] No primary email found for Clerk user')
+            return { clerkUserId, userId: null }
+          }
+
+          // Create user in database
+          const newUser = await db.sql`
+            INSERT INTO users (
+              email,
+              firebase_uid,
+              first_name,
+              last_name,
+              email_verified,
+              subscription_status,
+              is_premium,
+              free_credits,
+              used_credits,
+              safety
+            ) VALUES (
+              ${primaryEmail.emailAddress.toLowerCase()},
+              ${clerkUserId},
+              ${clerkUser.firstName || ''},
+              ${clerkUser.lastName || ''},
+              ${primaryEmail.verification?.status === 'verified'},
+              ${'free'},
+              ${false},
+              ${5},
+              ${0},
+              ${'standard'}
+            )
+            RETURNING id
+          `
+
+          if (newUser && newUser[0]) {
+            console.log('✅ [Auth] User auto-created successfully:', newUser[0].id)
+            return { userId: newUser[0].id, clerkUserId }
+          } else {
+            console.error('❌ [Auth] Failed to create user, no ID returned')
+            return { clerkUserId, userId: null }
+          }
+        } catch (createError) {
+          console.error('❌ [Auth] Error auto-creating user:', createError)
+
+          // Race condition - user might have been created by another request
+          // Try fetching again
+          user = await db.sql`
+            SELECT id FROM users WHERE firebase_uid = ${clerkUserId} LIMIT 1
+          `
+
+          if (user && user[0]) {
+            console.log('✅ [Auth] User found on retry (race condition)')
+            return { userId: user[0].id, clerkUserId }
+          }
+
           return { clerkUserId, userId: null }
         }
       } catch (clerkError) {
