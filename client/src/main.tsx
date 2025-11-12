@@ -24,4 +24,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <App />
     </ClerkProvider>
   </React.StrictMode>,
-)
+)// Force rebuild Wed 12 Nov 2025 19:59:36 GMT
