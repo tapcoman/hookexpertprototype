@@ -68,9 +68,9 @@ export default function ExactApp() {
 
     // Debug: Check auth status on component mount
     const checkAuthStatus = async () => {
-      const token = localStorage.getItem('auth_token')
+      const token = await getAuthToken()
       console.log('🔍 Checking auth status on mount...')
-      console.log('- Token in localStorage:', !!token)
+      console.log('- Token from Clerk:', !!token)
       
       if (token) {
         try {
@@ -110,7 +110,7 @@ export default function ExactApp() {
     
     // Load onboarding data from user profile (database) first, then fallback to localStorage
     const loadUserProfile = async () => {
-      const token = localStorage.getItem('auth_token')
+      const token = await getAuthToken()
       if (token) {
         try {
           const response = await fetch('/api/users/profile', {
@@ -310,23 +310,26 @@ export default function ExactApp() {
         bannedTerms,
         toneOfVoice: tones,
       }
-      
+
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
-      const token = localStorage.getItem('auth_token')
+
+      // Get fresh auth token from Clerk
+      const token = await getAuthToken()
       console.log('🔐 Hook Generation Auth Debug:')
       console.log('- Token exists:', !!token)
       console.log('- Token type:', typeof token)
       console.log('- Token length:', token?.length || 0)
       console.log('- Token preview:', token ? token.substring(0, 30) + '...' : 'null')
-      
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
       if (token) {
         headers.Authorization = `Bearer ${token}`
-        console.log('- Authorization header set')
+        console.log('✅ Authorization header set with fresh Clerk token')
       } else {
-        console.log('❌ No auth token found in localStorage')
+        console.error('❌ No auth token available from Clerk')
+        throw new Error('Authentication required. Please reload the page and try again.')
       }
       
       const res = await fetch('/api/hooks/generate/enhanced', {
