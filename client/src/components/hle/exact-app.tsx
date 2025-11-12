@@ -66,32 +66,9 @@ export default function ExactApp() {
       })
     }
 
-    // Debug: Check auth status on component mount
-    const checkAuthStatus = async () => {
-      const token = await getAuthToken()
-      console.log('🔍 Checking auth status on mount...')
-      console.log('- Token from Clerk:', !!token)
-      
-      if (token) {
-        try {
-          const response = await fetch('/api/auth/verify', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-          console.log('- Auth verify response:', response.status)
-          if (response.ok) {
-            const data = await response.json()
-            console.log('- User authenticated:', data.success)
-            console.log('- User email:', data.data?.user?.email)
-          } else {
-            console.log('❌ Auth verify failed:', await response.text())
-          }
-        } catch (error) {
-          console.log('❌ Auth verify error:', error)
-        }
-      }
-    }
-    
-    checkAuthStatus()
+    // Auth status is handled by Clerk - no manual verification needed
+    // ClerkAuthSync component manages token synchronization
+    console.log('✅ Hook generation app mounted - auth managed by Clerk')
   }, [])
 
   // Onboarding/brand data
