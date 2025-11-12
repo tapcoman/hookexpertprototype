@@ -1,17 +1,23 @@
 import { Router, Response, Request } from 'express'
 import { z } from 'zod'
+import { createClerkClient } from '@clerk/clerk-sdk-node'
 import { clerkAuth, AuthenticatedRequest } from '../middleware/clerkAuth.js'
 import { validateRequest } from '../middleware/validation.js'
 import { apiRateLimit } from '../middleware/rateLimiting.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
 import { NotFoundError, ValidationError } from '../middleware/errorHandler.js'
 import { logBusinessEvent } from '../middleware/logging.js'
-import { 
-  UserService, 
+import {
+  UserService,
   PsychologicalProfileService,
   AnalyticsService
 } from '../services/database.js'
 import { APIResponse } from '../../shared/types.js'
+
+// Initialize Clerk client
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY
+})
 
 const router = Router()
 
@@ -234,6 +240,22 @@ router.post('/onboarding',
       }
 
       await PsychologicalProfileService.createOrUpdate(userId, psychProfileData)
+    }
+
+    // Update Clerk metadata to mark onboarding as completed
+    // This prevents redirect loops in ClerkProtectedRoute
+    if (req.clerkUserId) {
+      try {
+        await clerkClient.users.updateUserMetadata(req.clerkUserId, {
+          publicMetadata: {
+            onboardingCompleted: true
+          }
+        })
+        console.log('✅ [Onboarding] Clerk metadata updated for user:', req.clerkUserId)
+      } catch (clerkError) {
+        console.error('⚠️ [Onboarding] Failed to update Clerk metadata:', clerkError)
+        // Don't fail onboarding if Clerk update fails - user can retry
+      }
     }
 
     logBusinessEvent('onboarding_completed', {

@@ -185,27 +185,55 @@ export async function verifyClerkToken(
         .limit(1)
 
       if (userResult.length === 0) {
-        // User doesn't exist - this should be created by webhook
-        // For now, return a minimal user object
-        // In production, webhook should create user before they can authenticate
-        logSecurityEvent('clerk_user_not_synced', {
+        // User doesn't exist in database - create them automatically
+        // This handles cases where webhook hasn't fired yet or user signed up before webhooks were configured
+        console.log('🔧 [ClerkAuth] User not found in database, creating new user record')
+
+        logSecurityEvent('clerk_user_auto_created', {
           clerkUserId,
           email,
           endpoint: req.path,
           ipAddress: req.ip
         })
 
-        // Attach minimal user data for now
-        // The webhook should sync the user properly
-        ;(req as ClerkAuthenticatedRequest).user = {
-          id: clerkUserId, // Temporary - use Clerk ID
-          email: email,
-          subscriptionStatus: 'free',
-          isPremium: false
-        }
-        ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
+        try {
+          // Create new user in database
+          const newUserData = {
+            email: email.toLowerCase(),
+            firebaseUid: clerkUserId, // Store Clerk ID
+            firstName: clerkUser.firstName || '',
+            lastName: clerkUser.lastName || '',
+            emailVerified: clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.verification?.status === 'verified',
+            subscriptionStatus: 'free',
+            isPremium: false,
+            freeCredits: 5,
+            usedCredits: 0,
+            safety: 'standard'
+          }
 
-        return next()
+          const newUserResult = await db.insert(users)
+            .values(newUserData)
+            .returning()
+
+          user = newUserResult[0]
+
+          console.log('✅ [ClerkAuth] New user created successfully:', user.id)
+        } catch (dbError: any) {
+          console.error('❌ [ClerkAuth] Failed to create user in database:', dbError)
+
+          // If user creation fails (e.g., race condition), try to fetch again
+          userResult = await db.select()
+            .from(users)
+            .where(eq(users.firebaseUid, clerkUserId))
+            .limit(1)
+
+          if (userResult.length > 0) {
+            user = userResult[0]
+            console.log('✅ [ClerkAuth] User found on retry (race condition handled)')
+          } else {
+            throw new Error('Failed to create or find user in database')
+          }
+        }
       }
 
       // User found by email but not clerkId - update the clerkId
@@ -307,15 +335,39 @@ export async function optionalClerkAuth(
           .limit(1)
 
         if (userResult.length === 0) {
-          // User doesn't exist, create minimal object
-          ;(req as ClerkAuthenticatedRequest).user = {
-            id: clerkUserId,
-            email: email,
-            subscriptionStatus: 'free',
-            isPremium: false
+          // User doesn't exist, create them in database
+          try {
+            const newUserData = {
+              email: email.toLowerCase(),
+              firebaseUid: clerkUserId,
+              firstName: clerkUser.firstName || '',
+              lastName: clerkUser.lastName || '',
+              emailVerified: clerkUser.emailAddresses.find((e: any) => e.id === clerkUser.primaryEmailAddressId)?.verification?.status === 'verified',
+              subscriptionStatus: 'free',
+              isPremium: false,
+              freeCredits: 5,
+              usedCredits: 0,
+              safety: 'standard'
+            }
+
+            const newUserResult = await db.insert(users)
+              .values(newUserData)
+              .returning()
+
+            const user = newUserResult[0]
+
+            ;(req as ClerkAuthenticatedRequest).user = {
+              id: user.id,
+              email: user.email,
+              subscriptionStatus: user.subscriptionStatus || 'free',
+              isPremium: user.isPremium || false
+            }
+            ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
+            return next()
+          } catch (dbError) {
+            // On error, continue without authentication for optional auth
+            return next()
           }
-          ;(req as ClerkAuthenticatedRequest).clerkUserId = clerkUserId
-          return next()
         }
 
         // Update clerkId if found by email

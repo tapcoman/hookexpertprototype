@@ -13,11 +13,12 @@ import { serviceStatusChecker } from './middleware/serviceAvailability.js'
 import { validateEnvironmentAndServices } from './config/simpleStartup.js'
 
 // Import basic routes
-import authRoutes from './routes/simpleAuth.js'
+// DEPRECATED: import authRoutes from './routes/simpleAuth.js' - Removed in favor of Clerk
 import hookRoutes, { v0Router } from './routes/hooks.js'
 import userRoutes from './routes/users.js'
 import debugRoutes from './routes/simpleDebug.js'
 import projectRoutes from './routes/projects.js'
+import clerkWebhookRoutes from './routes/clerkWebhook.js'
 
 // Load environment variables from parent directory
 dotenv.config({ path: '../.env' })
@@ -162,8 +163,11 @@ app.get('/api/health', async (req, res) => {
 })
 
 // API routes
-app.use('/api/auth', authRoutes)
-app.use('/api/hooks', hookRoutes)  
+// Webhooks must be mounted before other routes (no auth required)
+app.use('/api/webhooks', clerkWebhookRoutes)
+
+// DEPRECATED: app.use('/api/auth', authRoutes) - Removed SimpleAuth routes, use Clerk authentication instead
+app.use('/api/hooks', hookRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api', v0Router) // v0.dev compatibility routes
