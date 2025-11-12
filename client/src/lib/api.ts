@@ -26,23 +26,37 @@ import {
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-// Token management - now uses localStorage for persistence
-let authToken: string | null = null
+// Token management - uses Clerk's getToken for fresh tokens
+let clerkGetToken: (() => Promise<string | null>) | null = null
 
-export const setAuthToken = (token: string | null) => {
-  authToken = token
-  if (token) {
-    localStorage.setItem('auth_token', token)
-  } else {
-    localStorage.removeItem('auth_token')
-  }
+// Set the Clerk getToken function (called by ClerkAuthSync)
+export const setClerkTokenGetter = (getter: (() => Promise<string | null>) | null) => {
+  clerkGetToken = getter
+  console.log('🔧 API Client: Clerk token getter', getter ? 'registered ✓' : 'cleared')
 }
 
-export const getAuthToken = () => {
-  if (!authToken) {
-    authToken = localStorage.getItem('auth_token')
+// Get fresh token from Clerk (async)
+export const getAuthToken = async (): Promise<string | null> => {
+  if (clerkGetToken) {
+    try {
+      const token = await clerkGetToken()
+      if (token) {
+        console.log('✅ API Client: Fresh token retrieved from Clerk')
+        return token
+      }
+    } catch (error) {
+      console.error('❌ API Client: Failed to get token from Clerk:', error)
+    }
   }
-  return authToken
+
+  console.warn('⚠️ API Client: No Clerk token getter available')
+  return null
+}
+
+// Legacy setAuthToken for backwards compatibility (now does nothing)
+export const setAuthToken = (_token: string | null) => {
+  // No-op: tokens are now fetched fresh from Clerk on each request
+  console.log('⚠️ API Client: setAuthToken called but ignored (using Clerk token getter)')
 }
 
 // Enhanced fetch wrapper with comprehensive error handling and retry logic
@@ -54,12 +68,15 @@ async function apiFetch<T>(
   const url = `${API_BASE_URL}${endpoint}`
   const finalRetryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig }
 
-  // Get the current auth token (checks localStorage if not in memory)
-  const currentToken = getAuthToken()
+  // Get a fresh auth token from Clerk (async)
+  const currentToken = await getAuthToken()
 
   // Debug logging for auth token
   if (endpoint.includes('/onboarding')) {
     console.log('🔑 API Client: Making onboarding request with token:', currentToken ? 'Present ✓' : 'MISSING ✗')
+    if (currentToken) {
+      console.log('🔑 API Client: Token length:', currentToken.length)
+    }
   }
 
   const config: RequestInit = {
