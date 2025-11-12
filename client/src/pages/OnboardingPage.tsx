@@ -518,23 +518,14 @@ const OnboardingPageContent: React.FC = () => {
       console.log('🚀 Starting onboarding with data:', data)
 
       // Save onboarding data to backend
+      // Backend will also update Clerk metadata with onboardingCompleted = true
       const response = await api.user.completeOnboarding(data)
       console.log('✅ Onboarding API response:', response.data)
 
-      // Update Clerk user metadata to mark onboarding as completed
+      // Force Clerk to reload user data to get updated metadata
       if (user) {
-        try {
-          await user.update({
-            publicMetadata: {
-              ...user.publicMetadata,
-              onboardingCompleted: true
-            }
-          })
-          console.log('✅ Clerk metadata updated with onboarding status')
-        } catch (metadataError) {
-          console.error('❌ Failed to update Clerk metadata:', metadataError)
-          // Don't throw - onboarding data is saved, just metadata update failed
-        }
+        await user.reload()
+        console.log('🔄 Clerk user data reloaded')
       }
 
       return response.data

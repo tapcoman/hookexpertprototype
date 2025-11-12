@@ -367,7 +367,7 @@ export default async function handler(req, res) {
         // Update user with onboarding data
         const { updateUserOnboarding } = await import('./lib/auth.js')
         const updatedUser = await updateUserOnboarding(decoded.userId, onboardingData)
-        
+
         if (!updatedUser) {
           console.error('updateUserOnboarding returned null for userId:', decoded.userId)
           return res.status(400).json({
@@ -375,6 +375,25 @@ export default async function handler(req, res) {
             error: 'Onboarding failed',
             message: 'Failed to update user profile - user not found or update failed'
           })
+        }
+
+        // Update Clerk metadata to mark onboarding as completed
+        if (decoded.clerkUserId) {
+          try {
+            const { createClerkClient } = await import('@clerk/clerk-sdk-node')
+            const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
+
+            await clerkClient.users.updateUser(decoded.clerkUserId, {
+              publicMetadata: {
+                onboardingCompleted: true
+              }
+            })
+
+            console.log('✅ Clerk metadata updated: onboardingCompleted = true')
+          } catch (clerkError) {
+            console.error('⚠️ Failed to update Clerk metadata:', clerkError.message)
+            // Don't fail the request - onboarding data is already saved
+          }
         }
         
         // Ensure all necessary fields are present for frontend
