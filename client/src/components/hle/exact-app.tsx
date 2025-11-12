@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Download, Rocket, User, HistoryIcon, Star } from 'lucide-react'
 import { useLocation } from 'wouter'
+import { getAuthToken } from '@/lib/api'
 import { AppSidebar } from '@/components/hle/app-sidebar'
 import { ResultsList } from '@/components/hle/results-list'
 // Removed OnboardingDialog - using signup onboarding flow instead
@@ -214,21 +215,24 @@ export default function ExactApp() {
         toneOfVoice: tones,
       }
       lastParams.current = { idea, platform, outcome, count: countOverride ?? count }
-      const token = localStorage.getItem('auth_token')
+
+      // Get fresh auth token from Clerk
+      const token = await getAuthToken()
       console.log('🔐 Hook Generation Auth Debug:')
       console.log('- Token exists:', !!token)
       console.log('- Token type:', typeof token)
       console.log('- Token length:', token?.length || 0)
       console.log('- Token preview:', token ? token.substring(0, 30) + '...' : 'null')
-      
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       }
       if (token) {
         headers.Authorization = `Bearer ${token}`
-        console.log('- Authorization header set')
+        console.log('✅ Authorization header set with fresh Clerk token')
       } else {
-        console.log('❌ No auth token found in localStorage')
+        console.error('❌ No auth token available from Clerk')
+        throw new Error('Authentication required. Please reload the page and try again.')
       }
       
       const res = await fetch('/api/hooks/generate/enhanced', {
